@@ -3,6 +3,8 @@ _drafts/
 
 # API 키
 tools/config.json
+.vercel-token
+.vercel/
 
 __pycache__/
 *.pyc
