@@ -1,7 +1,7 @@
-# factory Magazine — site context
+# Factory Magazine — site context
 
-Static HTML/CSS content site for **factory Magazine**, the content/media brand under
-factorysignal Holdings. This is its OWN standalone repo/Vercel project (`factorysignal-magazine`),
+Static HTML/CSS content site for **Factory Magazine**, the content/media brand under
+Factory Holdings. This is its OWN standalone repo/Vercel project (`factorysignal-magazine`),
 deliberately split out from the `predict-analytics` repo (which holds the actual app) so that
 magazine writers/editors can get repo access without ever seeing the app's code. Deploys
 automatically on push to `main`.
@@ -9,22 +9,28 @@ automatically on push to `main`.
 ## Naming — read this before touching any brand text
 
 "predictanalytics-news" is only ever a domain/repo name. The actual prediction-market app
-brands itself **"factorysignal"** in its own UI (see `polymarket-news/index.html`'s header
-logo). To avoid the two properties both being called bare "factorysignal", this site is now
-**"factory Magazine"** everywhere a visible label appears (nav logo, page titles, footer
-brand text, byline, copyright line). The founder explicitly dropped "signal" from this site's
-own name to keep it distinct from the app — don't reintroduce "factorysignal" or
-"factorysignal Magazine" as this site's display name. The footer's "링크" column still
-legitimately says "factorysignal" once — that entry links to and correctly names the *other*
-property (the app), leave it alone.
+brands itself **"Factory Signal"** in its own UI (see `polymarket-news/index.html`'s header
+logo — capitalized, two words, not the old camelCase "FactorySignal" or one-word
+"factorysignal"). The parent company is **"Factory Holdings"** (also two words, capitalized —
+not "factorysignal Holdings"). This site is **"Factory Magazine"** everywhere a visible label
+appears (nav logo, page titles, footer brand text, byline, copyright line) — deliberately
+dropped "Signal" from its own name to stay distinct from the app, and capitalizes "Factory"
+like the other two properties. Don't reintroduce "factorysignal"/"FactorySignal Magazine"/
+lowercase "factory" anywhere — this three-way "Factory ___" capitalization is the baseline
+naming convention across all three properties now, not just a one-off style choice.
+
+The footer's "링크" column still legitimately says "Factory Signal" once — that entry links to
+and correctly names the *other* property (the app), leave it alone.
 
 **Public URL stays `predictanalytics-news.vercel.app/blog/`** even though the code now lives
 here — the main app's `vercel.json` has a rewrite that proxies `/blog/*` to this project's own
 Vercel deployment URL. If you need the raw deployment URL (e.g. to update that rewrite), check
 this project's Vercel dashboard; don't assume it matches the repo name exactly.
 
-Separate again from factorysignal-holdings, the parent-company corporate site — also its own
-repo, also linked from here, but a different visual identity (see below).
+Separate again from `factorysignal-holdings`, the parent-company corporate site — also its own
+repo, also linked from here, but a different visual identity (see below). (Repo/URL slugs like
+`factorysignal-holdings.vercel.app` and `factorysignal-magazine` keep their existing spelling —
+only the human-visible brand text changed, not repo names, domains, or GitHub slugs.)
 
 Referred to as **"Magazine"** everywhere in nav/copy — deliberately renamed from "블로그"/"Blog".
 Keep using "Magazine" (English word, unchanged) if this site ever gets multi-language support
@@ -54,7 +60,7 @@ here or vice versa without being asked.
 - Article thumbnails use a **category-colored gradient with bold text** (e.g. "TOKEN",
   "PRODUCT", "INFRA"), not a plain dark gradient — mimics Outstanding's colorful graphic
   thumbnails
-- Byline row: small "FS" avatar circle + "factory Magazine 팀", bold/dark (not faint gray) —
+- Byline row: small "FS" avatar circle + "Factory Magazine 팀", bold/dark (not faint gray) —
   echoes Outstanding's author-forward card style
 
 ## Sidebar (articles/index.html)
@@ -65,7 +71,7 @@ Order: 인기 포스팅 (전체) → 정치/경제/암호화폐/스포츠/세계
 안내 / 멤버십결제 / 로그인·가입 (these three point at the live app / $SIGNAL article since
 this site has no login or business-info pages of its own).
 
-## Category colors (must match the main app one directory up — see `../CLAUDE.md`)
+## Category colors (must match the main app's — it's a separate repo, `predict-analytics`)
 
 정치 purple `#6c5ce7` · 경제 green `#0ea968` · 암호화폐 amber `#d97706` · 스포츠 blue
 `#3b82f6` · 세계 red `#e03040` · **스타트업 teal `#0d9488`** (magazine-only 6th category,
