@@ -1,10 +1,20 @@
 # factorysignal magazine — site context
 
-Static HTML/CSS content site for **factorysignal**, the content/media brand under
+Static HTML/CSS content site for **factorysignal Magazine**, the content/media brand under
 factorysignal Holdings. This is its OWN standalone repo/Vercel project (`factorysignal-magazine`),
-deliberately split out from the `predict-analytics` repo (which holds the actual
-predictanalytics-news app) so that magazine writers/editors can get repo access without ever
-seeing the app's code. Deploys automatically on push to `main`.
+deliberately split out from the `predict-analytics` repo (which holds the actual app) so that
+magazine writers/editors can get repo access without ever seeing the app's code. Deploys
+automatically on push to `main`.
+
+## Naming — read this before touching any brand text
+
+"predictanalytics-news" is only ever a domain/repo name. The actual prediction-market app
+brands itself **"factorysignal"** in its own UI (see `polymarket-news/index.html`'s header
+logo). To avoid the two properties both being called bare "factorysignal", this site is now
+**"factorysignal Magazine"** everywhere a visible label appears (nav logo, page titles, footer
+brand text, footer link text) — not just "factorysignal" alone. Byline text ("factorysignal
+팀") is the one exception, left short on purpose since it reads as an author credit, not a
+service name. Don't revert to bare "factorysignal" as this site's display name.
 
 **Public URL stays `predictanalytics-news.vercel.app/blog/`** even though the code now lives
 here — the main app's `vercel.json` has a rewrite that proxies `/blog/*` to this project's own
