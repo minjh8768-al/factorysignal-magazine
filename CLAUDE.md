@@ -1,6 +1,6 @@
-# factorysignal magazine — site context
+# factory Magazine — site context
 
-Static HTML/CSS content site for **factorysignal Magazine**, the content/media brand under
+Static HTML/CSS content site for **factory Magazine**, the content/media brand under
 factorysignal Holdings. This is its OWN standalone repo/Vercel project (`factorysignal-magazine`),
 deliberately split out from the `predict-analytics` repo (which holds the actual app) so that
 magazine writers/editors can get repo access without ever seeing the app's code. Deploys
@@ -11,10 +11,12 @@ automatically on push to `main`.
 "predictanalytics-news" is only ever a domain/repo name. The actual prediction-market app
 brands itself **"factorysignal"** in its own UI (see `polymarket-news/index.html`'s header
 logo). To avoid the two properties both being called bare "factorysignal", this site is now
-**"factorysignal Magazine"** everywhere a visible label appears (nav logo, page titles, footer
-brand text, footer link text) — not just "factorysignal" alone. Byline text ("factorysignal
-팀") is the one exception, left short on purpose since it reads as an author credit, not a
-service name. Don't revert to bare "factorysignal" as this site's display name.
+**"factory Magazine"** everywhere a visible label appears (nav logo, page titles, footer
+brand text, byline, copyright line). The founder explicitly dropped "signal" from this site's
+own name to keep it distinct from the app — don't reintroduce "factorysignal" or
+"factorysignal Magazine" as this site's display name. The footer's "링크" column still
+legitimately says "factorysignal" once — that entry links to and correctly names the *other*
+property (the app), leave it alone.
 
 **Public URL stays `predictanalytics-news.vercel.app/blog/`** even though the code now lives
 here — the main app's `vercel.json` has a rewrite that proxies `/blog/*` to this project's own
@@ -52,7 +54,7 @@ here or vice versa without being asked.
 - Article thumbnails use a **category-colored gradient with bold text** (e.g. "TOKEN",
   "PRODUCT", "INFRA"), not a plain dark gradient — mimics Outstanding's colorful graphic
   thumbnails
-- Byline row: small "FS" avatar circle + "factorysignal 팀", bold/dark (not faint gray) —
+- Byline row: small "FS" avatar circle + "factory Magazine 팀", bold/dark (not faint gray) —
   echoes Outstanding's author-forward card style
 
 ## Sidebar (articles/index.html)
