@@ -1,0 +1,8 @@
+# 검수 대기 초안 — 발행되면 articles/ 로 옮겨진다
+_drafts/
+
+# API 키
+tools/config.json
+
+__pycache__/
+*.pyc

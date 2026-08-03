@@ -1,0 +1,152 @@
+# -*- coding: utf-8 -*-
+"""Gemini 호출. 유튜브 URL을 fileData로 직접 넘겨 영상을 읽힌다.
+
+HTML도 기사도 모른다. 프롬프트를 받아 구조화된 JSON 딕셔너리를 반환한다.
+"""
+import json
+import re
+import time
+import urllib.error
+import urllib.request
+
+from article import CATEGORIES
+
+ENDPOINT = ("https://generativelanguage.googleapis.com/v1beta/models/"
+            "{model}:generateContent?key={key}")
+
+# Gemini가 반드시 이 모양으로 반환하도록 강제한다 (JSON 파싱 실패를 구조적으로 없앤다)
+RESPONSE_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {
+        "title": {"type": "STRING"},
+        "description": {"type": "STRING"},
+        "slug": {"type": "STRING"},
+        "category": {"type": "STRING", "enum": list(CATEGORIES)},
+        "eyebrow": {"type": "STRING"},
+        "read_minutes": {"type": "INTEGER"},
+        "body_html": {"type": "STRING"},
+    },
+    "required": ["title", "description", "slug", "category", "eyebrow",
+                 "read_minutes", "body_html"],
+    "propertyOrdering": ["title", "description", "slug", "category", "eyebrow",
+                         "read_minutes", "body_html"],
+}
+
+PROMPT = f"""너는 한국어 시사 매거진 factorysignal의 기자다.
+첨부된 유튜브 영상을 보고, 그 내용을 정리한 기사 한 편을 쓴다.
+
+절대 규칙:
+- 영상에서 실제로 말한 내용만 근거로 삼는다. 영상에 없는 사실·수치·날짜를 채우지 마라.
+- 확실하지 않으면 쓰지 마라. 분량을 늘리려 추측하지 마라.
+- 날짜와 채널명은 아예 쓰지 마라. 출처 표기는 코드가 따로 붙인다.
+- 모든 평가·전망은 그 말을 한 사람에게 귀속시킨다. "우려가 깊어지고 있다",
+  "평가가 나온다"처럼 주체를 숨긴 표현을 쓰지 마라.
+  대신 "A는 ...라고 우려했다", "B는 ...라고 평가했다"로 쓴다.
+- 특정 정당·인물을 편드는 논평을 쓰지 마라. 누가 무엇을 주장했는지만 서술한다.
+- blockquote에는 화자가 실제로 한 발언만 그대로 옮긴다. 요약문을 인용문처럼 만들지 마라.
+  인용문은 2~3문장 이내로 짧게 자른다. 인용문 안에 화자 이름을 넣지 마라 —
+  누가 말했는지는 인용문 바로 앞 단락에서 밝힌다.
+
+각 필드:
+- title: 기사 제목. 영상 제목을 그대로 베끼지 말고 핵심을 담아 다시 쓴다.
+  핵심 발언을 큰따옴표로 인용해 넣는 형태를 선호한다.
+- description: 검색결과에 뜨는 한 문장 요약 (80~140자).
+- slug: 영문 소문자와 하이픈만 쓴 파일명 (3~6단어). 예: assembly-investigation-power-bill
+- category: 다음 중 정확히 하나. {" / ".join(CATEGORIES)}
+  국내 정당·국회·정부 문제는 정치. 해외 정세·국제관계는 세계.
+  금리·물가·산업·기업 실적은 경제. 가상자산·블록체인은 암호화폐.
+  창업·스타트업·투자유치는 스타트업.
+- eyebrow: 기사 상단과 카드에 붙는 영문 라벨 2~3단어. 예: Politics, Market Watch, Policy Watch
+- read_minutes: 본문 분량에 맞는 읽기 시간 (정수, 3~10)
+- body_html: 본문. 아래 태그만 쓴다.
+  <p> 단락, <h2> 소제목, <blockquote> 직접 인용, <ul><li> 목록, <strong> 강조
+  구조: 도입 단락 -> <h2> 소제목으로 나눈 3~6개 섹션 -> 각 섹션에 단락 1~3개.
+  적절한 곳에 <blockquote> 1~2개를 넣는다. 마지막은 정리 섹션.
+  <h1>, <div>, <script>, <style>, <img>, 인라인 style 속성은 쓰지 마라.
+  마크다운을 쓰지 마라. HTML 태그만 쓴다.
+영상을 볼 수 없으면 title을 정확히 "영상 접근 불가"로 채워라."""
+
+
+def _post(url, payload, timeout):
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return json.load(resp)
+
+
+def _retry_delay(message, default):
+    """서버가 알려준 재시도 대기시간(초)을 뽑는다."""
+    m = re.search(r'"retryDelay"\s*:\s*"(\d+)s"', message)
+    return min(int(m.group(1)), 35) if m else default
+
+
+def write_article(cfg, youtube_url, timeout=600, retries=3):
+    """유튜브 URL을 보고 기사 필드 딕셔너리를 반환한다."""
+    payload = {
+        "contents": [{
+            "parts": [
+                {"fileData": {"fileUri": youtube_url}},
+                {"text": PROMPT},
+            ]
+        }],
+        "generationConfig": {
+            "mediaResolution": cfg.get("media_resolution", "MEDIA_RESOLUTION_LOW"),
+            "responseMimeType": "application/json",
+            "responseSchema": RESPONSE_SCHEMA,
+            # 기본값으로는 본문이 문장 중간에서 잘린다 (사고 토큰이 출력 예산을 함께 쓴다)
+            "maxOutputTokens": cfg.get("max_output_tokens", 32768),
+        },
+    }
+    url = ENDPOINT.format(model=cfg["gemini_model"], key=cfg["gemini_api_key"])
+
+    last = ""
+    for attempt in range(retries):
+        try:
+            data = _post(url, payload, timeout)
+        except urllib.error.HTTPError as e:
+            body = e.read().decode("utf-8", "replace")
+            last = f"HTTP {e.code}: {body[:400]}"
+            if e.code in (429, 503) and attempt < retries - 1:
+                wait = _retry_delay(body, 10 * (attempt + 1))
+                print(f"  Gemini {e.code} — {wait}초 후 재시도 "
+                      f"({attempt + 1}/{retries - 1})")
+                time.sleep(wait)
+                continue
+            if e.code == 429:
+                raise RuntimeError(
+                    "Gemini 무료 한도를 다 썼습니다. 잠시 후 다시 시도하거나 "
+                    "config.json의 gemini_model을 바꾸세요.\n" + last
+                )
+            raise RuntimeError(last)
+        except urllib.error.URLError as e:
+            last = f"연결 실패: {e.reason}"
+            if attempt < retries - 1:
+                time.sleep(5)
+                continue
+            raise RuntimeError(last)
+
+        candidates = data.get("candidates") or []
+        if not candidates:
+            raise RuntimeError(f"Gemini가 빈 응답을 보냈습니다: {str(data)[:400]}")
+
+        # 잘린 응답을 절대 통과시키지 않는다. 구조화 출력 모드는 상한에 걸려도 JSON을
+        # 닫아버려서 파싱은 성공하고 본문만 문장 중간에서 끊긴다.
+        reason = candidates[0].get("finishReason")
+        if reason not in (None, "STOP"):
+            raise RuntimeError(
+                f"Gemini 응답이 정상 종료되지 않았습니다 (finishReason={reason}). "
+                "본문이 잘렸을 수 있어 중단합니다. MAX_TOKENS이면 config.json의 "
+                "max_output_tokens를 올리세요."
+            )
+
+        text = "".join(
+            p.get("text", "")
+            for p in candidates[0].get("content", {}).get("parts", [])
+        )
+        usage = data.get("usageMetadata", {})
+        return json.loads(text), usage
+
+    raise RuntimeError(last or "Gemini 호출 실패")
