@@ -82,6 +82,65 @@ class ReplaceCards(unittest.TestCase):
         self.assertIn("마커가 없습니다", str(cm.exception))
 
 
+class Coverage(unittest.TestCase):
+    """'6종 1개씩'이 목표라 배치가 어떤 카테고리를 덮었는지 알려준다."""
+
+    def _report(self, cats):
+        import io
+        import contextlib
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            publish.report_coverage(cats)
+        return buf.getvalue()
+
+    def test_full_batch_has_no_warnings(self):
+        out = self._report(list(article.CATEGORIES))
+        self.assertNotIn("빠진 카테고리", out)
+        self.assertNotIn("중복", out)
+
+    def test_reports_missing(self):
+        out = self._report(["정치", "경제"])
+        self.assertIn("빠진 카테고리", out)
+        for cat in ("암호화폐", "스포츠", "세계", "스타트업"):
+            self.assertIn(cat, out)
+
+    def test_reports_duplicates(self):
+        out = self._report(["정치", "정치", "경제"])
+        self.assertIn("중복", out)
+        self.assertIn("정치×2", out)
+
+    def test_empty_batch(self):
+        self.assertIn("없음", self._report([]))
+
+
+class BatchFlags(unittest.TestCase):
+    """draft.py --check 와 publish.py --apply --en 이 흐름을 이어 붙인다."""
+
+    def test_publish_accepts_translate_flag(self):
+        import inspect
+        sig = inspect.signature(publish.do_publish)
+        self.assertIn("translate_too", sig.parameters)
+        self.assertFalse(sig.parameters["translate_too"].default)
+
+    def test_main_maps_en_flag(self):
+        import inspect
+        src = inspect.getsource(publish.main)
+        self.assertIn('translate_too="--en" in args', src)
+
+    def test_draft_check_flag_runs_factcheck(self):
+        import inspect
+        import draft
+        src = inspect.getsource(draft.main)
+        self.assertIn('"--check" in argv', src)
+        self.assertIn("factcheck", src)
+
+    def test_en_flag_is_not_treated_as_a_slug(self):
+        # --로 시작하는 인자는 slug 목록에서 빠져야 한다
+        import inspect
+        src = inspect.getsource(publish.main)
+        self.assertIn('not a.startswith("--")', src)
+
+
 class TemplateDrift(unittest.TestCase):
     """article.py의 nav·footer 템플릿이 실제 사이트와 어긋나지 않았는지.
 

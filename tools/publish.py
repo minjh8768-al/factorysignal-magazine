@@ -3,6 +3,7 @@
 
     py -3 publish.py                    드라이런 — 무엇이 바뀔지만 출력
     py -3 publish.py --apply            _drafts/*.html 전부 발행
+    py -3 publish.py --apply --en        발행 + 영어판까지 한 번에
     py -3 publish.py --apply <slug>...  지정한 초안만 발행
     py -3 publish.py --list             현재 자동발행된 기사 목록
     py -3 publish.py --remove <slug>... 발행 취소 (드라이런)
@@ -99,7 +100,7 @@ def strip_factcheck(text):
     return re.sub(r"<!-- FACTCHECK:START.*?FACTCHECK:END -->\n?", "", text, flags=re.S)
 
 
-def do_publish(slugs, apply_changes):
+def do_publish(slugs, apply_changes, translate_too=False):
     files = sorted(os.path.basename(p) for p in glob.glob(os.path.join(DRAFTS, "*.html")))
     if slugs:
         files = [f for f in files if any(s in f for s in slugs)]
@@ -139,8 +140,39 @@ def do_publish(slugs, apply_changes):
         os.remove(src)
     rows, changed = rebuild_index(True)
     print(f"\n발행 완료 {len(planned)}건. 인덱스 자동카드 {len(rows)}개.")
-    print("git push 하면 사이트에 반영됩니다.")
+    report_coverage([m["category"] for _, _, _, _, m, _ in planned])
+
+    if translate_too:
+        # 영어판은 Gemini를 쓰지만 본문만 번역하므로 편당 1~2천 토큰이다.
+        import translate
+        print("\n" + "=" * 82)
+        print("영어판 생성")
+        cfg = translate.load_config()
+        slugs = [slug for _, _, slug, _, _, _ in planned]
+        results = [translate.one(cfg, s) for s in slugs]
+        failed = [r["slug"] for r in results if "error" in r]
+        if failed:
+            print(f"\n영어판 실패 {len(failed)}건: {', '.join(failed)}")
+            print("py -3 translate.py <slug> 로 개별 재시도할 수 있습니다.")
+
+    print("\ngit push 하면 사이트에 반영됩니다.")
     return 0
+
+
+def report_coverage(categories):
+    """이 배치가 6개 카테고리를 어떻게 덮었는지. '6종 1개씩'이 목표일 때 쓴다."""
+    counts = {}
+    for c in categories:
+        counts[c] = counts.get(c, 0) + 1
+    filled = [f"{c}×{n}" if n > 1 else c for c, n in
+              ((c, counts.get(c, 0)) for c in article.CATEGORIES) if n]
+    missing = [c for c in article.CATEGORIES if not counts.get(c)]
+    dup = [c for c, n in counts.items() if n > 1]
+    print(f"  이번 배치: {', '.join(filled) or '없음'}")
+    if missing:
+        print(f"  빠진 카테고리: {', '.join(missing)}")
+    if dup:
+        print(f"  중복: {', '.join(dup)} — 6종 1개씩이 목표면 확인하세요")
 
 
 def do_remove(slugs, apply_changes):
@@ -205,7 +237,7 @@ def main(argv):
         return do_list()
     if remove:
         return do_remove(slugs, apply_changes)
-    return do_publish(slugs, apply_changes)
+    return do_publish(slugs, apply_changes, translate_too="--en" in args)
 
 
 if __name__ == "__main__":

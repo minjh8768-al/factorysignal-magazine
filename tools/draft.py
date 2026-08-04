@@ -3,6 +3,12 @@
 
     py -3 draft.py https://youtu.be/xxxxxxxxxxx
     py -3 draft.py <url1> <url2> <url3> ...      여러 개를 동시에 처리
+    py -3 draft.py <url1> ... <url6> --check     초안 + 자동 대조까지 한 번에
+
+6종을 한 배치로 올리는 흐름은 두 명령이다. 가운데에 사람 검수가 들어가기 때문이다.
+
+    py -3 draft.py <url1> ... <url6> --check     생성 + 대조   (여기서 검수)
+    py -3 publish.py --apply --en                발행 + 영어판
 
 _drafts/YYYY-MM-DD-<slug>.html 을 만든다. articles/ 는 건드리지 않는다.
 브라우저로 그 파일을 열어 검수한 뒤 발행한다.
@@ -130,11 +136,21 @@ def main(argv):
     if bad:
         print("실패한 건은 그냥 다시 실행하면 대개 됩니다 "
               "(태그 짝 검사에 걸리는 경우가 있습니다).")
-    if ok:
+    if ok and "--check" in argv:
+        # 이어서 자동 대조까지 한 번에. Gemini를 쓰지 않으므로 한도와 무관하다.
+        import factcheck
+        print("\n" + "=" * 82)
+        print("자동 대조 (위키백과 · 네이버 · Google News)")
+        for r in ok:
+            factcheck.check_file(cfg, r["path"], write=True)
+        print("\n" + "=" * 82)
+        print("검수하세요:  run_preview.bat   ->  _drafts/ 의 !! · ?? 항목부터")
+        print("발행+영어판: py -3 publish.py --apply --en")
+    elif ok:
         print("\n다음 단계:")
-        print("  py -3 factcheck.py --write   네이버 뉴스로 고유명사·수치 대조")
-        print("  run_preview.bat              브라우저로 검수")
-        print("  py -3 publish.py --apply     발행")
+        print("  py -3 factcheck.py --write        네이버·위키로 대조 (--check로 한 번에 가능)")
+        print("  run_preview.bat                   브라우저로 검수")
+        print("  py -3 publish.py --apply --en     발행 + 영어판")
     return 0 if ok else 1
 
 
