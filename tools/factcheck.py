@@ -51,11 +51,18 @@ NOT_A_NAME = frozenset((
     "미국", "중국", "일본", "한국", "시장", "기업", "회사", "대표",
 ))
 
-# 소속 접두어는 2자 이상만 허용한다. 0자를 허용하면 "유일하게 반대표"에서 "반"+"대표"로
-# 쪼개져 사람 이름이 아닌 것을 잡는다. 뒤에 오는 조사(의원'만이')는 그냥 둔다.
-# 소속에 공백을 허용한다. 없으면 "파월 연준 의장"이 잡히지 않는다.
+# 이름이 3~4자인데 조사로 끝나면 사람 이름이 아니다. 실측에서 "구조는 마레스카 감독",
+# "밀림으로 본회의장"이 인물로 잡혔다. 은/이/가는 실제 이름 끝에도 오므로(한지은,
+# 박준이) 제외 목록에 넣지 않는다.
+NAME_TAIL_PARTICLES = ("는", "로", "를", "을", "의", "과", "와", "에", "서", "도", "만")
+
+# (?<![가-힣]) 로 왼쪽 경계를 준다. 없으면 긴 단어의 꼬리를 이름으로 문다 —
+# "더불어민주당"에서 "어민주당", "코인베이스"에서 "인베이스",
+# "과르디올라"에서 "르디올라"가 잡혔다.
+# 소속 접두어는 2자 이상만 허용한다. 0자를 허용하면 "유일하게 반대표"가 "반"+"대표"로
+# 쪼개진다. 소속에 공백을 허용하는 이유는 "파월 연준 의장"을 잡기 위해서다.
 RE_PERSON = re.compile(
-    r"([가-힣]{2,4})\s+((?:[가-힣]{2,10}\s?)?(?:%s))" % "|".join(TITLES))
+    r"(?<![가-힣])([가-힣]{2,4})\s+((?:[가-힣]{2,10}\s?)?(?:%s))" % "|".join(TITLES))
 RE_DATE = re.compile(r"\d{4}년\s*\d{1,2}월\s*\d{1,2}일|\d{1,2}월\s*\d{1,2}일|\d{4}년")
 RE_NUMBER = re.compile(
     r"\d[\d,]*(?:\.\d+)?\s*(?:%|퍼센트|표|명|억 원|억원|조 원|조원|포인트|석)")
@@ -92,6 +99,44 @@ def context_query(text, start, end, written, window=45):
     return " ".join(words[:3] + [written]) if words else written
 
 
+# 본문에 반복되는 핵심 용어. 4자 이상 한글 덩어리 중 여러 번 나오는 것만 본다.
+# 흔한 말(대통령·국회의원)은 뉴스 건수가 수만~수백만이라 자동으로 통과하고, 오타는
+# 건수가 급격히 낮다. 실측: 보완수사권 33,227건 vs 보안수사권 512건.
+RE_TERM = re.compile(r"[가-힣]{4,10}")
+TERM_MIN_REPEAT = 2      # 이만큼 반복되는 말만 핵심 용어로 본다
+TERM_MAX_CHECKS = 6      # API 호출을 아끼려 빈도 상위 몇 개만
+TERM_PLENTY = 2000       # 이보다 적으면 오타를 의심한다
+
+# 조사·어미가 붙은 말은 명사가 아니라 검사할 값이 없다. 실측에서 "것입니다"(230만건),
+# "개정안을", "부회장은"까지 조회해 API를 낭비했고, "요소부터"(2591건)는 오탐이 났다.
+TERM_TAILS = ("입니다", "습니다", "했습니다", "하고", "하는", "했다", "한다", "라고",
+              "이라고", "에서는", "부터", "까지", "으로", "에서", "라며", "면서",
+              "은", "는", "을", "를", "이", "가", "의", "에", "도", "만", "과", "와")
+
+
+def key_terms(text):
+    """대조할 핵심 용어를 빈도순으로 고른다. 조사·어미로 끝나는 말은 뺀다."""
+    counts = {}
+    for w in RE_TERM.findall(text):
+        if w.endswith(TERM_TAILS):
+            continue
+        counts[w] = counts.get(w, 0) + 1
+    picked = [(n, w) for w, n in counts.items() if n >= TERM_MIN_REPEAT]
+    picked.sort(reverse=True)
+    return [w for _, w in picked[:TERM_MAX_CHECKS]]
+
+
+def check_term(term):
+    """핵심 용어의 뉴스 건수를 본다. 오타는 건수가 확연히 낮다."""
+    total, payload = naver.search(cfg_holder["cfg"], f'"{term}"', display=2)
+    if total is None:
+        return "ER", "조회 실패", []
+    if total >= TERM_PLENTY:
+        return "OK", f"{total}건", []
+    return "!!", f"{total}건뿐 — 오타 의심", \
+        [f"· {t[:74]}" for t, _ in (payload or [])[:2]]
+
+
 def extract(text):
     """확인할 항목을 뽑는다. [(종류, 표기, 검색어)]
 
@@ -109,6 +154,8 @@ def extract(text):
         name, title = m.group(1), m.group(2)
         if name in NOT_A_NAME:
             continue
+        if len(name) >= 3 and name[-1] in NAME_TAIL_PARTICLES:
+            continue
         add("인물", f"{name} {title}", (name, title))
     for m in RE_DATE.finditer(text):
         w = m.group(0).strip()
@@ -116,6 +163,8 @@ def extract(text):
     for m in RE_NUMBER.finditer(text):
         w = m.group(0).strip()
         add("수치", w, context_query(text, m.start(), m.end(), w))
+    for term in key_terms(text):
+        add("용어", term, term)
     return items
 
 
@@ -211,6 +260,8 @@ def check_file(cfg, path, write):
     for kind, written, query in items:
         if kind == "인물":
             tag, note, evidence = check_person(*query)
+        elif kind == "용어":
+            tag, note, evidence = check_term(query)
         else:
             tag, note, evidence = check_context(kind, written, query)
 

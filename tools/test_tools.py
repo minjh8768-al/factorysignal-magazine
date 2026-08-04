@@ -127,6 +127,37 @@ class Extract(unittest.TestCase):
         got = [w for k, w, _ in factcheck.extract("3개 항목과 5가지 이유.") if k == "수치"]
         self.assertEqual(got, [])
 
+    def test_does_not_grab_tail_of_longer_word(self):
+        # 실측: "더불어민주당"에서 "어민주당", "코인베이스"에서 "인베이스",
+        # "과르디올라"에서 "르디올라"가 인물로 잡혀 !!를 남발했다
+        for text, wrong in [
+            ("더불어민주당 김승원 의원이 발언했다.", "어민주당"),
+            ("코인베이스 부회장은 낙관했다.", "인베이스"),
+            ("과르디올라 감독이 떠난 뒤", "르디올라"),
+        ]:
+            names = [w.split()[0] for k, w, _ in factcheck.extract(text) if k == "인물"]
+            self.assertNotIn(wrong, names, text)
+
+    def test_still_finds_real_names_in_those_sentences(self):
+        names = [w for k, w, _ in factcheck.extract(
+            "더불어민주당 김승원 의원이 발언했다.") if k == "인물"]
+        self.assertTrue(any("김승원" in n for n in names), names)
+
+    def test_rejects_names_ending_in_particle(self):
+        # "구조는 마레스카 감독", "밀림으로 본회의장"이 인물로 잡혔다
+        for text in ("빌드업 구조는 마레스카 감독의 과제다.",
+                     "몸싸움과 밀림으로 본회의장이 혼란해졌다."):
+            names = [w.split()[0] for k, w, _ in factcheck.extract(text) if k == "인물"]
+            for junk in ("구조는", "밀림으로"):
+                self.assertNotIn(junk, names, text)
+
+    def test_keeps_names_ending_in_eun_or_i(self):
+        # 은·이는 실제 이름 끝에도 온다 (한지은, 박준이)
+        for name in ("한지은", "박준이"):
+            names = [w.split()[0] for k, w, _ in
+                     factcheck.extract(f"{name} 의원이 말했다.") if k == "인물"]
+            self.assertIn(name, names)
+
     def test_deduplicates(self):
         got = factcheck.extract("곽상언 의원. 다시 곽상언 의원.")
         self.assertEqual(len([1 for k, w, _ in got if w == "곽상언 의원"]), 1)
@@ -233,6 +264,34 @@ class NaverClean(unittest.TestCase):
         total, msg = naver.search({}, "테스트")
         self.assertIsNone(total)
         self.assertIn("naver_client_id", msg)
+
+
+class KeyTerms(unittest.TestCase):
+    """핵심 용어 오타를 뉴스 건수로 잡는다.
+    실측: 보완수사권 33,227건 vs 보안수사권 512건. 인물·날짜·수치가 아닌
+    일반명사 오타는 다른 검사로는 잡히지 않는다."""
+
+    TEXT = ('보안수사권 폐지 논란. 보안수사권 관련 국민의힘 반발. '
+            '국민의힘 필리버스터. 필리버스터 대치. '
+            '것입니다 것입니다. 개정안을 개정안을. 부회장은 부회장은.')
+
+    def test_picks_repeated_nouns(self):
+        got = factcheck.key_terms(self.TEXT)
+        self.assertIn('보안수사권', got)
+        self.assertIn('필리버스터', got)
+
+    def test_drops_conjugated_and_particle_forms(self):
+        # API 호출을 낭비하고 오탐을 만든다
+        got = factcheck.key_terms(self.TEXT)
+        for junk in ('것입니다', '개정안을', '부회장은'):
+            self.assertNotIn(junk, got)
+
+    def test_ignores_words_appearing_once(self):
+        self.assertEqual(factcheck.key_terms('보완수사권 폐지 논란이 있었다.'), [])
+
+    def test_caps_number_of_checks(self):
+        many = ' '.join(f'용어{i}단어 용어{i}단어' for i in range(20))
+        self.assertLessEqual(len(factcheck.key_terms(many)), factcheck.TERM_MAX_CHECKS)
 
 
 if __name__ == "__main__":

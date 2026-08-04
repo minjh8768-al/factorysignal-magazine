@@ -74,7 +74,17 @@ def make_draft(cfg, url, today):
 
         fields["slug"] = article.clean_slug(fields["slug"])
         fields["source_title"] = youtube.source_title(meta)
-        html_text = article.render(fields, url)   # 카테고리·태그·잘림 검증 포함
+        try:
+            html_text = article.render(fields, url)   # 카테고리·태그·잘림 검증 포함
+        except ValueError as e:
+            # 무료 한도가 하루 20회라 실패한 요청도 헛되지 않게 원본을 남긴다.
+            # 다시 부르지 않고 무엇이 어긋났는지 볼 수 있다.
+            os.makedirs(DRAFTS, exist_ok=True)
+            dump = os.path.join(DRAFTS, f"{vid}.raw.txt")
+            with open(dump, "w", encoding="utf-8", newline="") as f:
+                f.write(f"검증 실패: {e}\n\n" + json.dumps(fields, ensure_ascii=False,
+                                                        indent=1))
+            raise ValueError(f"{e}\n        원본을 남겼습니다: {dump}")
 
         with _write_lock:
             os.makedirs(DRAFTS, exist_ok=True)
