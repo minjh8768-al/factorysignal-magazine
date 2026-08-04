@@ -4,7 +4,9 @@ import unittest
 
 import collect
 import factcheck
+import gnews
 import naver
+import wiki
 
 
 class Duration(unittest.TestCase):
@@ -75,8 +77,9 @@ class Filter(unittest.TestCase):
 
 class Extract(unittest.TestCase):
     def test_person_with_title(self):
+        # 인물은 위키백과로 따로 확인하므로 (이름, 직함) 튜플을 들고 간다
         got = factcheck.extract("곽상언 의원만이 유일하게 반대표를 던졌다.")
-        self.assertIn(("인물", "곽상언 의원", '"곽상언" 의원'), got)
+        self.assertIn(("인물", "곽상언 의원", ("곽상언", "의원")), got)
 
     def test_person_with_org_title(self):
         got = [w for k, w, _ in factcheck.extract(
@@ -124,6 +127,45 @@ class Verdict(unittest.TestCase):
 
     def test_query_failure_is_distinct(self):
         self.assertEqual(factcheck.verdict("인물", None)[0], "ER")
+
+
+class WikiTitleMatch(unittest.TestCase):
+    """기사가 쓴 직함이 위키백과 첫 문단에 있는지. 판정이 아니라 힌트다."""
+
+    WARSH = ("케빈 맥스웰 워시는 미국의 금융인으로, 2026년부터 미국 중앙은행 "
+             "연방준비제도 의장을 맡고 있다.")
+    KWAK = ("곽상언은 대한민국의 법조인, 정치인이며, 제22대 국회의원이다. "
+            "노무현 대한민국 제16대 대통령의 사위이다.")
+
+    def test_matches_abbreviated_title(self):
+        # 기사는 "연준 의장"으로 줄여 쓰지만 위키백과는 "연방준비제도 의장"이다
+        self.assertTrue(wiki.title_matches(self.WARSH, "연준 의장"))
+        self.assertTrue(wiki.title_matches(self.KWAK, "의원"))
+
+    def test_detects_wrong_title(self):
+        self.assertFalse(wiki.title_matches(self.KWAK, "교수"))
+        self.assertFalse(wiki.title_matches(self.WARSH, "총리"))
+
+    def test_handles_org_prefixed_title(self):
+        self.assertTrue(wiki.title_matches(self.WARSH, "연방준비제도 의장"))
+
+    def test_empty_inputs(self):
+        self.assertFalse(wiki.title_matches("", "의원"))
+        self.assertFalse(wiki.title_matches(self.KWAK, ""))
+
+
+class GnewsParse(unittest.TestCase):
+    def test_clean_strips_tags_and_entities(self):
+        self.assertEqual(gnews._clean("<b>Fed</b> &amp; ECB"), "Fed & ECB")
+
+    def test_known_locales(self):
+        for lang in ("en", "ko"):
+            self.assertIn("hl", gnews.LOCALES[lang])
+
+    def test_unknown_lang_falls_back_to_english(self):
+        # search()가 알 수 없는 언어를 받아도 죽지 않아야 한다
+        self.assertEqual(gnews.LOCALES.get("zz", gnews.LOCALES["en"]),
+                         gnews.LOCALES["en"])
 
 
 class NaverClean(unittest.TestCase):

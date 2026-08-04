@@ -22,7 +22,9 @@ import os
 import re
 import sys
 
+import gnews
 import naver
+import wiki
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -35,9 +37,10 @@ MARK_END = "FACTCHECK:END -->"
 PLENTY = 100
 
 # 직함. "시장"·"선수"는 "주식 시장"·"축구 선수"처럼 일반명사로 걸려 제외했다.
-TITLES = ("교수", "의원", "소장", "평론가", "총장", "사무총장", "장관", "총리",
-          "대통령", "위원장", "청장", "지사", "앵커", "기자", "회장", "부회장",
-          "사장", "감독", "코치", "차관", "실장", "본부장", "대변인", "연구원")
+TITLES = ("교수", "의원", "소장", "평론가", "총장", "사무총장", "장관", "부총리",
+          "총리", "대통령", "위원장", "의장", "청장", "처장", "지사", "앵커", "기자",
+          "회장", "부회장", "사장", "감독", "코치", "차관", "실장", "본부장",
+          "대변인", "연구원", "원장", "이사", "단장")
 
 # 이름 자리에 들어오지만 사람 이름이 아닌 말들. 실제 실행에서 걸러야 했던 것들이다.
 NOT_A_NAME = frozenset((
@@ -50,8 +53,9 @@ NOT_A_NAME = frozenset((
 
 # 소속 접두어는 2자 이상만 허용한다. 0자를 허용하면 "유일하게 반대표"에서 "반"+"대표"로
 # 쪼개져 사람 이름이 아닌 것을 잡는다. 뒤에 오는 조사(의원'만이')는 그냥 둔다.
+# 소속에 공백을 허용한다. 없으면 "파월 연준 의장"이 잡히지 않는다.
 RE_PERSON = re.compile(
-    r"([가-힣]{2,4})\s+((?:[가-힣]{2,10})?(?:%s))" % "|".join(TITLES))
+    r"([가-힣]{2,4})\s+((?:[가-힣]{2,10}\s?)?(?:%s))" % "|".join(TITLES))
 RE_DATE = re.compile(r"\d{4}년\s*\d{1,2}월\s*\d{1,2}일|\d{1,2}월\s*\d{1,2}일|\d{4}년")
 RE_NUMBER = re.compile(
     r"\d[\d,]*(?:\.\d+)?\s*(?:%|퍼센트|표|명|억 원|억원|조 원|조원|포인트|석)")
@@ -89,7 +93,10 @@ def context_query(text, start, end, written, window=45):
 
 
 def extract(text):
-    """확인할 항목을 뽑는다. [(종류, 표기, 검색어)]"""
+    """확인할 항목을 뽑는다. [(종류, 표기, 검색어)]
+
+    인물은 검색어 자리에 (이름, 직함) 튜플을 넣는다. 위키백과로 따로 확인하기 때문이다.
+    """
     items, seen = [], set()
 
     def add(kind, written, query):
@@ -102,7 +109,7 @@ def extract(text):
         name, title = m.group(1), m.group(2)
         if name in NOT_A_NAME:
             continue
-        add("인물", f"{name} {title}", f'"{name}" {title}')
+        add("인물", f"{name} {title}", (name, title))
     for m in RE_DATE.finditer(text):
         w = m.group(0).strip()
         add("날짜", w, context_query(text, m.start(), m.end(), w))
@@ -113,7 +120,7 @@ def extract(text):
 
 
 def verdict(kind, total):
-    """(태그, 설명). 날짜·수치는 건수로 판정하지 않는다."""
+    """뉴스 건수 기반 판정. 날짜·수치는 건수로 판정하지 않는다."""
     if total is None:
         return "ER", "조회 실패"
     if kind != "인물":
@@ -125,6 +132,71 @@ def verdict(kind, total):
     return "OK", f"{total}건"
 
 
+def check_person(name, title):
+    """위키백과 + 뉴스 건수를 합쳐 인물 표기를 본다. (태그, 설명, 근거줄들)
+
+    두 소스를 합치는 이유는 각각 다른 곳에서 틀리기 때문이다. 실측:
+      곽상언  위키 있음               -> 실존
+      곽상원  위키 없음 + 뉴스 67건    -> 오기 (잡아야 할 것)
+      정광재  위키 없음 + 뉴스 789건   -> 실존. 위키만 보면 오탐이 난다
+      정희용  위키 있음, 첫 문단에 '사무총장' 없음 -> 실존. 위키 첫 문단이 낡았을 뿐
+      이석현  위키가 동명이인 안내 페이지 -> 위키로는 판정 불가
+    그래서 '위키에 없고 뉴스도 얇을 때'만 오기로 의심한다. 직함 불일치는 참고 메모로만
+    남기고 확인 대상으로 세지 않는다.
+    """
+    extract_ko, err = wiki.lookup(name, "ko")
+    total, payload = naver.search(cfg_holder["cfg"], f'"{name}" {title}', display=2)
+    news = f"뉴스 {total}건" if total is not None else "뉴스 조회 실패"
+
+    if err:
+        # 위키가 막히면 뉴스 건수만으로 판단한다
+        tag, note = verdict("인물", total)
+        return tag, f"{note} (위키백과 조회 실패)", \
+            [f"· {t[:74]}" for t, _ in (payload or [])[:2]] if total else []
+
+    if extract_ko and not wiki.is_disambiguation(extract_ko):
+        snippet = extract_ko[:150]
+        if wiki.title_matches(extract_ko, title):
+            return "OK", f"위키백과 문서·직함 일치 · {news}", [snippet]
+        return "OK", f"위키백과 문서 있음 · {news} · 직함은 확인 권장", \
+            [snippet, f"기사가 쓴 직함: {title} (위키 첫 문단에 없음 — 최근 직책일 수 있음)"]
+
+    # 위키에 없거나 동명이인 페이지 -> 뉴스 건수로 판단
+    where = "동명이인 페이지" if extract_ko else "위키백과 문서 없음"
+    if total is None:
+        return "ER", f"{where} · 뉴스 조회 실패", []
+    if total >= PLENTY:
+        return "OK", f"{where}이지만 {news} — 실존으로 봄", []
+    hints = [t for t in wiki.search(name, "ko") if t != name][:3]
+    lines = [f"· {t[:74]}" for t, _ in (payload or [])[:2]]
+    if hints:
+        lines.append(f"비슷한 표제어: {', '.join(hints)}")
+    return "!!", f"{where} + {news}뿐 — 오기 의심", lines
+
+
+def check_context(kind, written, query):
+    """날짜·수치를 뉴스로 대조한다. 국내 근거가 없으면 Google News로 넘어간다."""
+    total, payload = naver.search(cfg_holder["cfg"], query, display=2)
+    if total:
+        tag, note = verdict(kind, total)
+        return tag, note, [f"검색: {query}"] + \
+            [f"· {t[:74]}\n  {d[:74]}" for t, d in payload[:2]]
+
+    # 국내 보도가 없으면 해외 사안일 수 있다
+    g_total, g_payload = gnews.search(query, lang="ko", limit=2)
+    if g_total is None:
+        first = payload if isinstance(payload, str) else "국내 근거 없음"
+        return "??", f"근거 없음 ({first})", [f"검색: {query}"]
+    if not g_total:
+        return "??", "네이버·Google News 모두 근거 없음 — 직접 확인", [f"검색: {query}"]
+    return "??", f"Google News {g_total}건 — 아래 기사와 대조", \
+        [f"검색: {query} (Google News)"] + \
+        [f"· {t[:74]}  ({s})" for t, s in g_payload[:2]]
+
+
+cfg_holder = {"cfg": {}}
+
+
 def check_file(cfg, path, write):
     text, raw = body_text(path)
     name = os.path.basename(path)
@@ -134,23 +206,21 @@ def check_file(cfg, path, write):
     items = extract(text)
     print(f"\n{'=' * 82}\n[{name}]  확인 항목 {len(items)}개")
 
+    cfg_holder["cfg"] = cfg
     lines, need_check = [], 0
     for kind, written, query in items:
-        total, payload = naver.search(cfg, query, display=2)
-        tag, note = verdict(kind, total)
+        if kind == "인물":
+            tag, note, evidence = check_person(*query)
+        else:
+            tag, note, evidence = check_context(kind, written, query)
+
         print(f"  {tag:2} [{kind}] {written}  — {note}")
         lines.append(f"{tag} [{kind}] {written} — {note}")
-
-        if total is None:                      # payload는 오류 메시지(문자열)
-            print(f"       ! {payload}")
-            need_check += 1
-            continue
         if tag != "OK":
             need_check += 1
-            print(f"       검색: {query}")
-            for title, desc in payload[:2]:
-                print(f"       · {title[:74]}")
-                print(f"         {desc[:74]}")
+        for line in evidence if tag != "OK" else []:
+            for sub in line.split("\n"):
+                print(f"       {sub}")
 
     print(f"\n  확인 필요: {need_check}건 / 전체 {len(items)}건")
 
