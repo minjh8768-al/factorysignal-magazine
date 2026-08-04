@@ -209,7 +209,35 @@ git push
 
 손으로 쓴 기존 카드(`bitcoin-the-perfect-ledger`)는 마커 밖에 있어 건드리지 않는다.
 
-### 6) 내리기
+### 6) 영어판 만들기 (선택)
+
+```
+py -3 tools	ranslate.py                  영어판이 없는 기사 전부
+py -3 tools	ranslate.py fomc             slug 일부로 지정
+py -3 tools	ranslate.py --force fomc     이미 있어도 다시 만든다
+```
+
+`articles/<slug>-en.html`을 만들고 한국어판에 `English` 링크를 붙인다.
+영상을 다시 읽히지 않고 이미 있는 한국어 본문만 번역하므로 **편당 약 2~3천 토큰**이다
+(초안 생성은 11만 토큰). 6편이 65초, 총 1만 4천 토큰이었다.
+
+영어판은 `fs:date`를 심지 않으므로 **목록에 카드가 생기지 않는다.** 한국어판 카드
+하나만 노출되고, 기사 안에서 언어를 바꾼다. 한국어판을 내리면 영어판도 함께 지워진다.
+
+**인용문은 한국어 원문을 그대로 두고 아래에 영어 번역을 붙인다.** 남의 발언이라
+원문을 지우면 독자가 번역을 검증할 수 없다.
+
+```html
+<blockquote>정광재 동연정치연구소장은 "범죄자들은 …"라고 우려했다.</blockquote>
+<p class="quote-tr">"I am truly worried that an era is coming where …"</p>
+```
+
+번역이 원문 구조를 바꾸면 파일을 만들지 않고 멈춘다. `<h2>`와 `<blockquote>` 개수가
+원문과 같아야 한다. 실측에서 blockquote가 0개인 기사를 번역했더니 13개가 생겼다
+(본문 안 인용부호를 승격시킴). 프롬프트에 개수를 숫자로 박아 넣어 줄였고,
+개수 검사가 최종 방어선이다.
+
+### 7) 내리기
 
 ```
 py -3 tools\publish.py --list                  발행된 기사 목록
@@ -241,7 +269,8 @@ css/  js/          공용 스타일·동작
 tools/
   collect.py       카테고리별 영상 후보 수집 (+ 품질 필터)
   draft.py         유튜브 URL -> 초안 (여러 개 동시 처리)
-  factcheck.py     네이버 뉴스로 인물·날짜·수치 대조
+  factcheck.py     인물·날짜·수치 대조 (위키백과·네이버·Google News)
+  translate.py     한국어 기사 -> 영어판 (<slug>-en.html)
   publish.py       발행 · 발행 취소 · 목록
   article.py       템플릿 조립 · 검증 (순수 함수)
   gemini.py        Gemini 호출

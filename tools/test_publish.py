@@ -81,6 +81,48 @@ class ReplaceCards(unittest.TestCase):
         self.assertIn("마커가 없습니다", str(cm.exception))
 
 
+class EnglishPairs(unittest.TestCase):
+    """영어판은 카드를 만들지 않고, 삭제할 때는 함께 지운다."""
+
+    def test_english_page_has_no_publish_date(self):
+        # publish.published()는 fs:date가 있는 파일만 카드로 만든다.
+        # translate.py는 fs:date를 심지 않으므로 영어판은 카드가 생기지 않는다.
+        import translate
+        ko = {"slug": "x", "category": "정치", "read": "8", "video": "abcdefghijk",
+              "source_title": "SBS", "title": "제목", "description": "설명",
+              "eyebrow": "Politics", "date": "2026-08-03"}
+        en = {"title": "Title", "description": "Desc", "eyebrow": "Politics",
+              "body_html": "<p>Body</p>"}
+        out = translate.render_en(ko, en)
+        self.assertNotIn('name="fs:date"', out)
+        self.assertIn('name="fs:lang" content="en"', out)
+        self.assertIn('<html lang="en">', out)
+
+    def test_english_page_links_back_and_declares_alternate(self):
+        import translate
+        ko = {"slug": "fomc", "category": "경제", "read": "8", "video": "abcdefghijk",
+              "source_title": "KBS", "title": "제목", "description": "설명",
+              "eyebrow": "Market Watch", "date": "2026-08-03"}
+        en = {"title": "Fed holds", "description": "Desc", "eyebrow": "Market Watch",
+              "body_html": "<p>Body</p>"}
+        out = translate.render_en(ko, en)
+        self.assertIn('hreflang="ko" href="fomc.html"', out)
+        self.assertIn('href="fomc.html" class="lang-switch"', out)
+
+    def test_investment_disclaimer_only_for_money_categories(self):
+        import translate
+        base = {"slug": "x", "read": "8", "video": "abcdefghijk", "source_title": "S",
+                "title": "t", "description": "d", "eyebrow": "E", "date": "2026-08-03"}
+        en = {"title": "T", "description": "D", "eyebrow": "E",
+              "body_html": "<p>Body</p>"}
+        for cat in ("경제", "암호화폐"):
+            self.assertIn("not investment advice",
+                          translate.render_en(dict(base, category=cat), en))
+        for cat in ("정치", "스포츠", "세계", "스타트업"):
+            self.assertNotIn("not investment advice",
+                             translate.render_en(dict(base, category=cat), en))
+
+
 class StripFactcheck(unittest.TestCase):
     """검수 메모는 발행본에 남지 않아야 한다."""
 

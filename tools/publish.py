@@ -165,10 +165,18 @@ def do_remove(slugs, apply_changes):
         print(f"\n드라이런입니다. {len(targets)}건 삭제 예정. 실제로 하려면 --apply 추가")
         return 0
 
+    removed = 0
     for slug in targets:
         os.remove(os.path.join(ARTICLES, slug + ".html"))
+        removed += 1
+        # 영어판도 같이 지운다. 남기면 한국어판을 가리키는 고아 페이지가 된다.
+        en = os.path.join(ARTICLES, slug + "-en.html")
+        if os.path.exists(en):
+            os.remove(en)
+            removed += 1
+            print(f"  영어판도 삭제: {slug}-en.html")
     left, _ = rebuild_index(True)
-    print(f"\n삭제 완료 {len(targets)}건. 남은 자동카드 {len(left)}개.")
+    print(f"\n삭제 완료 {removed}건. 남은 자동카드 {len(left)}개.")
     print("git push 하면 사이트에서 사라집니다.")
     return 0
 

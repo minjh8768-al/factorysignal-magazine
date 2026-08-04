@@ -48,6 +48,10 @@ PROMPT = f"""너는 한국어 시사 매거진 Factory Magazine의 기자다.
   "평가가 나온다"처럼 주체를 숨긴 표현을 쓰지 마라.
   대신 "A는 ...라고 우려했다", "B는 ...라고 평가했다"로 쓴다.
 - 특정 정당·인물을 편드는 논평을 쓰지 마라. 누가 무엇을 주장했는지만 서술한다.
+- 영상이 한국어가 아니면, 인용은 원문과 번역을 나란히 쓴다. 원문 언어 코드를 lang에 넣는다.
+  <blockquote lang="en">We are not going to change the 2 percent target.</blockquote>
+  <p class="quote-tr">"2% 목표를 바꾸지 않겠습니다."</p>
+  원문을 함께 실으면 독자가 번역을 검증할 수 있다. 한국어 영상이면 blockquote 하나만 쓴다.
 - blockquote에는 화자가 실제로 한 발언만 그대로 옮긴다. 요약문을 인용문처럼 만들지 마라.
   인용문은 2~3문장 이내로 짧게 자른다. 인용문 안에 화자 이름이나 "…라고 말했다" 같은
   서술을 넣지 마라. 발언 본문만 넣고, 누가 말했는지는 인용문 바로 앞 단락에서 밝힌다.
@@ -69,6 +73,7 @@ PROMPT = f"""너는 한국어 시사 매거진 Factory Magazine의 기자다.
 - read_minutes: 본문 분량에 맞는 읽기 시간 (정수, 3~10)
 - body_html: 본문. 아래 태그만 쓴다.
   <p> 단락, <h2> 소제목, <blockquote> 직접 인용, <ul><li> 목록, <strong> 강조
+  외국어 인용에는 <blockquote lang="en"> 과 <p class="quote-tr"> 를 쓴다.
   구조: 도입 단락 -> <h2> 소제목으로 나눈 3~6개 섹션 -> 각 섹션에 단락 1~3개.
   적절한 곳에 <blockquote> 1~2개를 넣는다. 마지막은 정리 섹션.
   <h1>, <div>, <script>, <style>, <img>, 인라인 style 속성은 쓰지 마라.
