@@ -333,6 +333,56 @@ class SayIsCrashProof(unittest.TestCase):
             sys.stdout = old
 
 
+class Sanity(unittest.TestCase):
+    """자동 발행의 유일한 게이트. 이미 교정된 기사 6편에서 오탐 0건으로 측정됐다."""
+
+    # 문장이 서로 달라야 한다. 같은 문장을 반복하면 중복 검사에 스스로 걸린다.
+    GOOD = "<p>" + " ".join(
+        f"국회는 {i}차 회의에서 형사소송법 개정안의 세부 조항을 두고 여야가 공방을 벌였다."
+        for i in range(1, 19)) + "</p>"
+
+    def test_clean_body_passes(self):
+        import sanity
+        self.assertEqual(sanity.blocking(sanity.check(self.GOOD)), [])
+
+    def test_too_short_blocks(self):
+        import sanity
+        self.assertTrue(sanity.blocking(sanity.check("<p>짧다.</p>")))
+
+    def test_llm_boilerplate_blocks(self):
+        import sanity
+        for bad in ("죄송하지만 영상을 볼 수 없습니다.", "As an AI language model, I cannot"):
+            body = self.GOOD + f"<p>{bad}</p>"
+            self.assertTrue(sanity.blocking(sanity.check(body)), bad)
+
+    def test_repeated_sentence_blocks(self):
+        import sanity
+        dup = "이 문장은 두 번 나오는 아주 긴 중복 문장이다."
+        body = self.GOOD.replace("</p>", dup + " " + dup + "</p>")
+        self.assertTrue(sanity.blocking(sanity.check(body)))
+
+    def test_absurd_percentage_blocks(self):
+        import sanity
+        self.assertTrue(sanity.blocking(sanity.check(self.GOOD + "<p>지지율 45000% 상승</p>")))
+
+    def test_normal_percentage_passes(self):
+        import sanity
+        self.assertEqual(
+            sanity.blocking(sanity.check(self.GOOD + "<p>득표율 71.65%, 증가율 250%</p>")), [])
+
+    def test_odd_year_is_hint_not_blocker(self):
+        import sanity
+        issues = sanity.check(self.GOOD + "<p>1810년의 일이다.</p>")
+        self.assertTrue(any(k == "연도" for _, k, _ in issues))
+        self.assertEqual(sanity.blocking(issues), [])   # 역사 언급일 수 있어 막지 않는다
+
+    def test_cannot_catch_wrong_incumbent(self):
+        """원리적 한계를 문서화한다. 현직이 아닌 사람을 현직으로 쓴 오류는 못 잡는다."""
+        import sanity
+        body = self.GOOD + "<p>제롬 파월 연준 의장은 2% 목표를 고수한다고 밝혔다.</p>"
+        self.assertEqual(sanity.blocking(sanity.check(body)), [])
+
+
 class KeyTerms(unittest.TestCase):
     """핵심 용어 오타를 뉴스 건수로 잡는다.
     실측: 보완수사권 33,227건 vs 보안수사권 512건. 인물·날짜·수치가 아닌
@@ -353,8 +403,27 @@ class KeyTerms(unittest.TestCase):
         for junk in ('것입니다', '개정안을', '부회장은'):
             self.assertNotIn(junk, got)
 
-    def test_ignores_words_appearing_once(self):
-        self.assertEqual(factcheck.key_terms('보완수사권 폐지 논란이 있었다.'), [])
+    def test_includes_words_appearing_once(self):
+        # 1회만 나오는 말도 본다. "이산화화황"이 딱 한 번 나와서 반복 조건에 걸러졌고
+        # 사람이 읽다가 겨우 발견했다.
+        self.assertIn("보완수사권", factcheck.key_terms("보완수사권 폐지 논란이 있었다."))
+        self.assertIn("이산화화황",
+                      factcheck.key_terms("이산화화황과 황화수소가 섞인 유독가스."))
+
+    def test_strips_attached_particle_instead_of_dropping(self):
+        # "이산화화황과"를 항목째로 버려서 오타를 놓쳤다
+        self.assertEqual(factcheck.strip_tail("이산화화황과"), "이산화화황")
+        self.assertEqual(factcheck.strip_tail("보완수사권은"), "보완수사권")
+
+    def test_does_not_strip_when_remainder_too_short(self):
+        # "선거결과"에서 과를 떼면 "선거결"이라는 없는 말이 되어 오탐이 난다
+        self.assertEqual(factcheck.strip_tail("선거결과"), "선거결과")
+
+    def test_drops_conjugated_verb_forms(self):
+        # 실측: "전환되었음", "우상향하며", "감수하더라", "게임이거든요"가 용어로 잡혔다
+        got = factcheck.key_terms(
+            "전환되었음 우상향하며 감수하더라 게임이거든요 증가했으나 중요하다고")
+        self.assertEqual(got, [])
 
     def test_caps_number_of_checks(self):
         many = ' '.join(f'용어{i}단어 용어{i}단어' for i in range(20))

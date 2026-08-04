@@ -144,27 +144,41 @@ def main(argv):
         return 1
 
     log("자동 대조 시작")
+    clean, held = [], []
     for r in made:
+        name = os.path.basename(r["path"])
         try:
             buf = io.StringIO()
             old, sys.stdout = sys.stdout, buf
             try:
-                factcheck.check_file(cfg, r["path"], write=True)
+                blockers = factcheck.check_file(cfg, r["path"], write=True) or []
             finally:
                 sys.stdout = old
-            flagged = [l.strip() for l in buf.getvalue().split("\n")
-                       if l.strip().startswith(("!!", "ER"))]
-            name = os.path.basename(r["path"])
-            log(f"  {name}: 확인 필요 {len(flagged)}건")
-            for l in flagged:
-                log(f"      {l}")
+            hints = [l.strip() for l in buf.getvalue().split("\n")
+                     if l.strip().startswith(("??", "ER"))]
+            log(f"  {name}: 차단 {len(blockers)}건 / 확인권장 {len(hints)}건")
+            for b in blockers:
+                log(f"      ⛔ {b}")
+            (held if blockers else clean).append(r)
         except Exception as e:
-            log(f"  대조 실패 {os.path.basename(r['path'])}: {e}")
+            log(f"  대조 실패 {name}: {e} — 안전하게 보류합니다")
+            held.append(r)
 
     if do_publish:
-        log("발행 + 영어판 (검수를 건너뜁니다)")
-        import publish
-        publish.do_publish([], True, translate_too=True)
+        # 게이트: sanity 검사에서 '!!'가 하나라도 나온 기사는 발행하지 않고 보류한다.
+        # 이 검사는 이미 교정된 기사 6편에서 오탐 0건으로 측정됐다.
+        # 용어·인물 건수 검사는 같은 조건에서 '!!'를 15건 내므로 게이트로 쓰지 않는다.
+        log(f"발행 대상 {len(clean)}편 / 보류 {len(held)}편")
+        for r in held:
+            log(f"  보류: {os.path.basename(r['path'])} — _drafts/에 남겨 둡니다")
+        if clean:
+            import publish
+            slugs = [re.sub(r"^\d{4}-\d{2}-\d{2}-", "", os.path.splitext(
+                os.path.basename(r["path"]))[0]) for r in clean]
+            publish.do_publish(slugs, True, translate_too=True)
+            log("발행·영어판 완료. git push는 별도로 실행됩니다.")
+        else:
+            log("모두 보류되어 발행하지 않았습니다.")
     else:
         log("발행은 하지 않았습니다. 아침에 확인하세요:")
         log("  run_preview.bat                     초안 읽기 (!! 항목부터)")

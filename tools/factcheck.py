@@ -24,6 +24,7 @@ import sys
 
 import gnews
 import naver
+import sanity
 import wiki
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -103,37 +104,78 @@ def context_query(text, start, end, written, window=45):
 # 흔한 말(대통령·국회의원)은 뉴스 건수가 수만~수백만이라 자동으로 통과하고, 오타는
 # 건수가 급격히 낮다. 실측: 보완수사권 33,227건 vs 보안수사권 512건.
 RE_TERM = re.compile(r"[가-힣]{4,10}")
-TERM_MIN_REPEAT = 2      # 이만큼 반복되는 말만 핵심 용어로 본다
-TERM_MAX_CHECKS = 6      # API 호출을 아끼려 빈도 상위 몇 개만
+# 1회만 나오는 말도 본다. "이산화화황"이 딱 한 번 나와서 반복 조건에 걸러졌고,
+# 사람이 읽다가 겨우 발견했다. 네이버 검색은 하루 2만 5천 건이라 여유가 있다.
+TERM_MIN_REPEAT = 1
+TERM_MAX_CHECKS = 8     # 긴 것부터 본다 — 길수록 고유한 도메인 용어이고 오타가 드러난다
 TERM_PLENTY = 2000       # 이보다 적으면 오타를 의심한다
 
 # 조사·어미가 붙은 말은 명사가 아니라 검사할 값이 없다. 실측에서 "것입니다"(230만건),
 # "개정안을", "부회장은"까지 조회해 API를 낭비했고, "요소부터"(2591건)는 오탐이 났다.
-TERM_TAILS = ("입니다", "습니다", "했습니다", "하고", "하는", "했다", "한다", "라고",
-              "이라고", "에서는", "부터", "까지", "으로", "에서", "라며", "면서",
-              "은", "는", "을", "를", "이", "가", "의", "에", "도", "만", "과", "와")
+TERM_TAILS = (
+    # 종결·연결 어미. 실측에서 "전환되었음", "우상향하며", "감수하더라",
+    # "게임이거든요" 같은 활용형이 용어로 잡혀 API를 낭비하고 오탐을 만들었다.
+    "입니다", "습니다", "했습니다", "거든요", "하더라", "되었음", "하였다", "이라고",
+    "하면서", "되었다", "해졌다", "했으나", "하였고", "졌습니다", "집니다",
+    "다고", "아야", "어야", "겠다", "으나", "이며", "되며", "되어", "이고",
+    "하고", "하는", "했다", "한다", "라고", "에서는", "부터", "까지", "으로",
+    "에서", "라며", "면서", "하며", "하여", "하다", "되다", "있다", "없다", "이다",
+    "은", "는", "을", "를", "이", "가", "의", "에", "도", "만", "과", "와")
+
+
+def strip_tail(word):
+    """붙은 조사·어미를 떼어 명사만 남긴다. 못 떼면 원형을 돌려준다.
+
+    항목째로 버리면 안 된다. "이산화화황과"를 버려서 오타를 놓쳤다.
+    긴 어미부터 떼고, 남은 것이 4자 미만이면 볼 가치가 없다고 본다.
+    """
+    for tail in sorted(TERM_TAILS, key=len, reverse=True):
+        if word.endswith(tail) and len(word) - len(tail) >= 4:
+            return word[: -len(tail)]
+    return word
 
 
 def key_terms(text):
-    """대조할 핵심 용어를 빈도순으로 고른다. 조사·어미로 끝나는 말은 뺀다."""
+    """대조할 핵심 용어를 고른다. 붙은 조사는 떼고, 어미만 남는 말은 버린다."""
     counts = {}
     for w in RE_TERM.findall(text):
-        if w.endswith(TERM_TAILS):
+        w = strip_tail(w)
+        if len(w) < 4 or w.endswith(TERM_TAILS):
             continue
         counts[w] = counts.get(w, 0) + 1
-    picked = [(n, w) for w, n in counts.items() if n >= TERM_MIN_REPEAT]
+    # 긴 것 우선, 같은 길이면 자주 나온 것 우선
+    picked = [(len(w), n, w) for w, n in counts.items() if n >= TERM_MIN_REPEAT]
     picked.sort(reverse=True)
-    return [w for _, w in picked[:TERM_MAX_CHECKS]]
+    return [w for _, _, w in picked[:TERM_MAX_CHECKS]]
+
+
+_last_naver = [0.0]
+
+
+def _naver_pace(min_gap=0.15):
+    """몰아서 부르면 조회 실패가 난다. 실측에서 60회를 연달아 쏘자 ER이 쏟아졌다."""
+    import time
+    gap = time.monotonic() - _last_naver[0]
+    if gap < min_gap:
+        time.sleep(min_gap - gap)
+    _last_naver[0] = time.monotonic()
 
 
 def check_term(term):
-    """핵심 용어의 뉴스 건수를 본다. 오타는 건수가 확연히 낮다."""
+    """핵심 용어의 뉴스 건수를 본다.
+
+    판정은 힌트일 뿐이고 자동 발행을 막는 근거로 쓰지 않는다(?? 로 낸다).
+    이미 교정된 기사 4편에 '!!' 기준으로 적용해 보니 15건이 걸렸다. 정당한 고유명사가
+    니치해서 건수가 낮은 경우(애드쉴드 66건, 베이스벤처스 574건)와 진짜 오타
+    (보안수사권 512건)를 건수만으로는 구분할 수 없다.
+    """
+    _naver_pace()
     total, payload = naver.search(cfg_holder["cfg"], f'"{term}"', display=2)
     if total is None:
         return "ER", "조회 실패", []
     if total >= TERM_PLENTY:
         return "OK", f"{total}건", []
-    return "!!", f"{total}건뿐 — 오타 의심", \
+    return "??", f"{total}건뿐 — 오타인지 니치한 고유명사인지 확인", \
         [f"· {t[:74]}" for t, _ in (payload or [])[:2]]
 
 
@@ -257,6 +299,18 @@ def check_file(cfg, path, write):
 
     cfg_holder["cfg"] = cfg
     lines, need_check = [], 0
+
+    # API 없는 이상 검사부터. '!!'는 자동 발행을 막는 유일한 근거다.
+    # 이미 교정된 기사 4편에서 오탐 0건으로 측정됐다. 반면 용어·인물 건수 검사는
+    # 같은 조건에서 '!!'를 15건 냈으므로 게이트로 쓰지 않는다.
+    body_html = raw[raw.find("것입니다.</p>"):raw.find('<div class="disclaimer"')]
+    blockers = []
+    for sev, kind, msg in sanity.check(body_html):
+        print(f"  {sev} [{kind}] {msg[:70]}")
+        lines.append(f"{sev} [{kind}] {msg}")
+        need_check += 1
+        if sev == "!!":
+            blockers.append(f"{kind}: {msg}")
     for kind, written, query in items:
         if kind == "인물":
             tag, note, evidence = check_person(*query)
@@ -274,6 +328,8 @@ def check_file(cfg, path, write):
                 print(f"       {sub}")
 
     print(f"\n  확인 필요: {need_check}건 / 전체 {len(items)}건")
+    if blockers:
+        print(f"  ⛔ 발행 차단 {len(blockers)}건 — 사람이 봐야 합니다")
 
     if write:
         block = (MARK_START + "\n     네이버 뉴스 대조. OK=흔한 표기, !!=오기 의심, "
@@ -289,6 +345,7 @@ def check_file(cfg, path, write):
         with open(path, "w", encoding="utf-8", newline="") as f:
             f.write(raw)
         print(f"  → 판정을 {name} 주석으로 기록 (DOCTYPE 바로 뒤)")
+    return blockers
 
 
 def main(argv):
