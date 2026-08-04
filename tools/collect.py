@@ -33,6 +33,20 @@ QUERIES = {
     "스타트업": ["스타트업 대표 인터뷰", "창업 스토리 인터뷰", "EO 스타트업", "티타임즈 스타트업"],
 }
 
+# 영어권 검색어. 국내 유튜브에 쓸 만한 영상이 얇은 카테고리(스포츠·세계)를 메운다.
+# 정치는 국내 정당·국회 사안이라 한국어만 쓴다. 해외 정치 영상은 '세계'로 분류된다.
+EN_QUERIES = {
+    "경제": ["global economy analysis", "central bank policy explained",
+            "inflation outlook analysis"],
+    "암호화폐": ["crypto regulation explained", "bitcoin market analysis",
+               "stablecoin policy"],
+    "스포츠": ["premier league tactical analysis", "champions league review",
+             "mlb analysis breakdown"],
+    "세계": ["geopolitics explained", "world news analysis", "foreign policy briefing"],
+    "스타트업": ["startup founder interview", "venture capital interview",
+               "how they built it startup"],
+}
+
 # 매체 성격에 맞지 않거나 요약할 발언이 없는 영상을 걸러낸다.
 # 아래 목록은 실제 검색 결과를 보고 채운 것이다. 새로 걸러야 할 채널이 보이면 여기에
 # 추가하면 된다 — 이 필터가 collect.py의 유일한 튜닝 지점이다.
@@ -49,6 +63,16 @@ BAD_TITLE = re.compile(
 BAD_CHANNEL = re.compile(
     r"Why Times|스포차|스작|페드로|대단부자|신신 ?TV|24H"
     r"|뉴스 ?247|한국시사TV|뉴스브리핑TV|누리이슈TV")
+
+# 영어권 낚시성 제목. 실측에서 "TOP Economist ISSUES URGENT RECESSION WARNING"이
+# 한국어 필터를 그대로 통과했다.
+BAD_TITLE_EN = re.compile(
+    r"SHOCKING|URGENT|you won'?t believe|MUST WATCH|EXPOSED|DESTROY|INSANE"
+    r"|WARNING|BREAKING|GOES WRONG|GONE WRONG|\bSCAM\b|CRASH INCOMING"
+    r"|price prediction|to the moon|buy now", re.I)
+# 낚시성 제목은 대문자 단어를 연달아 쓴다. 약어(FOMC, ECB, AI)는 걸리지 않게 3개 이상만.
+CAPS_RUN = re.compile(r"(?:\b[A-Z]{3,}\b[^A-Za-z]+){3,}")
+EMOJI_BAIT = re.compile(r"[🚨🔥💥⚠]")
 
 MIN_SEC, MAX_SEC = 240, 1500          # 4~25분. 길면 토큰이 급증한다.
 RECENT = re.compile(r"(시간|일|주) 전")   # 최근성
@@ -116,7 +140,10 @@ def keep(video, loose_recency):
     pattern = RECENT_LOOSE if loose_recency else RECENT
     if not pattern.search(video["published"]):
         return False
-    if BAD_TITLE.search(video["title"]) or BAD_CHANNEL.search(video["channel"]):
+    title = video["title"]
+    if BAD_TITLE.search(title) or BAD_CHANNEL.search(video["channel"]):
+        return False
+    if BAD_TITLE_EN.search(title) or CAPS_RUN.search(title) or EMOJI_BAIT.search(title):
         return False
     return True
 
@@ -127,7 +154,7 @@ def collect(categories, per_category=6):
         loose = cat == "스타트업"
         seen, rows = set(), []
         dropped = 0
-        for query in QUERIES[cat]:
+        for query in QUERIES[cat] + EN_QUERIES.get(cat, []):
             try:
                 videos = search_youtube(query)
             except Exception as e:

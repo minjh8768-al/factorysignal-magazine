@@ -4,6 +4,7 @@ import unittest
 
 import collect
 import factcheck
+import gemini
 import gnews
 import naver
 import wiki
@@ -54,6 +55,29 @@ class Filter(unittest.TestCase):
                      "요동치는 민심 흔들리는 권력 (KBS_2026.07.25.방송)",
                      "[긴급분석] FOMC 금리동결과 출렁이는 국내증시"):
             self.assertTrue(collect.keep(video(title=good), False), good)
+
+    def test_drops_english_clickbait(self):
+        # 실측: "TOP Economist ISSUES URGENT RECESSION WARNING"이 한국어 필터를 통과했다
+        for bad in ("🚨TOP Economist ISSUES URGENT RECESSION WARNING",
+                    "BITCOIN PRICE PREDICTION 2026",
+                    "THIS CHANGES EVERYTHING FOR THE USD MARKET NOW",
+                    "Is this a SCAM? What the data says",
+                    "You won't believe what happened next"):
+            self.assertFalse(collect.keep(video(title=bad, channel="BBC"), False), bad)
+
+    def test_keeps_legitimate_english_title(self):
+        # 약어(FOMC·ECB·BOJ)는 대문자 연속 필터에 걸리지 않아야 한다
+        for good in ("Global Economy & Markets: Why the Rally May Continue",
+                     "FOMC holds rates: what the ECB does next",
+                     "How the ECB and BOJ diverged in 2026",
+                     "Premier League tactical analysis: Arsenal build-up"):
+            self.assertTrue(collect.keep(video(title=good, channel="BBC"), False), good)
+
+    def test_english_queries_only_for_relevant_categories(self):
+        # 정치는 국내 사안이라 영어 검색어를 쓰지 않는다 (해외 정치는 '세계'로 분류)
+        self.assertNotIn("정치", collect.EN_QUERIES)
+        for cat in ("경제", "암호화폐", "스포츠", "세계", "스타트업"):
+            self.assertTrue(collect.EN_QUERIES.get(cat), cat)
 
     def test_drops_too_short_and_too_long(self):
         self.assertFalse(collect.keep(video(length="2:30"), False))
@@ -166,6 +190,37 @@ class GnewsParse(unittest.TestCase):
         # search()가 알 수 없는 언어를 받아도 죽지 않아야 한다
         self.assertEqual(gnews.LOCALES.get("zz", gnews.LOCALES["en"]),
                          gnews.LOCALES["en"])
+
+
+class GeminiKeys(unittest.TestCase):
+    """무료 티어의 병목은 토큰이 아니라 요청 횟수(하루 20회)다.
+    키는 발급이 무료이고 한도가 키마다 별도라 여러 개를 순환한다."""
+
+    def test_single_key(self):
+        self.assertEqual(gemini.api_keys({"gemini_api_key": "A"}), ["A"])
+
+    def test_list_plus_single_without_duplicates(self):
+        self.assertEqual(
+            gemini.api_keys({"gemini_api_keys": ["A", "B"], "gemini_api_key": "A"}),
+            ["A", "B"])
+        self.assertEqual(
+            gemini.api_keys({"gemini_api_keys": ["A"], "gemini_api_key": "B"}),
+            ["A", "B"])
+
+    def test_string_instead_of_list(self):
+        self.assertEqual(gemini.api_keys({"gemini_api_keys": "A"}), ["A"])
+
+    def test_no_key_raises(self):
+        with self.assertRaises(RuntimeError):
+            gemini.api_keys({})
+
+    def test_daily_quota_vs_rate_limit(self):
+        # 하루 한도는 기다려도 안 풀리므로 다음 키로 넘어가야 하고,
+        # 분당 한도는 기다리면 풀리므로 재시도해야 한다
+        self.assertTrue(gemini.is_daily_quota(
+            "Quota exceeded for metric: generate_content_free_tier_requests, limit: 20"))
+        self.assertTrue(gemini.is_daily_quota("GenerateRequestsPerDayPerProject"))
+        self.assertFalse(gemini.is_daily_quota("GenerateRequestsPerMinute"))
 
 
 class NaverClean(unittest.TestCase):

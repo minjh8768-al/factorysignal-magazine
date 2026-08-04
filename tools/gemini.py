@@ -97,6 +97,29 @@ def _retry_delay(message, default):
     return min(int(m.group(1)), 35) if m else default
 
 
+def api_keys(cfg):
+    """설정에서 키 목록을 만든다. 여러 개면 한도 소진 시 다음 키로 넘어간다.
+
+    무료 티어의 실제 병목은 토큰이 아니라 요청 횟수다(gemini-2.5-flash 하루 20회).
+    실측에서 초안 6편을 한 번에 돌리다 4편이 이 한도에 걸렸다. 키는 발급이 무료이고
+    한도가 키마다 별도이므로, 두세 개를 넣으면 하루 처리량이 그만큼 늘어난다.
+    """
+    keys = cfg.get("gemini_api_keys") or []
+    if isinstance(keys, str):
+        keys = [keys]
+    single = cfg.get("gemini_api_key")
+    if single and single not in keys:
+        keys = list(keys) + [single]
+    if not keys:
+        raise RuntimeError("config.json에 gemini_api_key 또는 gemini_api_keys가 없습니다.")
+    return keys
+
+
+def is_daily_quota(body):
+    """분당 속도 제한이 아니라 '하루 한도 소진'인지. 후자면 기다려도 안 풀린다."""
+    return "free_tier_requests" in body or "PerDay" in body
+
+
 def write_article(cfg, youtube_url, timeout=600, retries=3):
     """유튜브 URL을 보고 기사 필드 딕셔너리를 반환한다."""
     payload = {
@@ -111,18 +134,27 @@ def write_article(cfg, youtube_url, timeout=600, retries=3):
             "responseMimeType": "application/json",
             "responseSchema": RESPONSE_SCHEMA,
             # 기본값으로는 본문이 문장 중간에서 잘린다 (사고 토큰이 출력 예산을 함께 쓴다)
-            "maxOutputTokens": cfg.get("max_output_tokens", 32768),
+            "maxOutputTokens": cfg.get("max_output_tokens", 65536),
         },
     }
-    url = ENDPOINT.format(model=cfg["gemini_model"], key=cfg["gemini_api_key"])
-
+    keys = api_keys(cfg)
+    key_index = 0
     last = ""
     for attempt in range(retries):
+        url = ENDPOINT.format(model=cfg["gemini_model"], key=keys[key_index])
         try:
             data = _post(url, payload, timeout)
         except urllib.error.HTTPError as e:
             body = e.read().decode("utf-8", "replace")
             last = f"HTTP {e.code}: {body[:400]}"
+
+            # 하루 한도가 소진된 키는 기다려도 안 풀린다. 다음 키로 넘어간다.
+            if e.code == 429 and is_daily_quota(body) and key_index + 1 < len(keys):
+                key_index += 1
+                print(f"  키 {key_index}의 하루 한도 소진 — 다음 키로 전환 "
+                      f"({key_index + 1}/{len(keys)})")
+                continue
+
             if e.code in (429, 503) and attempt < retries - 1:
                 wait = _retry_delay(body, 10 * (attempt + 1))
                 print(f"  Gemini {e.code} — {wait}초 후 재시도 "
@@ -130,10 +162,13 @@ def write_article(cfg, youtube_url, timeout=600, retries=3):
                 time.sleep(wait)
                 continue
             if e.code == 429:
-                raise RuntimeError(
-                    "Gemini 무료 한도를 다 썼습니다. 잠시 후 다시 시도하거나 "
-                    "config.json의 gemini_model을 바꾸세요.\n" + last
-                )
+                extra = ("하루 요청 한도(무료 티어 20회)를 다 썼습니다. "
+                         "자정(태평양시)에 초기화됩니다.\n"
+                         "config.json에 gemini_api_keys로 키를 여러 개 넣으면 "
+                         "키마다 한도가 따로 적용됩니다."
+                         if is_daily_quota(body) else
+                         "분당 요청 한도에 걸렸습니다. 잠시 후 다시 시도하세요.")
+                raise RuntimeError(extra + "\n" + last)
             raise RuntimeError(last)
         except urllib.error.URLError as e:
             last = f"연결 실패: {e.reason}"

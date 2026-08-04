@@ -1,9 +1,13 @@
 {
   "gemini_api_key": "YOUR_GEMINI_API_KEY",
+  "_gemini_api_keys_주석": "키를 여러 개 넣으면 하루 한도(20회)를 키마다 따로 쓴다",
+  "gemini_api_keys": [
+    "KEY_1_OPTIONAL",
+    "KEY_2_OPTIONAL"
+  ],
   "gemini_model": "gemini-2.5-flash",
   "media_resolution": "MEDIA_RESOLUTION_LOW",
-  "max_output_tokens": 32768,
-
+  "max_output_tokens": 65536,
   "naver_client_id": "YOUR_NAVER_CLIENT_ID",
   "naver_client_secret": "YOUR_NAVER_CLIENT_SECRET"
 }
