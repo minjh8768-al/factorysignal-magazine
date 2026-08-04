@@ -60,10 +60,21 @@ def unique_slug(slug, date):
 
 
 def say(*lines):
+    """출력이 불가능한 환경에서도 죽지 않는다.
+
+    작업 스케줄러로 돌리면 콘솔이 없고, 파이프가 닫히면 flush가
+    OSError(Invalid argument)를 던진다. 실측에서 이 예외가 원래 오류를 덮어썼다.
+    """
     with _print_lock:
         for line in lines:
-            print(line)
-        sys.stdout.flush()
+            try:
+                print(line)
+            except Exception:
+                return
+        try:
+            sys.stdout.flush()
+        except Exception:
+            pass
 
 
 def make_draft(cfg, url, today):

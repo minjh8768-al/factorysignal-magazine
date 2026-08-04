@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """collect.py · factcheck.py · naver.py 단위테스트. 네트워크 없음."""
+import sys
 import unittest
 
 import collect
@@ -278,6 +279,58 @@ class NaverClean(unittest.TestCase):
         total, msg = naver.search({}, "테스트")
         self.assertIsNone(total)
         self.assertIn("naver_client_id", msg)
+
+
+class DailyJob(unittest.TestCase):
+    """작업 스케줄러로 도는 스크립트라, 실수로 전체 실행이 시작되면 안 된다."""
+
+    def _run(self, args):
+        import contextlib
+        import io
+        import daily
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = daily.main(["daily.py"] + args)
+        return code, buf.getvalue()
+
+    def test_help_prints_usage_and_does_not_run(self):
+        # 실측: --help가 사용법 대신 실제 실행을 시작해 API 요청을 소비했다
+        code, out = self._run(["--help"])
+        self.assertEqual(code, 0)
+        self.assertIn("발행은 하지 않는다", out)
+        self.assertNotIn("일일 실행", out)
+
+    def test_unknown_flag_refuses_to_run(self):
+        code, out = self._run(["--nope"])
+        self.assertEqual(code, 2)
+        self.assertIn("모르는 옵션", out)
+        self.assertNotIn("일일 실행", out)
+
+    def test_known_flags_are_declared(self):
+        import daily
+        for f in ("--cats", "--publish"):
+            self.assertIn(f, daily.KNOWN_FLAGS)
+
+
+class SayIsCrashProof(unittest.TestCase):
+    """콘솔이 없는 환경(작업 스케줄러)에서 출력 때문에 죽지 않아야 한다."""
+
+    def test_say_survives_broken_stdout(self):
+        import draft
+
+        class Broken:
+            def write(self, *a):
+                raise OSError(22, "Invalid argument")
+
+            def flush(self):
+                raise OSError(22, "Invalid argument")
+
+        old = sys.stdout
+        sys.stdout = Broken()
+        try:
+            draft.say("아무 말")      # 예외가 새어나오면 실패
+        finally:
+            sys.stdout = old
 
 
 class KeyTerms(unittest.TestCase):
