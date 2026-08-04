@@ -90,6 +90,15 @@ def stamp_date(text, date):
                         f'<meta name="fs:date" content="{date}" />\n<meta name="fs:video"', 1)
 
 
+def strip_factcheck(text):
+    """factcheck.py가 남긴 검수 메모를 떼어낸다.
+
+    내부 검수 기록이라 발행본에 남을 이유가 없다. 주석이라 화면에는 안 보이지만
+    소스보기에 그대로 노출된다.
+    """
+    return re.sub(r"<!-- FACTCHECK:START.*?FACTCHECK:END -->\n?", "", text, flags=re.S)
+
+
 def do_publish(slugs, apply_changes):
     files = sorted(os.path.basename(p) for p in glob.glob(os.path.join(DRAFTS, "*.html")))
     if slugs:
@@ -126,7 +135,7 @@ def do_publish(slugs, apply_changes):
 
     for src, dst, slug, date, meta, _ in planned:
         with open(dst, "w", encoding="utf-8") as f:
-            f.write(stamp_date(meta["_text"], date))
+            f.write(strip_factcheck(stamp_date(meta["_text"], date)))
         os.remove(src)
     rows, changed = rebuild_index(True)
     print(f"\n발행 완료 {len(planned)}건. 인덱스 자동카드 {len(rows)}개.")
@@ -156,10 +165,18 @@ def do_remove(slugs, apply_changes):
         print(f"\n드라이런입니다. {len(targets)}건 삭제 예정. 실제로 하려면 --apply 추가")
         return 0
 
+    removed = 0
     for slug in targets:
         os.remove(os.path.join(ARTICLES, slug + ".html"))
+        removed += 1
+        # 영어판도 같이 지운다. 남기면 한국어판을 가리키는 고아 페이지가 된다.
+        en = os.path.join(ARTICLES, slug + "-en.html")
+        if os.path.exists(en):
+            os.remove(en)
+            removed += 1
+            print(f"  영어판도 삭제: {slug}-en.html")
     left, _ = rebuild_index(True)
-    print(f"\n삭제 완료 {len(targets)}건. 남은 자동카드 {len(left)}개.")
+    print(f"\n삭제 완료 {removed}건. 남은 자동카드 {len(left)}개.")
     print("git push 하면 사이트에서 사라집니다.")
     return 0
 

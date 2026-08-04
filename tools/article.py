@@ -177,15 +177,13 @@ _FOOTER = """<footer>
       <div class="footer-brand">
         <a href="index.html" class="nav-logo">Factory<span> Magazine</span></a>
         <p class="footer-tagline">노이즈 속에서, 신호를 찾습니다.</p>
-        <p>정치·경제·암호화폐·스포츠·세계 소식 뒤에 숨은 결정을 기록하는 콘텐츠 브랜드입니다.</p>
+        <p>정치·경제·암호화폐·스포츠·세계·스타트업 소식 뒤에 숨은 결정을 기록하는 콘텐츠 브랜드입니다.</p>
       </div>
       <div class="footer-cols">
         <div class="footer-col">
           <h4>아티클</h4>
           <ul>
-            <li><a href="why-signal-token.html">토큰 설계</a></li>
-            <li><a href="prediction-market-analytics.html">제품 이야기</a></li>
-            <li><a href="polygon-subscriptions.html">인프라</a></li>
+            <li><a href="index.html">전체 아티클</a></li>
             <li><a href="bitcoin-the-perfect-ledger.html">마켓 워치</a></li>
           </ul>
         </div>

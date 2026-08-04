@@ -3,6 +3,7 @@ _drafts/
 
 # API 키
 tools/config.json
+tools/_candidates.json
 .vercel-token
 .vercel/
 
