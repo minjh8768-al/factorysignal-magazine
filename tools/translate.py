@@ -152,15 +152,8 @@ def translate(cfg, ko):
             "maxOutputTokens": cfg.get("max_output_tokens", 32768),
         },
     }
-    url = gemini.ENDPOINT.format(model=cfg["gemini_model"], key=cfg["gemini_api_key"])
-    data = gemini._post(url, payload, timeout=300)
-    cand = (data.get("candidates") or [{}])[0]
-    reason = cand.get("finishReason")
-    if reason not in (None, "STOP"):
-        raise RuntimeError(f"번역이 정상 종료되지 않았습니다 (finishReason={reason})")
-    text = "".join(p.get("text", "")
-                   for p in cand.get("content", {}).get("parts", []))
-    return json.loads(text), data.get("usageMetadata", {})
+    # 키 순환·재시도·잘림 검사를 gemini.request가 한다. 초안 생성과 같은 경로다.
+    return gemini.request(cfg, payload, timeout=300)
 
 
 def check_structure(ko_body, en_body):

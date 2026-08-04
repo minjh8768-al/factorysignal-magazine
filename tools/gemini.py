@@ -120,23 +120,12 @@ def is_daily_quota(body):
     return "free_tier_requests" in body or "PerDay" in body
 
 
-def write_article(cfg, youtube_url, timeout=600, retries=3):
-    """유튜브 URL을 보고 기사 필드 딕셔너리를 반환한다."""
-    payload = {
-        "contents": [{
-            "parts": [
-                {"fileData": {"fileUri": youtube_url}},
-                {"text": PROMPT},
-            ]
-        }],
-        "generationConfig": {
-            "mediaResolution": cfg.get("media_resolution", "MEDIA_RESOLUTION_LOW"),
-            "responseMimeType": "application/json",
-            "responseSchema": RESPONSE_SCHEMA,
-            # 기본값으로는 본문이 문장 중간에서 잘린다 (사고 토큰이 출력 예산을 함께 쓴다)
-            "maxOutputTokens": cfg.get("max_output_tokens", 65536),
-        },
-    }
+def request(cfg, payload, timeout=600, retries=3):
+    """Gemini 호출 + 키 순환 + 재시도. (JSON 딕셔너리, usage) 를 반환한다.
+
+    draft.py(초안)와 translate.py(번역)가 같이 쓴다. 번역이 이 로직을 안 쓰고 단일 키로
+    직접 호출하던 탓에 한도에 걸리면 원시 HTTPError로 죽었다.
+    """
     keys = api_keys(cfg)
     key_index = 0
     last = ""
@@ -199,3 +188,23 @@ def write_article(cfg, youtube_url, timeout=600, retries=3):
         return json.loads(text), usage
 
     raise RuntimeError(last or "Gemini 호출 실패")
+
+
+def write_article(cfg, youtube_url, timeout=600, retries=3):
+    """유튜브 URL을 보고 기사 필드 딕셔너리를 반환한다."""
+    payload = {
+        "contents": [{
+            "parts": [
+                {"fileData": {"fileUri": youtube_url}},
+                {"text": PROMPT},
+            ]
+        }],
+        "generationConfig": {
+            "mediaResolution": cfg.get("media_resolution", "MEDIA_RESOLUTION_LOW"),
+            "responseMimeType": "application/json",
+            "responseSchema": RESPONSE_SCHEMA,
+            # 기본값으로는 본문이 문장 중간에서 잘린다 (사고 토큰이 출력 예산을 함께 쓴다)
+            "maxOutputTokens": cfg.get("max_output_tokens", 65536),
+        },
+    }
+    return request(cfg, payload, timeout, retries)
