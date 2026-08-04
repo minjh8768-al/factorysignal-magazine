@@ -59,7 +59,12 @@ EN_QUERIES = {
 BAD_TITLE = re.compile(
     r"승부예측|배팅|베팅|적중률|토토|무료픽|분석\.|국야분석|먹튀"
     r"|폭등|떡상|떡락|지금 사야|무조건|반드시 오른|이렇게 하세요|이것만"
-    r"|탈출해야|폭발 시나리오|불장|신호 포착|\[야구여왕")
+    r"|탈출해야|폭발 시나리오|불장|신호 포착|\[야구여왕"
+    # 정치 낚시성 제목. "정치 속보24" 류가 이런 어투를 쓴다.
+    r"|큰 거 터졌|결국 터졌|드디어 뒤집|발칵|경악|충격 폭로|난리|소름"
+    r"|알고보니|이럴 수가|어쩌다 이렇게")
+# 채널명에 '속보24'처럼 자동 양산 냄새가 나는 접미사
+BAD_CHANNEL_HINT = re.compile(r"속보\d|이슈\d|뉴스\d{2,}|TV\d")
 BAD_CHANNEL = re.compile(
     r"Why Times|스포차|스작|페드로|대단부자|신신 ?TV|24H"
     r"|뉴스 ?247|한국시사TV|뉴스브리핑TV|누리이슈TV")
@@ -144,6 +149,8 @@ def keep(video, loose_recency):
     if BAD_TITLE.search(title) or BAD_CHANNEL.search(video["channel"]):
         return False
     if BAD_TITLE_EN.search(title) or CAPS_RUN.search(title) or EMOJI_BAIT.search(title):
+        return False
+    if BAD_CHANNEL_HINT.search(video["channel"]):
         return False
     return True
 
