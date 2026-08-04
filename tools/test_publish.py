@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """카드 생성·인덱스 교체 단위테스트."""
 import os
+import re
 import tempfile
 import unittest
 
@@ -79,6 +80,41 @@ class ReplaceCards(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             article.replace_cards('<div class="article-grid"></div>', [])
         self.assertIn("마커가 없습니다", str(cm.exception))
+
+
+class TemplateDrift(unittest.TestCase):
+    """article.py의 nav·footer 템플릿이 실제 사이트와 어긋나지 않았는지.
+
+    2026-08-04에 동료가 사이트의 모든 기사 nav에 Factory Holdings 링크와 텔레그램
+    버튼을 추가했는데, article.py의 _NAV은 그대로였다. 그 상태로 새 기사를 만들면
+    그 기사만 링크가 빠진다. 손으로 고친 사이트와 생성 템플릿이 갈라지는 것은
+    이 구조에서 언제든 다시 일어날 수 있으므로 테스트로 잡는다.
+    """
+
+    INDEX = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         "..", "articles", "index.html")
+
+    def _block(self, text, pattern):
+        m = re.search(pattern, text, re.S)
+        self.assertIsNotNone(m, f"블록을 찾지 못했습니다: {pattern}")
+        return m.group(0)
+
+    def test_nav_links_match_site(self):
+        with open(self.INDEX, encoding="utf-8") as f:
+            live = f.read()
+        pattern = r'  <div class="nav-links">\n.*?\n  </div>'
+        self.assertEqual(
+            self._block(article._NAV, pattern),
+            self._block(live, pattern),
+            "article.py의 _NAV이 articles/index.html의 nav와 다릅니다. "
+            "사이트를 손으로 고쳤다면 템플릿에도 반영하세요.")
+
+    def test_footer_brand_text_matches_site(self):
+        with open(self.INDEX, encoding="utf-8") as f:
+            live = f.read()
+        pattern = r'<p class="footer-tagline">.*?</p>'
+        self.assertEqual(self._block(article._FOOTER, pattern),
+                         self._block(live, pattern))
 
 
 class EnglishPairs(unittest.TestCase):
