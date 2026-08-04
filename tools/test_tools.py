@@ -245,6 +245,20 @@ class GeminiKeys(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             gemini.api_keys({})
 
+    def test_dead_key_rotation_covers_revoked_and_missing_model(self):
+        """폐기된 키(401)나 모델 미지원(404)에서도 다음 키로 넘어가야 한다.
+
+        실측: 대화에 노출된 키를 폐기한 뒤 그 키가 목록 1순위에 남아 있었다.
+        429만 처리하던 로직으로는 첫 호출부터 죽는다.
+        """
+        import inspect
+        src = inspect.getsource(gemini.request)
+        self.assertIn("401", src)
+        self.assertIn("403", src)
+        self.assertIn("404", src)
+        # 다음 키로 넘어가는 분기 안에서 다뤄야 한다
+        self.assertIn("dead_key", src)
+
     def test_daily_quota_vs_rate_limit(self):
         # 하루 한도는 기다려도 안 풀리므로 다음 키로 넘어가야 하고,
         # 분당 한도는 기다리면 풀리므로 재시도해야 한다

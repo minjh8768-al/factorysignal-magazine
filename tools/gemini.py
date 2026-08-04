@@ -137,10 +137,19 @@ def request(cfg, payload, timeout=600, retries=3):
             body = e.read().decode("utf-8", "replace")
             last = f"HTTP {e.code}: {body[:400]}"
 
-            # 하루 한도가 소진된 키는 기다려도 안 풀린다. 다음 키로 넘어간다.
-            if e.code == 429 and is_daily_quota(body) and key_index + 1 < len(keys):
+            # 이 키로는 더 해볼 게 없는 경우들. 기다려도 안 풀리므로 다음 키로 넘어간다.
+            #   429 + 하루 한도 소진
+            #   401/403  폐기·차단된 키. 실측에서 노출된 키를 폐기한 뒤 그 키가 목록
+            #            1순위에 남아 있어, 이 분기가 없으면 첫 호출부터 죽었다.
+            #   404      그 프로젝트에서 쓸 수 없는 모델 (2.5-flash가 신규 프로젝트에서 막혔다)
+            dead_key = (e.code in (401, 403)
+                        or (e.code == 429 and is_daily_quota(body))
+                        or e.code == 404)
+            if dead_key and key_index + 1 < len(keys):
+                why = {401: "폐기·무효", 403: "권한 없음", 404: "이 키로는 모델 사용 불가"}.get(
+                    e.code, "하루 한도 소진")
                 key_index += 1
-                print(f"  키 {key_index}의 하루 한도 소진 — 다음 키로 전환 "
+                print(f"  키 {key_index} {why} — 다음 키로 전환 "
                       f"({key_index + 1}/{len(keys)})")
                 continue
 
