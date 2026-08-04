@@ -2,5 +2,8 @@
   "gemini_api_key": "YOUR_GEMINI_API_KEY",
   "gemini_model": "gemini-2.5-flash",
   "media_resolution": "MEDIA_RESOLUTION_LOW",
-  "max_output_tokens": 32768
+  "max_output_tokens": 32768,
+
+  "naver_client_id": "YOUR_NAVER_CLIENT_ID",
+  "naver_client_secret": "YOUR_NAVER_CLIENT_SECRET"
 }

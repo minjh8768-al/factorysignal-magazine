@@ -4,11 +4,15 @@
 유튜브 영상 링크 하나를 넣으면 그 내용을 요약한 기사를 만들어 사이트에 올린다.
 
 ```
-py -3 tools\draft.py https://youtu.be/xxxxxxxxxxx   # 초안 생성
-run_preview.bat                                      # 브라우저로 검수
-py -3 tools\publish.py --apply                       # 발행
+py -3 tools\collect.py                    # 6개 카테고리 영상 후보 수집 (20초)
+py -3 tools\draft.py <url1> <url2> ...    # 초안 생성 (최대 3개 동시)
+py -3 tools\factcheck.py --write          # 네이버 뉴스로 고유명사·수치 대조
+run_preview.bat                            # 브라우저로 검수
+py -3 tools\publish.py --apply            # 발행
 git push
 ```
+
+6편을 만드는 데 **30~35분** 정도 걸린다. 대부분이 검수 시간이다.
 
 ---
 
@@ -43,12 +47,23 @@ https://aistudio.google.com/apikey 에서 본인 키를 만든다. 무료로 발
   "gemini_api_key": "여기에 본인 키",
   "gemini_model": "gemini-2.5-flash",
   "media_resolution": "MEDIA_RESOLUTION_LOW",
-  "max_output_tokens": 32768
+  "max_output_tokens": 32768,
+
+  "naver_client_id": "네이버 검색 API 키",
+  "naver_client_secret": "네이버 검색 API 시크릿"
 }
 ```
 
 `config.json`은 `.gitignore`에 있어 저장소에 올라가지 않는다. **키를 공유하거나
 커밋하지 말 것.**
+
+### 5. 네이버 검색 API 키 (검수 자동화용)
+
+`factcheck.py`가 기사의 인물·수치를 뉴스와 대조하는 데 쓴다. 없어도 나머지는 다 돌아가고,
+그때는 검수를 손으로 하면 된다.
+
+https://developers.naver.com → 애플리케이션 등록 → **사용 API에 "검색"** 선택 →
+발급된 Client ID / Secret을 위 설정에 넣는다.
 
 ---
 
@@ -56,24 +71,36 @@ https://aistudio.google.com/apikey 에서 본인 키를 만든다. 무료로 발
 
 ### 1) 영상 고르기
 
-요약할 만한 **말이 있는 영상**을 고른다. 하이라이트 영상처럼 내레이션이 없으면
-요약할 내용이 없다.
+```
+py -3 tools\collect.py            모든 카테고리 (20초)
+py -3 tools\collect.py 스포츠 세계   지정한 카테고리만
+```
 
-피해야 할 것:
+카테고리별 후보를 번호가 붙은 표로 보여준다. 마음에 드는 것의 링크를 다음 단계에 넘긴다.
+
+품질 필터가 걸려 있어서 아래는 후보에서 제외된다. `collect.py`의 `BAD_TITLE` /
+`BAD_CHANNEL`이 **유일한 튜닝 지점**이고, 새로 걸러야 할 채널이 보이면 여기에 추가한다.
 
 - 승부예측·베팅 채널 (매체 성격에 안 맞고 법적 위험)
+- 낚시성 투자권유 제목 ("지금 사야", "폭등", "이렇게 하세요")
+- 자동생성 내레이션 콘텐츠팜·예능 리캡 (화자가 없어 인용할 발언이 없다)
 - 정치적 색이 강한 1인 논평 채널 (그 논조를 사이트가 그대로 뒤집어쓴다)
-- 자동생성 내레이션 콘텐츠팜 (화자가 없어 인용할 발언이 없다)
+- 4분 미만 / 25분 초과, 오래된 영상
 
-10~20분 영상이 적당하다. 길수록 토큰을 많이 쓴다(30분 = 약 18만 토큰).
+**요약할 만한 말이 있는 영상**을 고르는 것이 핵심이다. 하이라이트 영상처럼 내레이션이
+없으면 요약할 내용이 없다. 10~20분이 적당하다(30분이면 약 18만 토큰).
 
 ### 2) 초안 생성
 
 ```
-py -3 tools\draft.py https://www.youtube.com/watch?v=xxxxxxxxxxx
+py -3 tools\draft.py https://youtu.be/xxxxxxxxxxx
+py -3 tools\draft.py <url1> <url2> <url3>     여러 개를 동시에
 ```
 
-`_drafts\YYYY-MM-DD-<slug>.html`이 만들어진다. 1~2분 걸린다.
+`_drafts\YYYY-MM-DD-<slug>.html`이 만들어진다. 한 편에 1~2분,
+여러 개를 넘기면 **최대 3개씩 동시에** 돌려서 6편이 3~4분에 끝난다.
+3개로 제한한 것은 Gemini 무료 티어의 분당 요청 한도 때문이다.
+
 카테고리·제목·소제목·읽기 시간은 자동으로 정해진다.
 
 실패하는 경우:
@@ -85,21 +112,56 @@ py -3 tools\draft.py https://www.youtube.com/watch?v=xxxxxxxxxxx
 | `Gemini 무료 한도를 다 썼습니다` | 다음 날 다시 하거나 다른 키를 쓴다 |
 | `카테고리가 6개 중 하나가 아닙니다` | 재실행 |
 
-### 3) 검수 — 이 단계를 건너뛰지 말 것
+### 3) 자동 대조 — 무엇을 확인할지 좁힌다
+
+```
+py -3 tools\factcheck.py --write
+```
+
+초안에서 인물·날짜·수치를 뽑아 네이버 뉴스로 대조하고, 결과를 초안 `<head>` 위
+주석으로 적어 둔다. `--write`를 빼면 화면에만 보여준다.
+
+```
+OK [인물] 정희용 사무총장 — 8282건
+!! [인물] 곽상원 의원 — 근거 67건뿐 — 오기 의심
+   · 노 전 대통령의 사위인 곽상언 의원은 ...        ← 근거 기사
+?? [수치] 183표 — 근거 20건 — 아래 기사와 대조
+   · 찬성 183표로 종결동의안이 통과됐다             ← 법안 표결이 아니라 종결동의안
+```
+
+| 태그 | 뜻 |
+| --- | --- |
+| `OK` | 뉴스에서 흔히 쓰이는 표기 (100건 이상) |
+| `!!` | 근거가 얇다. 오기 의심 — 근거 기사를 읽고 판단 |
+| `??` | 날짜·수치는 건수로 판정할 수 없다. 근거 기사와 직접 대조 |
+| `ER` | 조회 실패 |
+
+**판정은 힌트일 뿐 정답이 아니다.** 날짜는 특히 그렇다 — `8월 7일`은 뉴스에 88만 건이
+나오지만 우리 기사와 같은 사건을 말하는지는 알 수 없다. 그래서 앞뒤 문맥 단어를 붙여
+검색하고 근거 기사를 항상 보여준다. 읽고 판단하는 것은 사람이다.
+
+이름이 아닌 말이 인물로 잡히기도 한다(`강경파와 대통령`). 무해하니 무시하면 된다.
+반대로 걸러내려다 실제 인물을 놓치는 쪽이 더 나쁘다.
+
+### 4) 사람 검수 — 이 단계를 건너뛰지 말 것
 
 ```
 run_preview.bat
 ```
 
 브라우저가 열리면 `_drafts/` 안의 파일을 클릭해 읽는다. 발행 후와 똑같이 보인다.
+`factcheck`가 적어 둔 `!!`·`??` 항목을 먼저 확인한다.
 
 **반드시 원본 영상과 대조할 것:**
 
-- **인명·직함** — 자주 틀린다. 실제로 `곽상언`을 `곽상원`, `인핸스`를 `이낸스`로 썼다
+- **인명·직함** — 자주 틀린다. 실제로 `곽상언`을 `곽상원`, `인핸스`를 `이낸스`,
+  현 연준 의장을 `파월`(→케빈 워시)로 썼다
 - **날짜·숫자** — 같은 영상을 두 번 돌렸을 때 값이 달라진 적이 있다
 - **`<blockquote>` 안의 직접 인용** — 음성인식 오류가 그대로 들어간다.
   남의 발언을 따옴표 안에서 틀리게 옮기는 것이라 가장 위험하다.
   화자가 실제로 한 말이 아니면 일반 `<p>`로 바꾸거나 지운다
+
+`factcheck` 주석은 발행할 때 `publish.py`가 떼어내므로 사이트에는 남지 않는다.
 
 고칠 것은 HTML을 직접 수정한다. 카테고리가 틀렸으면 `<head>`의 한 줄만 고치면 된다.
 
@@ -109,7 +171,7 @@ run_preview.bat
 
 버릴 초안은 파일을 그냥 지우면 된다.
 
-### 4) 발행
+### 5) 발행
 
 ```
 py -3 tools\publish.py            드라이런 — 무엇이 바뀔지만 보여준다
@@ -123,9 +185,9 @@ git push
 2. `articles\index.html`의 `<!-- CARDS:START/END -->` 사이를 다시 만든다
 3. 발행일(`fs:date`)을 심는다 — 카드 정렬 기준
 
-손으로 쓴 기존 카드 4개는 마커 밖에 있어 건드리지 않는다.
+손으로 쓴 기존 카드(`bitcoin-the-perfect-ledger`)는 마커 밖에 있어 건드리지 않는다.
 
-### 5) 내리기
+### 6) 내리기
 
 ```
 py -3 tools\publish.py --list                  발행된 기사 목록
@@ -155,11 +217,14 @@ articles/          발행된 기사 + index.html (목록 페이지)
 _drafts/           검수 대기 초안 (gitignore)
 css/  js/          공용 스타일·동작
 tools/
-  draft.py         유튜브 URL -> 초안
+  collect.py       카테고리별 영상 후보 수집 (+ 품질 필터)
+  draft.py         유튜브 URL -> 초안 (여러 개 동시 처리)
+  factcheck.py     네이버 뉴스로 인물·날짜·수치 대조
   publish.py       발행 · 발행 취소 · 목록
   article.py       템플릿 조립 · 검증 (순수 함수)
   gemini.py        Gemini 호출
   youtube.py       oEmbed로 채널·제목 조회
+  naver.py         네이버 뉴스 검색
   config.json      API 키 (gitignore)
 run_preview.bat    로컬 미리보기 서버 (8093)
 docs/superpowers/  설계 문서
@@ -200,16 +265,18 @@ py -3 -m unittest discover -p "test_*.py" -v
 
 ## 배포
 
-`main`에 push하면 Vercel이 배포한다.
+`main`(또는 `master`)에 push하면 Vercel이 배포한다. 1분 안에 반영된다.
 
-**2026-08-03 현재 이 경로가 동작하지 않는다.** push는 되지만 Vercel이 새 배포를
-만들지 않아 라이브 사이트가 갱신되지 않는다. Vercel 프로젝트 소유자만 확인할 수
-있는 영역이다. 확인할 곳:
+라이브: https://factorysignal-magazine.vercel.app/articles/index.html
+
+**배포가 안 되면 저장소가 private인지 먼저 확인한다.** 2026-08-03에 이 문제로 몇 시간을
+썼다. push는 정상이었는데 Vercel이 새 배포를 만들지 않았고, 저장소를 public으로
+바꾸자 바로 붙었다. 그다음 확인할 곳:
 
 - Vercel 대시보드 → Deployments — 최신 커밋 빌드가 있는지, 실패했는지
-- GitHub 저장소 → Settings → Webhooks — Vercel 훅의 Recent Deliveries
+- GitHub 저장소 → Settings → Webhooks — Vercel 훅의 Recent Deliveries (실패면 Redeliver)
 
-그때까지는 `run_preview.bat`으로 로컬에서 결과물을 확인한다.
+배포를 못 기다릴 때는 `run_preview.bat`으로 로컬에서 확인한다.
 
 ### 알려진 문제: PC 이름이 한글이면 `vercel login`이 실패한다
 

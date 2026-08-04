@@ -81,6 +81,30 @@ class ReplaceCards(unittest.TestCase):
         self.assertIn("마커가 없습니다", str(cm.exception))
 
 
+class StripFactcheck(unittest.TestCase):
+    """검수 메모는 발행본에 남지 않아야 한다."""
+
+    DOC = ('<!DOCTYPE html>\n'
+           '<!-- FACTCHECK:START\n'
+           '     !! [인물] 곽상원 의원 — 근거 67건뿐\n'
+           '     FACTCHECK:END -->\n'
+           '<html lang="ko">\n<head>\n</head>\n</html>\n')
+
+    def test_removes_block(self):
+        out = publish.strip_factcheck(self.DOC)
+        self.assertNotIn("FACTCHECK", out)
+        self.assertNotIn("곽상원", out)
+        self.assertTrue(out.startswith("<!DOCTYPE html>\n<html lang=\"ko\">"))
+
+    def test_noop_without_block(self):
+        plain = '<!DOCTYPE html>\n<html lang="ko">\n</html>\n'
+        self.assertEqual(publish.strip_factcheck(plain), plain)
+
+    def test_idempotent(self):
+        once = publish.strip_factcheck(self.DOC)
+        self.assertEqual(publish.strip_factcheck(once), once)
+
+
 class TitleRoundTrip(unittest.TestCase):
     """render()가 붙인 제목 접미사를 publish가 정확히 떼는지.
 
