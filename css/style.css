@@ -1054,6 +1054,27 @@ footer {
   margin: 40px 0;
 }
 
+/* 한국어 줄바꿈.
+   기본값(word-break: normal)은 한글을 음절 단위로 끊어서 "그러/나 동결에"처럼
+   단어 중간에서 줄이 바뀐다. keep-all은 띄어쓰기에서만 끊는다.
+   overflow-wrap: break-word를 함께 둬서, 띄어쓰기 없이 아주 긴 문자열(URL 등)이
+   들어오면 그때는 강제로 끊어 가로 넘침을 막는다. */
+.article-content p,
+.article-content li,
+.article-content h2,
+.article-content h3,
+.article-content blockquote,
+.article-hero h1,
+.article-card h3,
+.article-card p,
+.source-note,
+.disclaimer,
+.footer-brand p,
+.footer-tagline {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
 .back-link {
   display: inline-flex;
   align-items: center;
