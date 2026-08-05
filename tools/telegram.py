@@ -11,10 +11,14 @@
 
 링크가 살아 있어야 하므로 **git push 뒤에** 실행한다. run_daily.bat 이 그 순서로 부른다.
 
+**경제·암호화폐만 보낸다.** 사이트에는 6종을 다 올리지만 채널 성격에 맞춰 거른다.
+바꾸려면 config 의 telegram_categories. 슬러그를 직접 주면 필터를 건너뛴다.
+
 config.json:
     telegram_bot_token   @BotFather 에서 받은 토큰
-    telegram_chat_id     보낼 그룹 (음수 정수 문자열). --chats 로 확인한다.
-둘 중 하나라도 없으면 조용히 건너뛴다 — 알림이 없다고 발행이 실패하면 안 된다.
+    telegram_chat_id     보낼 그룹·채널 (음수 정수 문자열). --chats 로 확인한다.
+    telegram_categories  보낼 카테고리 목록. 없으면 경제·암호화폐.
+토큰이나 chat_id 가 없으면 조용히 건너뛴다 — 알림이 없다고 발행이 실패하면 안 된다.
 """
 import json
 import os
@@ -34,6 +38,11 @@ API = "https://api.telegram.org/bot{token}/{method}"
 
 EMOJI = {"정치": "🏛", "경제": "📈", "암호화폐": "₿", "스포츠": "⚽",
          "세계": "🌍", "스타트업": "🚀"}
+
+# 채널에 보낼 카테고리. 사이트에는 6종을 다 올리지만 채널 성격상 이 둘만 보낸다.
+# config.json 의 telegram_categories 로 바꾼다. 슬러그를 직접 지정하면 필터를 건너뛴다
+# — 사람이 이름을 대고 부른 것은 의도한 것이다.
+DEFAULT_CATEGORIES = ("경제", "암호화폐")
 
 
 def load_config():
@@ -116,6 +125,10 @@ def post(cfg, meta, slug, has_en=False):
                 disable_web_page_preview="false")
 
 
+def allowed(cfg, category):
+    return category in (cfg.get("telegram_categories") or DEFAULT_CATEGORIES)
+
+
 def configured(cfg):
     return bool(cfg.get("telegram_bot_token") and cfg.get("telegram_chat_id"))
 
@@ -145,7 +158,8 @@ def main(argv):
             print(f"  telegram_chat_id: {cid}    {title}")
         return 0
 
-    slugs = [a for a in argv[1:] if not a.startswith("-")] or new_article_slugs()
+    named = [a for a in argv[1:] if not a.startswith("-")]
+    slugs = named or new_article_slugs()
     if not slugs:
         print("HEAD 커밋에 새 기사가 없습니다. 보낼 것이 없습니다.")
         return 0
@@ -162,6 +176,9 @@ def main(argv):
             fails += 1
             continue
         meta = publish.read_meta(path)
+        if not named and not allowed(cfg, meta["category"]):
+            print(f"  건너뜀 [{meta['category']}] {slug} — 채널 대상 카테고리가 아님")
+            continue
         has_en = os.path.exists(os.path.join(ARTICLES, slug + "-en.html"))
         if not send:
             print("─" * 60)

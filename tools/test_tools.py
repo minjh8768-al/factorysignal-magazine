@@ -495,6 +495,24 @@ class Telegram(unittest.TestCase):
         import telegram
         self.assertEqual(telegram.chats_from_updates([{"poll": {}}, {}]), {})
 
+    def test_only_economy_and_crypto_by_default(self):
+        import telegram
+        for c in ("경제", "암호화폐"):
+            self.assertTrue(telegram.allowed({}, c), c)
+        for c in ("정치", "스포츠", "세계", "스타트업"):
+            self.assertFalse(telegram.allowed({}, c), c)
+
+    def test_config_overrides_the_category_list(self):
+        import telegram
+        cfg = {"telegram_categories": ["스포츠"]}
+        self.assertTrue(telegram.allowed(cfg, "스포츠"))
+        self.assertFalse(telegram.allowed(cfg, "경제"))
+
+    def test_empty_list_falls_back_to_default(self):
+        # 빈 목록으로 전부 막는 건 실수일 가능성이 크다. 기본값으로 되돌린다.
+        import telegram
+        self.assertTrue(telegram.allowed({"telegram_categories": []}, "경제"))
+
     def test_configured_requires_both_values(self):
         import telegram
         self.assertFalse(telegram.configured({"telegram_bot_token": "t"}))
