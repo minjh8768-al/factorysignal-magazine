@@ -67,6 +67,23 @@ def new_article_slugs():
     return slugs
 
 
+def chats_from_updates(updates):
+    """getUpdates 응답에서 {chat_id: 이름}.
+
+    봇이 그룹에 초대되면 텔레그램이 my_chat_member 를 보낸다. 이 이벤트는 Group
+    Privacy 를 켜둔 채로도 오므로, chat_id 를 얻기 위해 봇에게 그룹 대화 전체를
+    읽는 권한을 줄 필요가 없다. message 는 폴백이다.
+    """
+    seen = {}
+    for u in updates:
+        for key in ("my_chat_member", "chat_member", "message", "channel_post"):
+            c = (u.get(key) or {}).get("chat")
+            if c:
+                seen[c["id"]] = c.get("title") or c.get("username") or c.get("type")
+                break
+    return seen
+
+
 def escape(text):
     """텔레그램 HTML parse_mode 에서 뜻이 있는 문자만 막는다."""
     return (text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
@@ -119,17 +136,12 @@ def main(argv):
         if not cfg.get("telegram_bot_token"):
             print("config.json 에 telegram_bot_token 이 없습니다.")
             return 1
-        r = call(cfg, "getUpdates")
-        seen = {}
-        for u in r.get("result", []):
-            c = (u.get("message") or u.get("channel_post") or {}).get("chat")
-            if c:
-                seen[c["id"]] = c.get("title") or c.get("username") or c.get("type")
-        if not seen:
-            print("최근 메시지가 없습니다. 봇을 그룹에 넣고 아무 말이나 한 뒤 다시 실행하세요.")
-            print("(봇이 그룹 메시지를 보려면 BotFather 에서 Group Privacy 를 Disable)")
+        found = chats_from_updates(call(cfg, "getUpdates").get("result", []))
+        if not found:
+            print("아직 어느 그룹에서도 신호가 오지 않았습니다.")
+            print("텔레그램에서 봇 프로필 → '그룹에 추가' 로 그룹에 넣은 뒤 다시 실행하세요.")
             return 1
-        for cid, title in seen.items():
+        for cid, title in found.items():
             print(f"  telegram_chat_id: {cid}    {title}")
         return 0
 

@@ -479,6 +479,22 @@ class Telegram(unittest.TestCase):
         import telegram
         self.assertIn("📰", telegram.message({"title": "t", "category": "기타"}, "s"))
 
+    def test_chat_id_from_invite_event(self):
+        # 봇을 그룹에 넣으면 my_chat_member 가 온다. Group Privacy 를 끄지 않아도 온다.
+        import telegram
+        u = [{"my_chat_member": {"chat": {"id": -1001234, "title": "팩토리",
+                                          "type": "supergroup"}}}]
+        self.assertEqual(telegram.chats_from_updates(u), {-1001234: "팩토리"})
+
+    def test_chat_id_falls_back_to_message(self):
+        import telegram
+        u = [{"message": {"chat": {"id": -55, "title": "방", "type": "group"}}}]
+        self.assertEqual(telegram.chats_from_updates(u), {-55: "방"})
+
+    def test_ignores_updates_without_a_chat(self):
+        import telegram
+        self.assertEqual(telegram.chats_from_updates([{"poll": {}}, {}]), {})
+
     def test_configured_requires_both_values(self):
         import telegram
         self.assertFalse(telegram.configured({"telegram_bot_token": "t"}))
