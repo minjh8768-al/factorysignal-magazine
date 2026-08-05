@@ -100,6 +100,33 @@ class Filter(unittest.TestCase):
             self.assertTrue(qs, cat)
 
 
+class Ranking(unittest.TestCase):
+    """daily.py는 후보 맨 앞을 자동으로 고른다. 그래서 정렬이 곧 품질이다."""
+
+    def test_prefers_broadcasters_over_personal_channels(self):
+        rows = [video(channel="코인에 미친 남자"), video(channel="JTBC News"),
+                video(channel="개인분석러"), video(channel="채널A News")]
+        rows.sort(key=lambda v: 0 if collect.PREFERRED_CHANNEL.search(v["channel"]) else 1)
+        self.assertEqual([r["channel"] for r in rows[:2]], ["JTBC News", "채널A News"])
+
+    def test_ranking_keeps_recency_within_a_group(self):
+        rows = [video(channel="KBS News", vid="a"), video(channel="MBC뉴스", vid="b")]
+        rows.sort(key=lambda v: 0 if collect.PREFERRED_CHANNEL.search(v["channel"]) else 1)
+        self.assertEqual([r["id"] for r in rows], ["a", "b"])
+
+    def test_drops_channels_seen_in_the_2026_08_05_run(self):
+        # 자동 실행이 1순위로 뽑아 실제로 문제가 된 채널들
+        for ch in ("AL MAKKAH TECH & B", "엄지렐라 Umjirella", "프로토러너",
+                   "오늘의 매치업", "차티스트"):
+            self.assertFalse(collect.keep(video(channel=ch), False), ch)
+
+    def test_drops_coin_and_betting_titles_seen_in_the_run(self):
+        for bad in ("비트코인, 기회는 지금뿐. 놓치면 후회합니다",
+                    "비트코인 절호의 기회가 왔습니다",
+                    "[스포츠분석]★2배UP★8월 4일 국내야구"):
+            self.assertFalse(collect.keep(video(title=bad), False), bad)
+
+
 class Extract(unittest.TestCase):
     def test_person_with_title(self):
         # 인물은 위키백과로 따로 확인하므로 (이름, 직함) 튜플을 들고 간다

@@ -27,8 +27,11 @@ QUERIES = {
     # 암호화폐는 업로드날짜순으로 뽑으면 개인 트레이딩 채널이 상위를 덮는다.
     # 제도·규제·시장구조 쪽 검색어로 기울여 둔다.
     "암호화폐": ["가상자산 규제 정책", "스테이블코인 제도", "비트코인 시장 구조 해설",
-               "가상자산 거래소 뉴스"],
-    "스포츠": ["프로야구 이슈 정리", "축구 국가대표 소식", "스포츠 뉴스 브리핑", "KBO 순위 경쟁"],
+               "가상자산 이용자보호법", "가상자산 과세 제도", "비트코인 ETF 기관 자금"],
+    # 처음 검색어들은 개인 예능·가십 채널을 끌어왔다("국가대표 면접 탈락 영상"이 1순위였다).
+    # 방송사·리그 공식 채널이 상위에 오도록 매체명과 리그명을 섞는다.
+    "스포츠": ["KBS 스포츠 뉴스", "SBS 스포츠 뉴스", "축구 국가대표 대표팀 소식",
+             "KBO 리그 경기 분석", "프로야구 순위 전망 해설", "손흥민 유럽축구 소식"],
     "세계": ["국제뉴스 브리핑", "세계는 지금", "국제 이슈 정리", "특파원 현장"],
     "스타트업": ["스타트업 대표 인터뷰", "창업 스토리 인터뷰", "EO 스타트업", "티타임즈 스타트업"],
 }
@@ -38,10 +41,11 @@ QUERIES = {
 EN_QUERIES = {
     "경제": ["global economy analysis", "central bank policy explained",
             "inflation outlook analysis"],
-    "암호화폐": ["crypto regulation explained", "bitcoin market analysis",
-               "stablecoin policy"],
+    # "bitcoin market analysis"는 차트 트레이딩 채널을 끌어온다. 제도 쪽으로 기울인다.
+    "암호화폐": ["crypto regulation explained", "stablecoin regulation",
+               "crypto policy hearing", "bitcoin institutional adoption"],
     "스포츠": ["premier league tactical analysis", "champions league review",
-             "mlb analysis breakdown"],
+             "mlb analysis breakdown", "football transfer news analysis"],
     "세계": ["geopolitics explained", "world news analysis", "foreign policy briefing"],
     "스타트업": ["startup founder interview", "venture capital interview",
                "how they built it startup"],
@@ -62,12 +66,31 @@ BAD_TITLE = re.compile(
     r"|탈출해야|폭발 시나리오|불장|신호 포착|\[야구여왕"
     # 정치 낚시성 제목. "정치 속보24" 류가 이런 어투를 쓴다.
     r"|큰 거 터졌|결국 터졌|드디어 뒤집|발칵|경악|충격 폭로|난리|소름"
-    r"|알고보니|이럴 수가|어쩌다 이렇게")
+    r"|알고보니|이럴 수가|어쩌다 이렇게"
+    # 코인 채널 낚시 어투와 베팅 배당 표기("★2배UP★")
+    r"|놓치면 후회|절호의 기회|기회는 지금|꼭 준비할 것|[0-9]배 ?UP")
 # 채널명에 '속보24'처럼 자동 양산 냄새가 나는 접미사
 BAD_CHANNEL_HINT = re.compile(r"속보\d|이슈\d|뉴스\d{2,}|TV\d")
 BAD_CHANNEL = re.compile(
     r"Why Times|스포차|스작|페드로|대단부자|신신 ?TV|24H"
-    r"|뉴스 ?247|한국시사TV|뉴스브리핑TV|누리이슈TV")
+    r"|뉴스 ?247|한국시사TV|뉴스브리핑TV|누리이슈TV"
+    # 암호화폐 후보를 덮는 개인 트레이딩·차트 채널. 2026-08-05 자동 실행에서
+    # AL MAKKAH TECH가 1순위로 뽑혔다.
+    r"|AL MAKKAH|More Crypto Online|정다운 트레이딩|비트코인 대학|사토시\."
+    r"|아빤왜코인|소울트리|머니 블라블라|월가 브리핑|찰리초이"
+    r"|차티스트|코미남|절세미남|비트겟|코인사관학교"
+    # 스포츠 후보를 덮는 개인 예능·가십 채널. "국가대표 면접 탈락 영상"이 뽑혔다.
+    r"|엄지렐라|대한민국 브리핑룸|크보오프너|스포츠분석"
+    # 경기분석을 내세운 베팅 팁스터. 제목에 배당("2배UP")이 붙는다.
+    r"|프로토러너|오늘의 매치업|스포츠 ?토토")
+
+# 신뢰할 만한 채널을 후보 앞으로 끌어올린다. daily.py가 1순위를 자동으로 고르므로
+# 걸러내기만으로는 부족하고 순서가 중요하다. 블랙리스트는 두더지잡기라 이쪽이 낫다.
+PREFERRED_CHANNEL = re.compile(
+    r"KBS|MBC|SBS|JTBC|YTN|MBN|연합뉴스|채널A|TV ?조선|뉴스TVCHOSUN"
+    r"|한국경제|매일경제|조선비즈|서울경제|이데일리|딜사이트"
+    r"|BBC|Reuters|Bloomberg|CNBC|CBS News|Al Jazeera|DW |Financial Times|WSJ"
+    r"|EO Korea|티타임즈|아산나눔|경제 읽어주는 남자|김영익", re.I)
 
 # 영어권 낚시성 제목. 실측에서 "TOP Economist ISSUES URGENT RECESSION WARNING"이
 # 한국어 필터를 그대로 통과했다.
@@ -175,8 +198,12 @@ def collect(categories, per_category=6):
                     rows.append(v)
                 else:
                     dropped += 1
+        # 선호 채널을 앞으로. 같은 그룹 안에서는 원래 순서(업로드 최신순)를 지킨다.
+        rows.sort(key=lambda v: 0 if PREFERRED_CHANNEL.search(v["channel"]) else 1)
         result[cat] = rows[:per_category]
-        print(f"  {cat}: 후보 {len(result[cat])}개 (필터로 제외 {dropped}개)")
+        pref = sum(1 for v in result[cat] if PREFERRED_CHANNEL.search(v["channel"]))
+        print(f"  {cat}: 후보 {len(result[cat])}개 (선호채널 {pref}개, "
+              f"필터로 제외 {dropped}개)")
     return result
 
 
