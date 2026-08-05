@@ -410,6 +410,38 @@ class Sanity(unittest.TestCase):
         self.assertEqual(sanity.blocking(sanity.check(body)), [])
 
 
+class BoilerplateQuotes(unittest.TestCase):
+    """사과 어투는 영상 속 실제 발언과 겹친다. 실측 오탐에서 나온 회귀 테스트."""
+
+    REAL_QUOTE = "축구인의 한 명으로서 이 자리가 죄송스럽기도 하고 너무나 송구스러운 마음입니다."
+
+    def test_real_apology_quote_is_not_boilerplate(self):
+        import sanity
+        self.assertEqual(sanity.find_boilerplate(self.REAL_QUOTE), [])
+
+    def test_news_phrase_다음은_is_not_boilerplate(self):
+        import sanity
+        self.assertEqual(sanity.find_boilerplate("다음은 회의에서 나온 발언 요지다."), [])
+
+    def test_llm_refusal_is_still_caught(self):
+        import sanity
+        for bad in ("죄송합니다. 영상 내용을 확인할 수 없어 요약을 드리기 어렵습니다.",
+                    "요청하신 내용은 영상에 포함되어 있지 않습니다.",
+                    "양해 바랍니다. 자세한 정보가 없어 답변을 드릴 수 없습니다."):
+            self.assertTrue(sanity.find_boilerplate(bad), bad)
+
+    def test_strong_markers_still_caught_alone(self):
+        import sanity
+        for bad in ("저는 AI 어시스턴트입니다", "제공된 영상 기준으로", "As an AI model"):
+            self.assertTrue(sanity.find_boilerplate(bad), bad)
+
+    def test_gate_lets_the_real_quote_through(self):
+        import sanity
+        body = "<p>" + self.REAL_QUOTE * 12 + "</p>"
+        self.assertFalse([b for b in sanity.blocking(sanity.check(body))
+                          if "상용구" in b])
+
+
 class KeyTerms(unittest.TestCase):
     """핵심 용어 오타를 뉴스 건수로 잡는다.
     실측: 보완수사권 33,227건 vs 보안수사권 512건. 인물·날짜·수치가 아닌

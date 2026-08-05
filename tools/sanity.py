@@ -10,12 +10,21 @@
 import datetime
 import re
 
-# LLM이 흘리는 상용구. 기사 본문에 있으면 안 된다.
+# LLM이 흘리는 상용구. 이것만으로 LLM이 확실한 것들이다.
 BOILERPLATE = (
-    "죄송", "저는 AI", "언어 모델", "제공된 영상", "영상에 따르면 제가",
-    "제공해 주신", "요청하신", "다음은", "말씀드릴 수", "확인할 수 없습니다",
+    "저는 AI", "언어 모델", "제공된 영상", "영상에 따르면 제가",
+    "제공해 주신", "확인할 수 없습니다",
     "as an ai", "i cannot", "i'm sorry", "based on the provided",
 )
+
+# 사과·안내 어투는 영상 속 실제 발언과 겹친다. 실측: 축구협회 혁신위 기사에서
+# "축구인의 한 명으로서 이 자리가 죄송스럽기도 하고"라는 인용이 '죄송'에 걸려 보류됐다.
+# 그래서 이 어투는 '도움을 못 준다'는 진술과 같이 나올 때만 상용구로 본다.
+# 이전에 있던 "다음은"("다음은 발언 요지다")도 같은 이유로 뺐다.
+APOLOGY = re.compile(r"죄송|양해 ?바|요청하신|말씀드릴 수 없")
+INABILITY = re.compile(
+    r"확인할 수 없|알 수 없|정보가 없|제공되지 않|포함되어 있지 않"
+    r"|도움을 드릴|답변을 드릴|요약할 수 없|볼 수 ?없|볼 수가 없")
 
 # 본문이 이보다 짧으면 생성이 덜 된 것으로 본다 (실측 기사들은 1,300~3,000자)
 MIN_BODY_CHARS = 700
@@ -42,6 +51,9 @@ def find_boilerplate(text):
         needle = p.lower() if p.isascii() else p
         if needle in haystack:
             found.append(p)
+    a, i = APOLOGY.search(text), INABILITY.search(text)
+    if a and i:
+        found.append(f"{a.group(0)}…{i.group(0)}")
     return found
 
 
