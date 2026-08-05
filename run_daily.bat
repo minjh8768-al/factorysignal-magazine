@@ -28,6 +28,9 @@ if errorlevel 1 (
   git push -q origin main
   git push -q origin main:master
   echo Pushed.
+  REM Telegram notice runs after the push so the links are already live.
+  REM Skips itself when no token is set; a failure here must not fail the job.
+  py -3 "tools\telegram.py" --send
 ) else (
   echo Nothing to push.
 )

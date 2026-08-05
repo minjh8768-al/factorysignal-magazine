@@ -442,6 +442,51 @@ class BoilerplateQuotes(unittest.TestCase):
                           if "상용구" in b])
 
 
+class Telegram(unittest.TestCase):
+    META = {"title": "국회서 \"가상자산 과세 신중해야\"", "category": "암호화폐",
+            "eyebrow": "Crypto Policy", "read": "4",
+            "description": "기재부는 내년 시행을 재확인했다"}
+
+    def test_message_has_category_title_and_link(self):
+        import telegram
+        m = telegram.message(self.META, "crypto-tax")
+        self.assertIn("₿ 암호화폐 · 4분 읽기", m)
+        self.assertIn("<b>", m)
+        self.assertIn(telegram.SITE + "/articles/crypto-tax.html", m)
+
+    def test_uses_korean_summary_not_english_eyebrow(self):
+        import telegram
+        m = telegram.message(self.META, "s")
+        self.assertIn("기재부는 내년 시행을 재확인했다", m)
+        self.assertNotIn("Crypto Policy", m)
+
+    def test_read_minutes_get_a_unit(self):
+        import telegram
+        self.assertIn("4분 읽기", telegram.message(self.META, "s"))
+        self.assertIn("· 4분", telegram.message({**self.META, "read": "4분"}, "s"))
+
+    def test_english_link_only_when_it_exists(self):
+        import telegram
+        self.assertNotIn("English", telegram.message(self.META, "s"))
+        self.assertIn("English", telegram.message(self.META, "s", has_en=True))
+
+    def test_escapes_html_meaningful_chars(self):
+        import telegram
+        m = telegram.message({**self.META, "title": "a <b> & c"}, "s")
+        self.assertIn("a &lt;b&gt; &amp; c", m)
+
+    def test_unknown_category_still_renders(self):
+        import telegram
+        self.assertIn("📰", telegram.message({"title": "t", "category": "기타"}, "s"))
+
+    def test_configured_requires_both_values(self):
+        import telegram
+        self.assertFalse(telegram.configured({"telegram_bot_token": "t"}))
+        self.assertFalse(telegram.configured({"telegram_chat_id": "-1"}))
+        self.assertTrue(telegram.configured(
+            {"telegram_bot_token": "t", "telegram_chat_id": "-1"}))
+
+
 class KeyTerms(unittest.TestCase):
     """핵심 용어 오타를 뉴스 건수로 잡는다.
     실측: 보완수사권 33,227건 vs 보안수사권 512건. 인물·날짜·수치가 아닌

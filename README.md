@@ -377,3 +377,26 @@ has a value of 52572 which is greater than 255
 Vercel CLI가 로그인할 때 PC 이름을 HTTP 헤더에 넣는데 헤더는 ASCII만 받는다.
 CLI 56·58 모두 같다. 토큰 인증은 이 흐름을 타지 않으므로 `.vercel-token` 파일에
 토큰을 넣고 `deploy.bat`을 쓰면 우회된다.
+
+## 텔레그램 알림
+
+발행한 기사를 텔레그램 그룹에 게시한다. `run_daily.bat` 이 **git push 뒤에** 자동으로
+부른다(링크가 살아 있어야 하므로). 토큰이 없으면 조용히 건너뛴다 — 알림이 없다고
+발행이 실패하지는 않는다.
+
+처음 한 번만 설정하면 된다:
+
+1. 텔레그램에서 **@BotFather** → `/newbot` → 토큰을 받는다.
+2. 그 봇을 기사 올릴 그룹에 초대한다.
+3. @BotFather → `/mybots` → 해당 봇 → Bot Settings → **Group Privacy → Disable**
+   (봇이 그룹 메시지를 봐야 chat_id를 알 수 있다).
+4. 그룹에 아무 말이나 하고 `py -3 tools	elegram.py --chats` → 나온 값을
+   `tools/config.json` 의 `telegram_bot_token`, `telegram_chat_id` 에 넣는다.
+
+확인:
+
+    py -3 tools	elegram.py            보낼 메시지 미리보기 (전송 안 함)
+    py -3 tools	elegram.py --send     실제 전송
+
+어떤 기사를 보낼지는 **HEAD 커밋에서 articles/ 에 새로 추가된 파일**로 정한다.
+상태 파일을 두지 않으므로 push 와 어긋나지 않는다. 슬러그를 직접 줄 수도 있다.
