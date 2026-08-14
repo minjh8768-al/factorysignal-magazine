@@ -178,6 +178,13 @@ a {
   background: #0b6fc4;
 }
 
+/* 가리키는 사이트의 로고를 그대로 재현한다. factorysignal-holdings 의 nav-logo 도
+   Factory<span> Holdings</span> 구조이고, 그쪽 --accent 가 #4f46e5 다.
+   'Factory' 는 색을 주지 않아야 밝은 nav 에서는 검정, 검은 서랍에서는 흰색이 된다. */
+.nav-holdings span {
+  color: #a5b4fc;             /* 검은 모바일 서랍 — 홀딩스도 어두운 배경에서 이 색을 쓴다 */
+}
+
 /* 텔레그램은 부차적인 목적지라 외곽선으로 둔다. 채운 버튼이 둘이면 어느 쪽이
    주된 행동인지 알 수 없고, 텔레그램 브랜드색(#229ED9)은 --accent 와 거의 같아
    나란히 놓이면 브랜드가 아니라 실수로 읽힌다. 높이·모서리·굵기는 .nav-cta 와 맞춘다. */
@@ -208,6 +215,10 @@ a {
   .nav-toggle,
   .nav-search {
     display: none;
+  }
+
+  .nav-holdings span {
+    color: #4f46e5;           /* 밝은 nav — 홀딩스 사이트의 --accent 그대로 */
   }
 
   .nav-links {
