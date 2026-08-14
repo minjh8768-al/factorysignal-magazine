@@ -178,6 +178,26 @@ a {
   background: #0b6fc4;
 }
 
+/* 텔레그램은 부차적인 목적지라 외곽선으로 둔다. 채운 버튼이 둘이면 어느 쪽이
+   주된 행동인지 알 수 없고, 텔레그램 브랜드색(#229ED9)은 --accent 와 거의 같아
+   나란히 놓이면 브랜드가 아니라 실수로 읽힌다. 높이·모서리·굵기는 .nav-cta 와 맞춘다. */
+.nav-tg {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 17px;          /* 테두리 1.5px 를 더하면 .nav-cta 와 같은 높이 */
+  border: 1.5px solid var(--accent);
+  border-radius: 6px;
+  color: var(--accent) !important;
+  font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.nav-tg:hover {
+  background: var(--accent);
+  color: var(--white) !important;
+}
+
 @media (min-width: 769px) {
   .nav {
     display: flex;
