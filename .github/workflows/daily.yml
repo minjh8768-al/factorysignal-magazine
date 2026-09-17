@@ -14,6 +14,11 @@ on:
         description: '특정 카테고리만 (예: 경제 세계). 비우면 6종 전부'
         required: false
         default: ''
+      dry_run:
+        description: '초안만 만들고 발행하지 않음 (배선 점검용)'
+        type: boolean
+        required: false
+        default: false
 
 # 분석 워크플로와 같은 저장소에 푸시하므로 동시에 돌지 않게 한다.
 concurrency:
@@ -55,14 +60,17 @@ jobs:
       - name: 초안 생성 · 검수 · 발행
         env:
           CATS: ${{ inputs.cats }}
+          # dry_run 이면 --publish 를 빼서 초안까지만 만든다.
+          PUB: ${{ inputs.dry_run == true && ' ' || '--publish' }}
         run: |
           if [ -n "$CATS" ]; then
-            python tools/daily.py --publish --cats $CATS
+            python tools/daily.py $PUB --cats $CATS
           else
-            python tools/daily.py --publish
+            python tools/daily.py $PUB
           fi
 
       - name: 바뀐 것이 있으면 커밋
+        if: inputs.dry_run != true
         id: commit
         run: |
           git config user.name  "github-actions[bot]"
