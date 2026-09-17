@@ -8,6 +8,12 @@ on:
   schedule:
     - cron: '30 7 * * 1-5'       # 평일 16:30 KST
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: '초안만 만들고 발행하지 않음 (배선 점검용)'
+        type: boolean
+        required: false
+        default: false
 
 concurrency:
   group: publish
@@ -48,10 +54,18 @@ jobs:
       - name: 분석 기사 생성
         run: python tools/analysis.py
 
+      - name: 만들어진 초안 확인
+        if: always()
+        run: |
+          echo "### 초안" >> "$GITHUB_STEP_SUMMARY"
+          ls -la _drafts/ 2>/dev/null || echo "초안 없음(주말이거나 게이트에 걸림)"
+
       - name: 발행
+        if: inputs.dry_run != true
         run: python tools/publish.py --apply
 
       - name: 바뀐 것이 있으면 커밋
+        if: inputs.dry_run != true
         id: commit
         run: |
           git config user.name  "github-actions[bot]"
