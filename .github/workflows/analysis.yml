@@ -1,0 +1,86 @@
+# 오후 데이터 분석 기사. 국내 증시 마감(15:30 KST) 뒤에 당일 종가로 쓴다.
+#
+# 16:30 KST = 07:30 UTC. 예약은 평일만 걸지만, agenda.py 도 주말이면 None 을
+# 돌려주므로 수동 실행이 주말에 들어와도 아무 일도 하지 않는다(이중 안전장치).
+name: analysis
+
+on:
+  schedule:
+    - cron: '30 7 * * 1-5'       # 평일 16:30 KST
+  workflow_dispatch:
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TZ: Asia/Seoul
+      PYTHONUTF8: '1'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 설정 파일 만들기
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS }}
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: python tools/config_from_env.py
+
+      # 규제 게이트에 걸리면 초안 자체가 만들어지지 않는다. 그 경우 발행 단계는
+      # 바뀐 파일이 없어 그대로 건너뛴다.
+      - name: 분석 기사 생성
+        run: python tools/analysis.py
+
+      - name: 발행
+        run: python tools/publish.py --apply
+
+      - name: 바뀐 것이 있으면 커밋
+        id: commit
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet --exit-code HEAD -- articles ; then
+            echo "changed=no" >> "$GITHUB_OUTPUT"
+            echo "발행된 기사가 없습니다(주말이거나 게이트에 걸림)."
+            exit 0
+          fi
+          git add -A articles
+          git commit -q -m "chore(analysis): 시장 분석 $(date +%Y-%m-%d)"
+          echo "changed=yes" >> "$GITHUB_OUTPUT"
+
+      - name: 푸시 (main·master 양쪽)
+        if: steps.commit.outputs.changed == 'yes'
+        run: |
+          git pull --rebase origin ${{ github.ref_name }}
+          git push origin HEAD:master
+          git push origin HEAD:main
+
+      - name: 텔레그램 알림
+        if: steps.commit.outputs.changed == 'yes'
+        run: python tools/telegram.py --send
+
+      - name: 보류된 초안 보관
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analysis-drafts-${{ github.run_number }}
+          path: _drafts/
+          retention-days: 14
+          if-no-files-found: ignore

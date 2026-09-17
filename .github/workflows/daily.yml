@@ -1,0 +1,107 @@
+# 아침 영상 기사 배치. PC 가 꺼져 있어도 GitHub 이 대신 돌린다.
+#
+# 예약은 UTC 로 돈다. 09:00 KST = 00:00 UTC.
+# TZ 를 Asia/Seoul 로 두어 파이썬의 date.today() 가 한국 날짜를 쓰게 한다 —
+# 기사 파일명과 fs:date 가 여기서 나오므로 UTC 날짜를 쓰면 하루 어긋난다.
+name: daily
+
+on:
+  schedule:
+    - cron: '0 0 * * *'          # 매일 09:00 KST
+  workflow_dispatch:              # 수동 실행 (Actions 탭에서 버튼)
+    inputs:
+      cats:
+        description: '특정 카테고리만 (예: 경제 세계). 비우면 6종 전부'
+        required: false
+        default: ''
+
+# 분석 워크플로와 같은 저장소에 푸시하므로 동시에 돌지 않게 한다.
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      TZ: Asia/Seoul
+      PYTHONUTF8: '1'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 설정 파일 만들기
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS }}
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: python tools/config_from_env.py
+
+      # 입력은 반드시 env 로 받는다. run 블록에 ${{ }} 를 그대로 끼워넣으면
+      # 입력 문자열이 셸 명령으로 실행될 수 있다.
+      - name: 초안 생성 · 검수 · 발행
+        env:
+          CATS: ${{ inputs.cats }}
+        run: |
+          if [ -n "$CATS" ]; then
+            python tools/daily.py --publish --cats $CATS
+          else
+            python tools/daily.py --publish
+          fi
+
+      - name: 바뀐 것이 있으면 커밋
+        id: commit
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet --exit-code HEAD -- articles ; then
+            echo "changed=no" >> "$GITHUB_OUTPUT"
+            echo "발행된 기사가 없습니다."
+            exit 0
+          fi
+          git add -A articles
+          git commit -q -m "chore(daily): 자동 배치 $(date +%Y-%m-%d)"
+          echo "changed=yes" >> "$GITHUB_OUTPUT"
+
+      - name: 푸시 (main·master 양쪽)
+        if: steps.commit.outputs.changed == 'yes'
+        run: |
+          git pull --rebase origin ${{ github.ref_name }}
+          git push origin HEAD:master
+          git push origin HEAD:main
+
+      - name: 텔레그램 알림
+        if: steps.commit.outputs.changed == 'yes'
+        run: python tools/telegram.py --send
+
+      - name: 실행 기록을 요약에 남기기
+        if: always()
+        run: |
+          {
+            echo "### 일일 배치"
+            echo '```'
+            tail -40 _drafts/_daily.log 2>/dev/null || echo "로그 없음"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 보류된 초안 보관
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: drafts-${{ github.run_number }}
+          path: _drafts/
+          retention-days: 14
+          if-no-files-found: ignore
