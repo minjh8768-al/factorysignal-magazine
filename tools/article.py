@@ -211,6 +211,33 @@ CARDS_START = "<!-- CARDS:START -->"
 CARDS_END = "<!-- CARDS:END -->"
 
 
+def thumb_html(meta):
+    """카드 썸네일.
+
+    영상 기사는 유튜브 이미지를 배경으로 쓴다. 분석 기사는 영상이 없어 그 URL 이
+    깨진 이미지가 되므로, 사진을 <img> 로 깔고 그 위에 지표 차트를 얹는다.
+
+    사진을 background-image 로 넣지 않는 이유: .article-thumb--data 가 카테고리
+    그라디언트를 이기려고 background 에 !important 를 쓰는데, !important 는 인라인
+    스타일까지 이겨서 사진이 통째로 사라졌다. <img> 는 그 싸움 밖에 있다.
+    """
+    esc = lambda v: html.escape(str(v), quote=True)
+    nl, q = chr(10), chr(39)
+    if meta.get("video"):
+        src = f"https://img.youtube.com/vi/{esc(meta['video'])}/hqdefault.jpg"
+        return (f'            <div class="article-thumb article-thumb--video" '
+                f'style="background-image:url({q}{src}{q});">'
+                f'<span>▶</span></div>{nl}')
+    photo = meta.get("photo") or ""
+    klass = "article-thumb article-thumb--data"
+    img = ""
+    if photo:
+        klass += " article-thumb--photo"
+        img = (f'<img class="thumb-photo" src="{esc(photo)}" alt="" '
+               f'loading="lazy" />')
+    return (f'            <div class="{klass}">{img}{meta.get("thumb_svg") or ""}'
+            f'<span class="thumb-badge">데이터</span></div>{nl}')
+
 def card_html(meta):
     """인덱스 카드 하나. meta: slug, category, eyebrow, title, description, read, video
 
@@ -222,9 +249,7 @@ def card_html(meta):
     return (
         f'          <a href="{esc(meta["slug"])}.html" class="article-card" '
         f'data-category="{esc(meta["category"])}">\n'
-        f'            <div class="article-thumb article-thumb--video" '
-        f'style="background-image:url(\'https://img.youtube.com/vi/'
-        f'{esc(meta["video"])}/hqdefault.jpg\');"><span>▶</span></div>\n'
+        + thumb_html(meta) +
         f'            <div class="article-body">\n'
         f'              <div class="article-tag">{esc(meta["eyebrow"])}</div>\n'
         f'              <h3>{esc(meta["title"])}</h3>\n'

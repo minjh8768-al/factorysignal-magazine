@@ -1294,3 +1294,47 @@ footer {
     flex-direction: column;
   }
 }
+
+/* 데이터 분석 기사 카드. 영상 대신 지표 차트가 썸네일이다.
+   차트 SVG 가 지표명·현재값·변화율까지 그려 썸네일 전체를 채우므로, 카테고리
+   그라디언트와 padding 을 무효화한다(!important 는 위쪽 카테고리 규칙이 속성
+   선택자라 우선순위가 높기 때문이다 — 단색 배경에 선만 남던 원인이었다). */
+.article-thumb--data{
+  position:relative;
+  padding:0 !important;
+  background:#12161c !important;
+  overflow:hidden;
+}
+.article-thumb--data svg{display:block;width:100%;height:100%;position:relative;z-index:1}
+
+/* 사진을 깐 카드. 사진 위 글자가 읽히도록 어두운 막을 씌운다.
+   막이 없으면 밝은 차트 사진 위에서 흰 숫자가 사라진다. */
+.article-thumb--photo .thumb-photo{
+  position:absolute;inset:0;z-index:0;
+  width:100%;height:100%;object-fit:cover;
+}
+.article-thumb--photo::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(8,11,16,.86) 0%,rgba(8,11,16,.42) 52%,
+                             rgba(8,11,16,.80) 100%);
+}
+.article-thumb--photo svg{z-index:2}
+.article-thumb--photo .thumb-badge{z-index:3}
+.article-thumb--data .thumb-badge{
+  position:absolute;right:12px;bottom:12px;
+  padding:3px 8px;border-radius:4px;
+  background:rgba(255,255,255,.12);color:rgba(255,255,255,.75);
+  font-size:.64rem;font-weight:700;letter-spacing:.06em;
+}
+
+/* 참고 영상. 기사의 출처가 아니라 같은 주제를 다룬 다른 매체의 영상이다.
+   본문 위 유튜브 임베드(영상 요약 기사)와 구분되도록 위에 구분선과 라벨을 둔다. */
+.related-video{margin:46px 0 0;padding-top:26px;border-top:1px solid var(--gray-200)}
+.related-video-head{
+  font-size:.78rem;font-weight:700;letter-spacing:.08em;color:var(--gray-600);
+  text-transform:uppercase;margin-bottom:14px;
+}
+.related-video figcaption:last-child{
+  margin-top:12px;font-size:.85rem;line-height:1.65;color:var(--gray-600);
+}
+.related-video figcaption a{text-decoration:underline}

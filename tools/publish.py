@@ -35,6 +35,26 @@ def _meta(text, name):
     return html.unescape(m.group(1)) if m else None
 
 
+def _first_spark(text):
+    """카드 썸네일로 쓸 SVG.
+
+    분석 기사는 카드용 차트를 <div class="card-thumb" hidden> 에 미리 심어 둔다.
+    그게 있으면 그것을 쓴다 — 본문 표의 스파크라인을 카드에 그대로 올리면 선 하나만
+    남아 자리표시자처럼 보였다. 없으면 데이터 블록의 첫 스파크라인으로 물러선다.
+
+    문서 전체에서 첫 <svg> 를 찾으면 nav 의 검색 아이콘이 잡히므로 범위를 좁힌다.
+    """
+    for pattern in (r'<div class="card-thumb"[^>]*>.*?</div>',
+                    r'<figure class="data-block">.*?</figure>'):
+        block = re.search(pattern, text, re.S)
+        if not block:
+            continue
+        svg = re.search(r"<svg[ >].*?</svg>", block.group(0), re.S)
+        if svg:
+            return svg.group(0)
+    return ""
+
+
 def read_meta(path):
     """기사/초안 HTML에서 카드에 필요한 값을 뽑는다."""
     with open(path, encoding="utf-8") as f:
@@ -51,6 +71,12 @@ def read_meta(path):
         "read": _meta(text, "fs:read"),
         "video": _meta(text, "fs:video"),
         "date": _meta(text, "fs:date"),
+        "kind": _meta(text, "fs:kind"),
+        "photo": _meta(text, "fs:photo"),
+        "photo_by": _meta(text, "fs:photo_by"),
+        # 분석 기사는 영상이 없어 카드 썸네일이 깨진다. 기사가 이미 그려 둔
+        # 스파크라인 첫 개를 카드에 그대로 쓴다(수치를 두 번 계산하지 않는다).
+        "thumb_svg": _first_spark(text),
         "_text": text,
     }
 

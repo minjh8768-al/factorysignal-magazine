@@ -521,6 +521,284 @@ class Telegram(unittest.TestCase):
             {"telegram_bot_token": "t", "telegram_chat_id": "-1"}))
 
 
+class MarketSalients(unittest.TestCase):
+    """수치는 코드가 계산한다. LLM이 놓치던 것을 여기서 찾아 준다."""
+
+    # 실측 KOSPI(2026-07-27~31): 순변화는 작지만 하루 -10.84%/+17.91% 가 있었다.
+    STAMPS = [1753574400 + 86400 * i for i in range(5)]
+    VALUES = [6755.75, 6023.66, 5663.24, 5593.56, 6595.45]
+
+    def test_finds_the_swing_the_net_change_hides(self):
+        import market
+        s = market.salients(self.STAMPS, self.VALUES)
+        self.assertGreater(s["고저폭_퍼센트"], 20)
+        self.assertLess(s["하루최대하락_퍼센트"], -10)
+        self.assertGreater(s["하루최대상승_퍼센트"], 17)
+
+    def test_run_carries_its_own_dates(self):
+        # 날짜가 없으면 LLM이 "최근 6일 연속"처럼 시점을 지어낸다(실측 오류).
+        import market
+        s = market.salients(self.STAMPS, self.VALUES)
+        self.assertEqual(s["최장연속방향"], "하락")
+        self.assertEqual(s["최장연속"], 3)
+        self.assertTrue(s["최장연속시작일"] and s["최장연속종료일"])
+
+    def test_dates_are_korean_not_iso(self):
+        import market
+        s = market.salients(self.STAMPS, self.VALUES)
+        self.assertNotIn("-", s["최고일"])
+        self.assertIn("월", s["최고일"])
+
+    def test_sparkline_needs_two_points(self):
+        import market
+        self.assertEqual(market.sparkline([1]), "")
+        self.assertIn("<polyline", market.sparkline([1, 2, 3]))
+
+
+class AnalysisGuards(unittest.TestCase):
+    def test_big_won_amounts_get_readable_units(self):
+        import analysis
+        self.assertEqual(analysis.label(90886406.15, "원"), "9,089만 원")
+        self.assertEqual(analysis.label(1400.28, "원"), "1,400.28원")
+        self.assertEqual(analysis.label(6468.32, ""), "6,468.32")
+
+    def test_eok_amounts_read_as_korean(self):
+        import analysis
+        self.assertEqual(analysis.label(107000000, "원"), "1억 700만 원")
+        self.assertEqual(analysis.label(100000000, "원"), "1억 원")
+        # 9,999.95만이 "10,000만 원"으로 나오던 경계
+        self.assertEqual(analysis.label(99999500, "원"), "1억 원")
+
+    def test_field_name_leak_is_caught(self):
+        # 실측: "최근값표시 6,852.58로 장을 마치며" 가 본문에 나왔다.
+        import analysis
+        self.assertIn("최근값표시",
+                      analysis.leaks("<p>최근값표시 6,852.58로 마감</p>"))
+        self.assertEqual(analysis.leaks("<p>6,852.58로 마감했다</p>"), [])
+
+    def test_gojeopok_is_real_terminology_not_a_leak(self):
+        import analysis
+        self.assertEqual(analysis.leaks("<p>고저폭 10.64%를 기록했다</p>"), [])
+
+    def test_everyday_words_that_double_as_field_names_pass(self):
+        # 실측 오탐: "5일 연속 상승을 기록한 점도 특징적이다"
+        import analysis
+        self.assertEqual(
+            analysis.leaks("<p>5일 연속 상승을 기록한 점도 특징적이다.</p>"), [])
+
+
+class DataCardThumb(unittest.TestCase):
+    BASE = dict(slug="s", category="경제", eyebrow="E", title="T",
+                description="D", read=3)
+
+    def test_video_article_uses_youtube_thumb(self):
+        import article
+        html_ = article.card_html({**self.BASE, "video": "abc123"})
+        self.assertIn("img.youtube.com/vi/abc123", html_)
+
+    def test_analysis_article_uses_its_sparkline(self):
+        # 영상이 없으면 유튜브 URL이 깨진 이미지가 된다.
+        import article
+        html_ = article.card_html(
+            {**self.BASE, "video": "", "thumb_svg": "<svg id='k'/>"})
+        self.assertNotIn("img.youtube.com", html_)
+        self.assertIn("<svg id='k'/>", html_)
+        self.assertIn("article-thumb--data", html_)
+
+    def test_photo_goes_in_an_img_not_a_background(self):
+        # background-image 로 넣었더니 .article-thumb--data 의 !important 가
+        # 인라인 스타일을 이겨 사진이 통째로 사라졌다(실측).
+        import article
+        html_ = article.card_html({**self.BASE, "video": "",
+                                   "thumb_svg": "<svg/>", "photo": "https://x/y.jpg"})
+        self.assertIn('<img class="thumb-photo" src="https://x/y.jpg"', html_)
+        self.assertNotIn("background-image", html_)
+        self.assertIn("article-thumb--photo", html_)
+
+    def test_no_photo_means_no_img_tag(self):
+        import article
+        html_ = article.card_html({**self.BASE, "video": "", "thumb_svg": "<svg/>"})
+        self.assertNotIn("thumb-photo", html_)
+        self.assertNotIn("article-thumb--photo", html_)
+
+    def test_chart_drops_its_ground_when_a_photo_is_behind(self):
+        import market
+        vals = [1, 2, 3, 2, 4]
+        with_ground = market.card_chart(vals, "KOSPI", "1", 1.0, ground=True)
+        on_photo = market.card_chart(vals, "KOSPI", "1", 1.0, ground=False)
+        self.assertIn("url(#bg)", with_ground)
+        self.assertNotIn("url(#bg)", on_photo)
+        self.assertIn("feDropShadow", on_photo)   # 사진 위 가독성용
+
+    def test_no_video_and_no_svg_still_renders(self):
+        import article
+        html_ = article.card_html({**self.BASE, "video": ""})
+        self.assertIn("article-thumb--data", html_)
+
+
+class Compliance(unittest.TestCase):
+    """분석 기사가 투자자문으로 읽히지 않게 막는 게이트."""
+
+    def test_action_advice_blocks(self):
+        import compliance
+        for bad in ("지금 매수할 시점이다", "비중 확대가 필요하다",
+                    "손절 라인을 지켜야 한다", "목표가는 7,500이다",
+                    "가장 유망한 자산이다", "투자 전략을 점검한다"):
+            self.assertTrue(compliance.blocking(compliance.check("<p>%s</p>" % bad)),
+                            bad)
+
+    def test_return_promises_block(self):
+        import compliance
+        for bad in ("원금 보장 상품이다", "반드시 오른다", "손실 없는 구조다"):
+            self.assertTrue(compliance.blocking(compliance.check("<p>%s</p>" % bad)),
+                            bad)
+
+    def test_bare_future_blocks_but_conditional_passes(self):
+        import compliance
+        bare = "<p>환율은 앞으로 더 오를 것이다.</p>"
+        cond = ("<p>미 국채금리가 안정세를 이어가면 환율 하방 압력이 "
+                "이어질 수 있다는 해석이 가능하다.</p>")
+        self.assertTrue(compliance.blocking(compliance.check(bare)))
+        self.assertEqual(compliance.blocking(compliance.check(cond)), [])
+
+    def test_advice_in_title_also_blocks(self):
+        import compliance
+        self.assertTrue(compliance.blocking(
+            compliance.check("<p>지수가 올랐다.</p>", title="지금 담아야 할 자산")))
+
+    def test_missing_disclaimer_blocks(self):
+        import compliance
+        self.assertTrue(compliance.blocking(compliance.check(
+            "<p>지수가 올랐다.</p>", disclaimer="참고용 자료입니다.")))
+
+    def test_real_disclaimer_passes(self):
+        import analysis, compliance
+        self.assertEqual(compliance.blocking(compliance.check(
+            "<p>지수가 올랐다.</p>", disclaimer=analysis.DISCLAIMER)), [])
+
+    def test_plain_market_reporting_passes(self):
+        import compliance
+        ok = ("<p>코스피는 7월 28일 하루에만 -10.84% 급락한 뒤 7월 31일 "
+              "17.91% 폭등했다. 8월 10일부터 14일까지 5일 연속 올랐다.</p>")
+        self.assertEqual(compliance.blocking(compliance.check(ok)), [])
+
+
+class Ecos(unittest.TestCase):
+    """한국은행 거시지표. 네트워크 없이 순수 함수만 시험한다."""
+
+    def test_yoy_turns_an_index_into_a_rate(self):
+        # 소비자물가지수(2020=100)를 그대로 실으면 뜻이 없다. 상승률이어야 한다.
+        import ecos
+        rows = [(f"2025{m:02d}", 100.0) for m in range(1, 13)]
+        rows += [("202601", 103.0)]
+        self.assertEqual(ecos.yoy(rows), ("202601", 3.0))
+
+    def test_yoy_needs_thirteen_points(self):
+        import ecos
+        self.assertIsNone(ecos.yoy([("202601", 100.0)]))
+
+    def test_units_follow_korean_convention(self):
+        import ecos
+        self.assertEqual(ecos.human(2.75, "연%"), "2.75%")
+        self.assertEqual(ecos.human(44427.6, "백만달러"), "444억 달러")
+
+    def test_time_labels_match_the_article_style(self):
+        import ecos
+        self.assertEqual(ecos.pretty_time("20260825"), "8월 25일")
+        self.assertEqual(ecos.pretty_time("202607"), "2026년 7월")
+
+    def test_monthly_span_reaches_back_over_a_year(self):
+        # 전년 대비를 내려면 13개월 이상이 필요하다.
+        import datetime, ecos
+        start, end = ecos.span("M", datetime.date(2026, 8, 26))
+        self.assertLess(int(start), int(end) - 100)
+
+    def test_no_key_returns_nothing_instead_of_failing(self):
+        # 거시지표가 없다고 기사 생성이 죽으면 안 된다.
+        import ecos
+        self.assertEqual(ecos.macro({}), [])
+
+    def test_macro_table_disappears_when_empty(self):
+        import analysis
+        self.assertEqual(analysis.macro_block([]), "")
+
+    def test_macro_table_shows_asof_per_row(self):
+        import analysis
+        html_ = analysis.macro_block([
+            {"이름": "기준금리", "표시": "2.75%", "변화표시": "+0.00%",
+             "기준시점": "8월 23일"}])
+        self.assertIn("2.75%", html_)
+        self.assertIn("8월 23일", html_)
+
+
+class Agenda(unittest.TestCase):
+    """평일에만 발행한다. 소재와 형식이 자동으로 돌아야 매일 다른 기사가 된다."""
+
+    import datetime as _dt
+    MON = _dt.date(2026, 8, 31)
+
+    def runs(self, n):
+        """n일간의 계획 중 발행하는 날만."""
+        import agenda, datetime
+        out = []
+        for i in range(n):
+            day = self.MON + datetime.timedelta(days=i)
+            p = agenda.plan(day)
+            if p:
+                out.append((day, p))
+        return out
+
+    def test_weekends_are_off(self):
+        import agenda, datetime
+        for i in range(21):
+            day = self.MON + datetime.timedelta(days=i)
+            if day.weekday() >= 5:
+                self.assertIsNone(agenda.plan(day), day)
+
+    def test_five_articles_a_week(self):
+        self.assertEqual(len(self.runs(7)), 5)
+
+    def test_friday_is_the_weekly_review(self):
+        for day, p in self.runs(21):
+            if day.weekday() == 4:
+                self.assertEqual(p["형식"], "weekly")
+            else:
+                self.assertEqual(p["형식"], "daily")
+
+    def test_never_repeats_a_theme_on_consecutive_runs(self):
+        names = [p["주제"] for _, p in self.runs(60)]
+        self.assertEqual([a for a, b in zip(names, names[1:]) if a == b], [])
+
+    def test_every_theme_gets_used(self):
+        import agenda
+        seen = {p["주제"] for _, p in self.runs(28)}
+        self.assertTrue(set(agenda.WEEKDAY_THEMES) <= seen)
+
+    def test_same_day_gives_the_same_plan(self):
+        import agenda
+        self.assertEqual(agenda.plan(self.MON), agenda.plan(self.MON))
+
+    def test_a_theme_does_not_stick_to_one_weekday(self):
+        # 요일 고정이면 독자가 예측해버린다. 주말이 이틀을 먹어 배치가 밀려야 한다.
+        import datetime, agenda
+        mondays = {agenda.plan(self.MON + datetime.timedelta(days=7 * w))["주제"]
+                   for w in range(3)}
+        self.assertGreater(len(mondays), 1)
+
+    def test_no_individual_stocks_in_the_pool(self):
+        """지수·환율·원자재·가상자산만. 개별 종목은 유사투자자문업 선을 넘는다.
+
+        허용 형태를 나열하는 대신 종목 형태를 배제한다 — 달러지수(DX-Y.NYB)처럼
+        생김새가 특이한 지수를 매번 예외로 넣게 되기 때문이다.
+        """
+        import re as _re
+        import agenda
+        stock = _re.compile(r"^(\d{6}\.K[SQ]|[A-Z]{1,5})$")   # 005930.KS, AAPL
+        for spec in list(agenda.THEMES.values()) + [agenda.WEEKLY_SET]:
+            for sym, name, *_ in spec["지표"]:
+                self.assertIsNone(stock.match(sym), f"{name} {sym} 은 개별 종목 형태다")
+
+
 class KeyTerms(unittest.TestCase):
     """핵심 용어 오타를 뉴스 건수로 잡는다.
     실측: 보완수사권 33,227건 vs 보안수사권 512건. 인물·날짜·수치가 아닌
