@@ -404,3 +404,34 @@ CLI 56·58 모두 같다. 토큰 인증은 이 흐름을 타지 않으므로 `.v
 
 어떤 기사를 보낼지는 **HEAD 커밋에서 articles/ 에 새로 추가된 파일**로 정한다.
 상태 파일을 두지 않으므로 push 와 어긋나지 않는다. 슬러그를 직접 줄 수도 있다.
+
+## 자동 발행은 GitHub 에서 돈다 (PC 를 켜 둘 필요 없음)
+
+2026-09-17 부터 윈도우 예약작업이 아니라 **GitHub Actions** 가 돌린다.
+PC 가 꺼져 있어도 발행된다.
+
+| 워크플로 | 시각(KST) | 하는 일 |
+|---|---|---|
+| `.github/workflows/daily.yml` | 매일 09:00 | 영상 기사 배치 + 영어판 + 텔레그램 |
+| `.github/workflows/analysis.yml` | 평일 16:30 | 시장 분석 기사 (증시 마감 뒤) |
+
+- **수동 실행**: 저장소 **Actions** 탭 → 워크플로 선택 → **Run workflow**.
+  `dry_run` 을 켜면 초안만 만들고 발행하지 않는다(배선 점검용).
+  `daily` 는 `cats` 에 `경제 세계` 처럼 넣어 일부 카테고리만 돌릴 수 있다.
+- `tools/config.json` 은 저장소에 없다(gitignore). 러너에서
+  `tools/config_from_env.py` 가 저장소 시크릿으로 만든다. **키를 바꾸면
+  Settings → Secrets and variables → Actions 에서 같이 바꿔야 한다.**
+  등록된 시크릿: `GEMINI_API_KEY` `GEMINI_API_KEYS` `NAVER_CLIENT_ID`
+  `NAVER_CLIENT_SECRET` `TELEGRAM_BOT_TOKEN` `TELEGRAM_CHAT_ID`
+  `ECOS_API_KEY` `PEXELS_API_KEY`
+- 실행 기록은 각 실행의 **Summary**, 보류된 초안은 **Artifacts**(14일 보관)에 남는다.
+- 두 워크플로는 같은 저장소에 푸시하므로 `concurrency` 로 직렬화돼 있다.
+  푸시는 `master` 와 `main` 양쪽에 같은 커밋으로 나간다.
+- 시각은 UTC 로 예약하고 `TZ: Asia/Seoul` 로 돌린다. 기사 파일명과 `fs:date` 가
+  `date.today()` 에서 나오므로 UTC 로 두면 날짜가 하루 어긋난다.
+
+**로컬 예약작업 `FactoryMagazineDaily` 는 꺼 두었다** — GitHub 과 PC 가 둘 다 돌면
+같은 날 두 번 발행된다. 손으로 돌릴 때는 `run_daily.bat` · `run_analysis.bat` 을 쓴다.
+
+⚠️ 저장소가 공개라 **실행 로그도 공개**다. GitHub 이 시크릿 값을 가려 주기는 하지만,
+로그에 키를 찍는 코드를 새로 넣지 말 것.
