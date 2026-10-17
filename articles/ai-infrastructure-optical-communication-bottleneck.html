@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI 데이터센터의 새 병목 &#x27;연결&#x27;… 대안으로 떠오른 광통신 생태계 분석 — Factory Magazine</title>
+<meta name="description" content="수만 개의 GPU를 연결하는 과정에서 구리선의 한계가 드러남에 따라 광통신 기술과 CPO가 AI 인프라의 핵심 해결책으로 부상하고 있다." />
+<meta name="fs:category" content="경제" />
+<meta name="fs:eyebrow" content="Tech Watch" />
+<meta name="fs:read" content="5" />
+<meta name="fs:date" content="2026-10-17" />
+<meta name="fs:video" content="DB_pvycXuhs" />
+<link rel="alternate" hreflang="en" href="ai-infrastructure-optical-communication-bottleneck-en.html" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <button class="nav-toggle" aria-label="메뉴 열기">
+    <span></span><span></span><span></span>
+  </button>
+  <a href="index.html" class="nav-logo">Factory<span> Magazine</span></a>
+  <button type="button" class="nav-search" aria-label="검색" title="검색 (준비 중)">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+  </button>
+  <div class="nav-links">
+    <a href="https://factorysignal-holdings.vercel.app" class="nav-holdings" target="_blank" rel="noopener">Factory<span> Holdings</span></a>
+    <a href="https://t.me/+dQQkMVnpAqZhMDU9" class="nav-tg" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-2.012 9.483c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.48 14.697l-2.95-.924c-.642-.204-.654-.642.136-.953l11.5-4.432c.537-.194 1.006.131.396.86z"/></svg>텔레그램</a>
+    <a href="https://predictanalytics-news.vercel.app" class="nav-cta" target="_blank" rel="noopener">앱 열기</a>
+  </div>
+</nav>
+
+<header class="article-hero">
+  <div class="wrap">
+    <a href="index.html" class="back-link">← 아티클 목록으로</a><a href="ai-infrastructure-optical-communication-bottleneck-en.html" class="lang-switch">English</a>
+    <span class="section-eyebrow">Tech Watch</span>
+    <h1>AI 데이터센터의 새 병목 &#x27;연결&#x27;… 대안으로 떠오른 광통신 생태계 분석</h1>
+    <div class="article-meta"><span class="byline-avatar">FS</span><span class="byline-name">Factory Magazine 팀</span> · <span>5분 읽기</span></div>
+  </div>
+</header>
+
+<article class="article-content">
+
+  <div class="video-embed">
+    <iframe src="https://www.youtube.com/embed/DB_pvycXuhs" title="티타임즈TV · 엔비디아, 브로드컴, TSMC가 칩 속에 광케이블을 심는 이유" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen loading="lazy"></iframe>
+  </div>
+  <p class="source-note">원본 영상: <a href="https://www.youtube.com/watch?v=DB_pvycXuhs" target="_blank" rel="noopener">티타임즈TV · 엔비디아, 브로드컴, TSMC가 칩 속에 광케이블을 심는 이유</a>. 이하 내용은 해당 영상을 요약·정리한 것입니다.</p>
+
+  <p>GPU와 메모리, 전력 및 냉각에 이어 AI 인프라 전반의 새로운 병목 요소로 데이터 전송을 담당하는 '연결'이 부상하고 있다. 수만 장의 GPU가 하나의 거대한 컴퓨터처럼 작동해야 하는 AI 데이터센터 특성상, 데이터 교환 경로가 막히면 전체 시스템 성능이 저하되기 때문이다.</p>
+  <h2>구리선의 한계와 광통신의 등장</h2>
+  <p>기존 데이터센터에서는 서버 간 단거리 연결에 구리선을 주로 사용해 왔다. 그러나 GPU 수의 폭증과 포트당 데이터 전송량의 급격한 증가로 인해 구리선은 신호 감쇄 및 발열 문제에 직면했다.</p>
+  <p>고속 전기 신호는 구리선을 15cm만 지나도 세기가 100분의 1 수준으로 떨어지는 반면, 광섬유는 15km를 이동해야 절반 수준으로 줄어든다. 또한 광통신은 전력 소모와 열 발생이 적고, 한 가닥에 서로 다른 파장의 빛을 동시에 실어 보낼 수 있어 대역폭 면에서 압도적인 장점을 갖는다.</p>
+  <h2>바깥에서 안쪽으로 파고드는 광통신 기술</h2>
+  <p>AI 데이터센터 내 광통신 적용은 단계적으로 진행되고 있다. 첫 번째 단계는 랙과 랙 사이를 연결하는 구간으로, 리프 스위치와 스파인 스위치 사이를 광케이블과 광모듈로 대체하는 방식이 현재 본격적으로 확산 중이다.</p>
+  <p>두 번째 단계는 스위치 내부의 전구간 손실을 줄이는 CPO(공동 패키징 광학) 기술이다. 광변환 부품을 외부 포트가 아닌 스위치 칩 바로 옆 패키지 안에 통합함으로써 전기 신호 이동 거리를 기존 30cm에서 수 mm로 축소한다. 이를 통해 포트당 전력 소모를 30W에서 9W 수준으로 낮추고 신호 손실도 크게 줄일 수 있다.</p>
+  <p>마지막 단계는 GPU 칩 자체의 입출력을 빛으로 처리하는 광 I/O 기술이다. 이는 칩 설계부터 패키징까지 대대적인 변화가 필요해 가장 늦게 전환될 것으로 보이지만, GPU 배치 및 운영 방식을 근본적으로 바꿀 기술로 평가받는다.</p>
+  <h2>중국의 물량과 미국·대만의 기술 줄다리기</h2>
+  <p>광통신 산업 생태계는 국가별로 역할이 나누어져 있다. 완성품인 광모듈 대량 생산과 조립은 중국 기업들이 주도하고 있으며, 글로벌 1위 기업인 이노라이트 등은 미국 빅테크 기업에 광모듈을 대량 공급하고 있다.</p>
+  <p>반면 광모듈 내부의 핵심 부품인 레이저는 미국의 루멘텀과 코히어런트가, 광섬유는 미국의 코닝이 시장을 점유하고 있다. 향후 CPO 기술 도입이 본격화되면 단순 조립을 담당하는 중국보다 칩 설계 능력을 보유한 미국의 엔비디아, 브로드컴, 마벨 및 패키징 기술을 갖춘 대만의 TSMC 중심으로 주도권이 이동할 수 있다는 전망이 나온다.</p>
+  <p>다만 CPO 시장은 아직 형성 초기 단계이며, 장거리 구간에서는 기존 광모듈 방식이 지속적으로 쓰이므로 향후 수년간은 물량을 쥐고 있는 중국과 핵심 기술을 보유한 미국 간의 주도권 경쟁이 이어질 것으로 보인다.</p>
+
+  <div class="disclaimer">
+    이 글은 유튜브 영상의 내용을 요약·정리한 것이며, 영상 출연자 개인의 견해입니다. Factory Magazine이 검증하거나 보증하는 내용이 아닙니다. 투자 조언이나 권유가 아니며, 투자에는 원금 손실 위험이 있으니 투자 결정은 본인의 판단과 책임 하에 이루어져야 합니다.
+  </div>
+
+</article>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-logo">Factory<span> Magazine</span></a>
+        <p class="footer-tagline">노이즈 속에서, 신호를 찾습니다.</p>
+        <p>정치·경제·암호화폐·스포츠·세계·스타트업 소식 뒤에 숨은 결정을 기록하는 콘텐츠 브랜드입니다.</p>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h4>아티클</h4>
+          <ul>
+            <li><a href="index.html">전체 아티클</a></li>
+            <li><a href="bitcoin-the-perfect-ledger.html">마켓 워치</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>링크</h4>
+          <ul>
+            <li><a href="https://predictanalytics-news.vercel.app" target="_blank" rel="noopener">Factory Signal</a></li>
+            <li><a href="https://predictanalytics-news.vercel.app/terms.html" target="_blank" rel="noopener">이용약관</a></li>
+            <li><a href="https://predictanalytics-news.vercel.app/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Factory Magazine</span>
+      <span>$SIGNAL은 현금화·환전이 불가능한 서비스 내 유틸리티 토큰입니다.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+</body>
+</html>
