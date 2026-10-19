@@ -67,6 +67,24 @@ document.addEventListener("DOMContentLoaded", () => {
       heroMeta.append(" · ", time);
     }
 
+    // 기사 → Factory Signal 모의 예측으로 넘기는 연결 고리. 가상 포인트라 돈이 들지
+    // 않는다는 점을 문구에 분명히 한다(베팅 유도로 읽히지 않게).
+    const cta = document.createElement("aside");
+    cta.className = "predict-cta";
+    const ctaTitle = document.createElement("strong");
+    const ctaText = document.createElement("p");
+    const ctaLink = document.createElement("a");
+    ctaTitle.textContent = isEn
+      ? "What odds does the world give this?"
+      : "이 이슈, 세계는 몇 %로 보고 있을까요?";
+    ctaText.textContent = isEn
+      ? "See live prediction-market probabilities and make your own call with free virtual points."
+      : "실제 예측시장 확률을 확인하고, 무료 가상 포인트로 직접 예측해 보세요.";
+    ctaLink.href = "https://predictanalytics-news.vercel.app/#markets";
+    ctaLink.textContent = isEn ? "Make a prediction →" : "모의 예측 하러 가기 →";
+    cta.append(ctaTitle, ctaText, ctaLink);
+    articleBody.append(cta);
+
     const notice = document.createElement("p");
     notice.className = "source-note ai-note";
     notice.textContent = isEn
