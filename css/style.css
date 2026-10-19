@@ -1369,3 +1369,14 @@ footer {
   text-decoration: none;
 }
 .predict-cta a:hover { opacity: 0.9; color: var(--white); }
+
+/* 카드 하단 줄: 날짜가 추가되면서 좁은 카드에서 바이라인이 여러 줄로 꺾였다.
+   각 항목은 한 덩어리로 유지하고, 자리가 모자라면 날짜가 다음 줄로 내려가게 한다. */
+.article-card .article-meta {
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+.article-card .article-meta > span,
+.article-card .article-meta > time {
+  white-space: nowrap;
+}
