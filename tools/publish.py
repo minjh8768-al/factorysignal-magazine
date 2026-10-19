@@ -105,7 +105,36 @@ def rebuild_index(apply_changes):
     if apply_changes and new != old:
         with open(INDEX, "w", encoding="utf-8") as f:
             f.write(new)
+    if apply_changes:
+        write_sitemap()
     return rows, new != old
+
+
+SITE_BASE = "https://predictanalytics-news.vercel.app/blog/articles/"
+SITEMAP = os.path.join(ARTICLES, "sitemap.xml")
+
+
+def write_sitemap():
+    """검색엔진 제출용 사이트맵. articles/ 안에 두는 이유: daily 워크플로가
+    articles 폴더만 커밋하므로, 여기 있어야 매일 발행과 함께 갱신된다.
+    손으로 쓴 기사(fs:date 없음)와 영어판도 모두 싣는다."""
+    entries = []
+    for path in sorted(glob.glob(os.path.join(ARTICLES, "*.html"))):
+        slug = os.path.splitext(os.path.basename(path))[0]
+        if slug == "index":
+            entries.append((SITE_BASE, None))
+            continue
+        with open(path, encoding="utf-8") as f:
+            date = _meta(f.read(), "fs:date")
+        entries.append((SITE_BASE + slug + ".html", date))
+    lines = ['<?xml version="1.0" encoding="UTF-8"?>',
+             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for url, date in entries:
+        lastmod = f"<lastmod>{date}</lastmod>" if date else ""
+        lines.append(f"  <url><loc>{html.escape(url)}</loc>{lastmod}</url>")
+    lines.append("</urlset>\n")
+    with open(SITEMAP, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
 
 
 def stamp_date(text, date):

@@ -246,6 +246,10 @@ def card_html(meta):
     """
     esc = lambda v: html.escape(str(v), quote=True)
     validate_category(meta["category"])
+    # 날짜가 없으면 뉴스가 언제 것인지 독자가 알 수 없다. fs:date(YYYY-MM-DD)를 점 표기로.
+    date = meta.get("date") or ""
+    date_html = (f'<span>·</span><time datetime="{esc(date)}">{esc(date.replace("-", "."))}</time>'
+                 if date else "")
     return (
         f'          <a href="{esc(meta["slug"])}.html" class="article-card" '
         f'data-category="{esc(meta["category"])}">\n'
@@ -256,7 +260,7 @@ def card_html(meta):
         f'              <p>{esc(meta["description"])}</p>\n'
         f'              <div class="article-meta"><span class="byline-avatar">FS</span>'
         f'<span class="byline-name">{BYLINE}</span><span>·</span>'
-        f'<span>{esc(meta["read"])}분 읽기</span></div>\n'
+        f'<span>{esc(meta["read"])}분 읽기</span>{date_html}</div>\n'
         f'            </div>\n'
         f'          </a>'
     )
