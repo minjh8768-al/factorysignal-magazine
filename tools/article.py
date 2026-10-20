@@ -310,11 +310,17 @@ def thumb_html(meta):
     esc = lambda v: html.escape(str(v), quote=True)
     nl = chr(10)
     if meta.get("video") and meta.get("photo"):
-        # 뉴스처럼 보이게 실제 사진(Pexels, 상업 이용 무료) + 분야 라벨. 남의 방송 화면은 쓰지 않는다.
+        # 뉴스처럼 보이게 실제 사진 + 분야 라벨. 남의 방송 화면은 쓰지 않는다.
+        # 사진은 위키미디어 커먼즈(인물·팀 실사진, CC BY 등) 또는 Pexels(장면). CC BY 계열은
+        # 출처 표기가 이용 조건이라 촬영자·라이선스를 사진 위에 작게 단다.
+        credit = ""
+        if meta.get("photo_license"):
+            credit = (f'<span class="thumb-credit">사진: {esc(meta.get("photo_by") or "")} · '
+                      f'{esc(meta["photo_license"])}</span>')
         return (f'            <div class="article-thumb article-thumb--news">'
                 f'<img class="thumb-photo" src="{esc(meta["photo"])}" alt="" loading="lazy" />'
                 f'<span class="thumb-cat">{esc(meta["category"])}</span>'
-                f'<span class="thumb-badge">영상 요약</span></div>{nl}')
+                f'<span class="thumb-badge">영상 요약</span>{credit}</div>{nl}')
     if meta.get("video"):
         # 사진을 못 찾은 경우의 대체 썸네일: 분야 색 + 핵심어.
         # 2026-10-20: 남의 방송 썸네일(채널 로고·자막이 그대로 보임) 대신 우리 썸네일.
@@ -442,6 +448,9 @@ def render(fields, url):
         thumb_tag += f'<meta name="fs:photo" content="{esc(photo["url"])}" />\n'
         if photo.get("by"):
             thumb_tag += f'<meta name="fs:photo_by" content="{esc(photo["by"])}" />\n'
+        for key in ("license", "src"):     # 커먼즈 사진의 출처 표기용
+            if photo.get(key):
+                thumb_tag += f'<meta name="fs:photo_{key}" content="{esc(photo[key])}" />\n'
 
     return f"""<!DOCTYPE html>
 <html lang="ko">

@@ -355,5 +355,27 @@ class TodayTop3(unittest.TestCase):
         self.assertNotIn("old", out)
 
 
+class CommonsRules(unittest.TestCase):
+    """커먼즈 실사진: 라이선스 허용 범위와 제목→주인공 규칙 (네트워크 없이)."""
+
+    def test_license_allowlist(self):
+        import commons
+        for ok in ("CC BY 4.0", "CC BY-SA 3.0", "CC0", "Public domain", "KOGL Type 1", "CC BY-SA 3.0 de"):
+            self.assertTrue(commons.license_ok(ok), ok)
+        for bad in ("CC BY-NC 4.0", "CC BY-ND 2.0", "CC BY-NC-SA 3.0", "", "All rights reserved"):
+            self.assertFalse(commons.license_ok(bad), bad)
+
+    def test_subject_rules(self):
+        import commons
+        self.assertEqual(commons.subject_for("걸그룹 리센느, SBS 8뉴스 출연"), "RESCENE")
+        self.assertEqual(commons.subject_for("한국 축구 대표팀 임시 감독"), "South Korea national football team")
+        self.assertEqual(commons.subject_for("'시차 적응' 극복한 LoL 대표팀"), "")   # 축구로 가면 안 됨
+        self.assertEqual(commons.subject_for("KIA 타이거즈, 4위 탈환"), "")           # 호랑이 사진 방지
+
+    def test_credit_shown_for_licensed_photo(self):
+        card = article.card_html(dict(META, photo="https://x/y.jpg", photo_by="K-POPIT", photo_license="CC BY 4.0"))
+        self.assertIn("사진: K-POPIT · CC BY 4.0", card)
+
+
 if __name__ == "__main__":
     unittest.main()

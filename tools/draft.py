@@ -25,6 +25,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 
 import article
+import commons
 import gemini
 import pexels
 import youtube
@@ -92,10 +93,14 @@ def make_draft(cfg, url, today):
 
         fields["slug"] = article.clean_slug(fields["slug"])
         fields["source_title"] = youtube.source_title(meta)
-        # 카드 사진. Gemini 검색어가 없으면 제목·꼬리표로 정한다. 실패해도 기사는 계속.
-        q = (fields.get("photo_query") or "").strip() or pexels.query_for(
-            fields.get("title", ""), fields.get("eyebrow", ""))
-        fields["photo"] = pexels.photo(cfg, q, pexels.pick_index(fields["slug"], 8))
+        # 카드 사진: 주인공(인물·팀)이 있으면 커먼즈 실사진, 없거나 못 찾으면 Pexels 장면 사진.
+        # 실패해도 기사는 계속(글자 썸네일로 물러선다).
+        subject = (fields.get("photo_subject") or "").strip() or commons.subject_for(fields.get("title", ""))
+        fields["photo"] = commons.search(subject) if subject else None
+        if not fields["photo"]:
+            q = (fields.get("photo_query") or "").strip() or pexels.query_for(
+                fields.get("title", ""), fields.get("eyebrow", ""))
+            fields["photo"] = pexels.photo(cfg, q, pexels.pick_index(fields["slug"], 8))
         try:
             html_text = article.render(fields, url)   # 카테고리·태그·잘림 검증 포함
         except ValueError as e:

@@ -1696,3 +1696,11 @@ footer {
   font-size: 0.66rem; font-weight: 700; padding: 3px 8px; border-radius: 999px;
   background: rgba(0, 0, 0, 0.45); color: var(--white); max-width: none; letter-spacing: 0;
 }
+/* 커먼즈 사진 출처 표기 (CC BY 등의 이용 조건) */
+.article-thumb--news .thumb-credit {
+  position: absolute; right: 10px; bottom: 10px; z-index: 1; max-width: 55%;
+  font-size: 0.6rem; font-weight: 500; letter-spacing: 0; line-height: 1.3;
+  color: rgba(255, 255, 255, 0.85); text-align: right;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.article-thumb--news .thumb-photo { object-position: center 30%; }   /* 인물 사진의 얼굴이 덜 잘리게 */
