@@ -560,10 +560,22 @@ def home_top_html(rows, exclude=()):
             '\n<div class="home-grid">\n' + "\n".join(_home_card(r) for r in rest) + "\n</div>\n")
 
 
-def home_sections_html(rows, skip=8):
-    """분야별 구역. 맨 위(대표+최신 8)에 나온 기사는 되도록 빼고 고른다."""
+def home_top_slugs(rows, exclude=()):
+    """home_top_html이 실제로 보여 주는 기사(대표 1 + 최신 8)의 slug. 아래 구역 중복 방지용."""
+    rows = [r for r in rows if r["slug"] not in set(exclude)] or rows
+    if not rows:
+        return set()
+    latest = rows[0]["date"]
+    pool = [r for r in rows if r["date"] == latest]
+    feature = next((r for r in pool if r["category"] in _TODAY_FIRST and r.get("photo")),
+                   next((r for r in pool if r.get("photo")), rows[0]))
+    return {feature["slug"]} | {r["slug"] for r in [r for r in rows if r is not feature][:8]}
+
+
+def home_sections_html(rows, shown=None):
+    """분야별 구역. 위에서 이미 보여 준 기사(핵심 3·대표·최신 8)는 되도록 빼고 고른다."""
     esc = lambda v: html.escape(str(v), quote=True)
-    shown = {r["slug"] for r in rows[:skip + 1]}
+    shown = set(shown or ())
     pick = lambda cats, n: ([r for r in rows if r["category"] in cats and r["slug"] not in shown]
                             or [r for r in rows if r["category"] in cats])[:n]
     out = ['\n<div class="home-columns">']

@@ -141,8 +141,10 @@ def rebuild_index(apply_changes):
         if article.HOME_TOP_START in text:
             text = article.replace_between(text, article.HOME_TOP_START, article.HOME_TOP_END,
                                            article.home_top_html(rows, [r["slug"] for r in article.pick_today(rows)]))
+            top3 = [r["slug"] for r in article.pick_today(rows)]
+            shown = set(top3) | article.home_top_slugs(rows, top3)
             text = article.replace_between(text, article.HOME_SEC_START, article.HOME_SEC_END,
-                                           article.home_sections_html(rows))
+                                           article.home_sections_html(rows, shown))
         if article.CARDS_START in text:          # 예전 구조(카드 목록이 첫 화면에 있던 때)
             text = article.replace_cards(text, cards)
         return text

@@ -323,6 +323,21 @@ class TitleRoundTrip(unittest.TestCase):
             self.assertIn(article.BYLINE, text)
 
 
+class HomeNoDuplicates(unittest.TestCase):
+    """첫 화면: 핵심 3·대표·최신 8·분야 구역에 같은 기사가 두 번 나오지 않는다."""
+
+    def test_sections_skip_articles_shown_above(self):
+        rows = [{"slug": f"s{i}", "date": "2026-10-20", "category": ("경제", "세계")[i % 2],
+                 "title": f"t{i}", "description": "d", "photo": "x", "video": "v", "eyebrow": "시장"}
+                for i in range(30)]
+        top3 = [r["slug"] for r in article.pick_today(rows)]
+        shown = set(top3) | article.home_top_slugs(rows, top3)
+        html_ = article.home_top_html(rows, top3) + article.home_sections_html(rows, shown)
+        found = re.findall(r'class="home-(?:card|text|feature-img)" href="([a-z0-9]+)\.html', html_)
+        self.assertEqual(len(found), len(set(found)))
+        self.assertFalse(set(found) & set(top3))
+
+
 class TodayTop3(unittest.TestCase):
     """첫 화면 '오늘의 핵심 3' 고르기와 요약 줄 뽑기."""
 
