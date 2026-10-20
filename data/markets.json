@@ -1,0 +1,115 @@
+{
+ "updatedAt": "2026-10-20T07:22:48Z",
+ "markets": [
+  {
+   "id": "2589813",
+   "q": "미 연준이 2026년 10월 회의 후 기준금리를 0.25%p 인상할까?",
+   "en": "Will the Fed increase interest rates by 25 bps after the October 2026 meeting?",
+   "cat": "경제",
+   "event": "fed-decision-in-october-20260617190323537",
+   "endDate": "2026-10-29T03:59:00Z",
+   "last": 14.5,
+   "addedAt": "2026-10-20T07:22:48Z",
+   "status": "live"
+  },
+  {
+   "id": "5409680",
+   "q": "FC 바르셀로나가 2026년 10월 20일 경기에서 승리할까?",
+   "en": "Will FC Barcelona win on 2026-10-20?",
+   "cat": "스포츠",
+   "event": "ucl-psg-fcb-2026-10-20",
+   "endDate": "2026-10-20T19:00:00Z",
+   "last": 39.5,
+   "addedAt": "2026-10-20T07:22:48Z",
+   "status": "live"
+  },
+  {
+   "id": "5686979",
+   "q": "미국과 이란의 휴전이 10월 22일까지 유지될까?",
+   "en": "US x Iran ceasefire continues through October 22?",
+   "cat": "정치·세계",
+   "event": "us-iran-ceasefire-continues-throughptptpt",
+   "endDate": "2026-10-23T03:59:00Z",
+   "last": 91.2,
+   "addedAt": "2026-10-20T07:22:48Z",
+   "status": "live"
+  },
+  {
+   "id": "562830",
+   "q": "2026년 미 중간선거에서 공화당이 상원, 민주당이 하원을 차지할까?",
+   "en": "2026 Balance of Power: R Senate, D House",
+   "cat": "정치·세계",
+   "event": "balance-of-power-2026-midterms",
+   "endDate": "2026-11-04T04:59:00Z",
+   "last": 28.5,
+   "addedAt": "2026-10-20T07:22:48Z",
+   "status": "live"
+  },
+  {
+   "id": "682705",
+   "q": "베냐민 네타냐후가 차기 이스라엘 총리가 될까?",
+   "en": "Will Benjamin Netanyahu be the next Prime Minister of Israel?",
+   "cat": "정치·세계",
+   "event": "who-will-be-the-next-prime-minister-of-israel-after-the-next-election",
+   "endDate": "2026-10-28T03:59:00Z",
+   "last": 27.5,
+   "addedAt": "2026-10-20T07:22:48Z",
+   "status": "live"
+  },
+  {
+   "id": "5409532",
+   "q": "SSC 나폴리가 2026년 10월 20일 경기에서 승리할까?",
+   "en": "Will SSC Napoli win on 2026-10-20?",
+   "cat": "스포츠",
+   "event": "ucl-nap-bog-2026-10-20",
+   "endDate": "2026-10-20T19:00:00Z",
+   "last": 55.5,
+   "addedAt": "2026-10-20T07:22:48Z",
+   "status": "live"
+  },
+  {
+   "id": "5447182",
+   "q": "미국과 이란의 휴전이 미 중간선거까지 유지될까?",
+   "en": "US-Iran ceasefire continues through the midterms?",
+   "cat": "정치·세계",
+   "event": "us-iran-ceasefire-continues-through-the-midterms",
+   "endDate": "2026-11-04T04:59:00Z",
+   "last": 76.5,
+   "addedAt": "2026-10-20T07:22:48Z",
+   "status": "live"
+  },
+  {
+   "id": "5170735",
+   "q": "비트코인이 10월에 8만 7,500달러에 도달할까?",
+   "en": "Will Bitcoin reach $87,500 in October?",
+   "cat": "코인",
+   "event": "what-price-will-bitcoin-hit-in-october-2026",
+   "endDate": "2026-11-01T04:00:00Z",
+   "last": 26.5,
+   "addedAt": "2026-10-20T07:22:48Z",
+   "status": "live"
+  },
+  {
+   "id": "5732709",
+   "q": "'GTA 6 출시 트레일러' 조회수가 첫 주에 4,000만~6,000만 회를 기록할까?",
+   "en": "Will \"Grand Theft Auto VI Launch Trailer\" get between 40 and 60 million views on week 1?",
+   "cat": "테크·문화",
+   "event": "of-views-of-grand-theft-auto-vi-launch-trailer-on-week-1",
+   "endDate": "2026-10-23T03:59:00Z",
+   "last": 41.5,
+   "addedAt": "2026-10-20T07:22:48Z",
+   "status": "live"
+  },
+  {
+   "id": "4397033",
+   "q": "빌리빌리 게이밍이 2026 롤드컵에서 우승할까?",
+   "en": "Will Bilibili Gaming win Worlds 2026?",
+   "cat": "스포츠",
+   "event": "worlds-2026-winner",
+   "endDate": "2026-11-29T04:59:00Z",
+   "last": 16.5,
+   "addedAt": "2026-10-20T07:22:48Z",
+   "status": "live"
+  }
+ ]
+}
