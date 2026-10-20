@@ -1600,3 +1600,9 @@ footer {
 .odds-card .odds-actions { margin: 0; gap: 6px; }
 .odds-card .odds-actions button { flex: 0 0 auto; padding: 4px 16px; font-size: 0.8rem; }
 .odds-card .odds-mine { font-size: 0.78rem; }
+.odds-badge {
+  flex-shrink: 0; font-size: 0.72rem; font-weight: 700; white-space: nowrap;
+  padding: 3px 8px; border-radius: 999px; background: var(--accent); color: var(--white);
+}
+.odds-note-line { margin: 4px 0 8px; font-size: 0.78rem; color: var(--gray-600); }
+.odds-card.is-reader-only { background: var(--accent-dim); }

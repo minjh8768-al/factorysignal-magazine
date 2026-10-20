@@ -1,14 +1,13 @@
 [
-  { "key": "fed-oct-hike", "group": "경제·코인", "marketId": "2589813", "question": "연준이 10월 회의에서 금리를 올릴까?" },
-  { "key": "btc-100k-2026", "group": "경제·코인", "marketId": "701496", "question": "비트코인이 올해 안에 10만 달러를 찍을까?" },
-  { "key": "btc-below-70k-2026", "group": "경제·코인", "marketId": "3865960", "question": "비트코인이 올해 안에 7만 달러 아래로 떨어질까?" },
-
-  { "key": "dem-senate-2026", "group": "정치·세계", "marketId": "562793", "question": "민주당이 이번 중간선거에서 상원 다수당이 될까?" },
-  { "key": "us-iran-ceasefire-oct31", "group": "정치·세계", "marketId": "4641065", "question": "미국-이란 휴전이 10월 31일까지 이어질까?" },
-
-  { "key": "t1-vs-los-1023", "group": "스포츠", "marketId": "5906226", "outcomeIndex": 1, "question": "T1이 10월 23일 롤드컵 조별 경기에서 LOS를 이길까?" },
-  { "key": "geng-worlds-2026", "group": "스포츠", "marketId": "4397022", "question": "젠지가 롤드컵(Worlds 2026)에서 우승할까?" },
-  { "key": "t1-worlds-2026", "group": "스포츠", "marketId": "4397025", "question": "T1이 롤드컵(Worlds 2026)에서 우승할까?" },
-  { "key": "brewers-ws-2026", "group": "스포츠", "marketId": "1235568", "question": "밀워키가 2026 월드시리즈에서 우승할까?" },
-  { "key": "son-mls-mvp-2026", "group": "스포츠", "marketId": "1394407", "question": "손흥민이 올해 MLS MVP를 받을까?" }
+  {"key": "fed-oct-hike", "group": "경제·코인", "marketId": "2589813", "question": "연준이 10월 회의에서 금리를 올릴까?"},
+  {"key": "btc-100k-2026", "group": "경제·코인", "marketId": "701496", "question": "비트코인이 올해 안에 10만 달러를 찍을까?"},
+  {"key": "btc-below-70k-2026", "group": "경제·코인", "marketId": "3865960", "question": "비트코인이 올해 안에 7만 달러 아래로 떨어질까?"},
+  {"key": "dem-senate-2026", "group": "정치·세계", "marketId": "562793", "question": "민주당이 이번 중간선거에서 상원 다수당이 될까?"},
+  {"key": "us-iran-ceasefire-oct31", "group": "정치·세계", "marketId": "4641065", "question": "미국-이란 휴전이 10월 31일까지 이어질까?"},
+  {"key": "kbo-sp3-lg-kia-1020", "group": "스포츠", "question": "LG가 오늘 준플레이오프 3차전에서 KIA를 이길까?", "note": "준PO 3차전 · 18:30 잠실 · KIA 2승 0패", "closesAt": "2026-10-20T09:30:00Z"},
+  {"key": "t1-vs-los-1023", "group": "스포츠", "marketId": "5906226", "outcomeIndex": 1, "question": "T1이 10월 23일 롤드컵 조별 경기에서 LOS를 이길까?"},
+  {"key": "geng-worlds-2026", "group": "스포츠", "marketId": "4397022", "question": "젠지가 롤드컵(Worlds 2026)에서 우승할까?"},
+  {"key": "t1-worlds-2026", "group": "스포츠", "marketId": "4397025", "question": "T1이 롤드컵(Worlds 2026)에서 우승할까?"},
+  {"key": "brewers-ws-2026", "group": "스포츠", "marketId": "1235568", "question": "밀워키가 2026 월드시리즈에서 우승할까?"},
+  {"key": "son-mls-mvp-2026", "group": "스포츠", "marketId": "1394407", "question": "손흥민이 올해 MLS MVP를 받을까?"}
 ]

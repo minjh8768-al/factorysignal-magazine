@@ -7,6 +7,7 @@
 // 로그인 없는 투표라 같은 사람이 여러 번 누르는 것을 IP 해시로 30일간 막는다
 // (브라우저 localStorage는 화면 표시용일 뿐 막는 장치가 아니다). IP 원문은 저장하지 않는다.
 const crypto = require('crypto');
+const topics = require('./_odds-topics.json');
 
 const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
 const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -64,6 +65,11 @@ module.exports = async (req, res) => {
       const choice = body.choice;
       if (!SLUG_RE.test(slug) || (choice !== 'yes' && choice !== 'no')) {
         return res.status(400).json({ error: 'bad request' });
+      }
+      // 마감 시각이 있는 질문(예: 경기 시작 전까지만 받는 독자 예측)은 서버에서도 막는다.
+      const topic = slug.startsWith('odds-') && topics.find((t) => `odds-${t.key}` === slug);
+      if (topic && topic.closesAt && Date.now() > Date.parse(topic.closesAt)) {
+        return res.status(409).json({ error: '투표가 마감됐습니다.' });
       }
       const [first] = await redis([['SET', voterKey(req, slug), choice, 'NX', 'EX', DEDUPE_SECONDS]]);
       const counted = first === 'OK';

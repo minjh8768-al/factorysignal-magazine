@@ -133,31 +133,42 @@ async function mountOdds(list) {
   list.innerHTML = "";
   list.append(tabs, body);
 
+  const isOpen = (it) => !it.closesAt || Date.now() < Date.parse(it.closesAt);
   const readerText = (data, mine) => {
     const total = (data.yes || 0) + (data.no || 0);
-    const minePart = `내 예측 ${mine === "yes" ? "예" : "아니오"}`;
-    if (total < READER_MIN) return `${minePart} · 독자 ${total}명 참여 (${READER_MIN}명부터 비율 공개)`;
-    return `${minePart} · 독자 ${pct((data.yes / total) * 100)} 예 (${total.toLocaleString()}명)`;
+    const minePart = mine ? `내 예측 ${mine === "yes" ? "예" : "아니오"} · ` : "";
+    if (total < READER_MIN) return `${minePart}독자 ${total}명 참여 (${READER_MIN}명부터 비율 공개)`;
+    return `${minePart}독자 ${pct((data.yes / total) * 100)} 예 (${total.toLocaleString()}명)`;
   };
 
   const card = (it) => {
     const slug = `odds-${it.key}`;
+    const readerOnly = it.market === null;
     const el = document.createElement("div");
-    el.className = "odds-card";
+    el.className = "odds-card" + (readerOnly ? " is-reader-only" : "");
+    // 시장이 없는 한국 이슈(KBO 등)는 '독자 예측' 배지와 경기 정보 줄을 단다.
+    const right = readerOnly
+      ? '<span class="odds-badge">독자 예측</span>'
+      : `<span class="odds-market" title="해외 예측시장 확률">시장 <b>${pct(it.market)}</b></span>`;
     el.innerHTML = `
-      <div class="odds-top"><p class="odds-q"></p><span class="odds-market" title="해외 예측시장 확률">시장 <b>${pct(it.market)}</b></span></div>
-      <span class="odds-track"><span style="width:${it.market}%"></span></span>
+      <div class="odds-top"><p class="odds-q"></p>${right}</div>
+      ${readerOnly ? '<p class="odds-note-line"></p>' : `<span class="odds-track"><span style="width:${it.market}%"></span></span>`}
       <div class="odds-actions"><button type="button" data-choice="yes">예</button><button type="button" data-choice="no">아니오</button></div>`;
     el.querySelector(".odds-q").textContent = it.question;
+    if (readerOnly) el.querySelector(".odds-note-line").textContent = it.note;
     const actions = el.querySelector(".odds-actions");
-    const done = (data, mine) => {
+    const done = (data, mine, closed) => {
       actions.innerHTML = "";
       const s = document.createElement("span");
       s.className = "odds-mine";
-      s.textContent = readerText(data, mine);
+      s.textContent = (closed ? "투표 마감 · " : "") + readerText(data, mine);
       actions.append(s);
     };
     const mine = localStorage.getItem(`fm-poll:${slug}`);
+    if (!isOpen(it)) {
+      done(readers[slug] || {}, mine, true);
+      return el;
+    }
     if (mine && readers[slug]) done(readers[slug], mine);
     actions.querySelectorAll("button").forEach((b) => b.addEventListener("click", async () => {
       actions.querySelectorAll("button").forEach((x) => (x.disabled = true));
@@ -190,7 +201,9 @@ async function mountOdds(list) {
     b.addEventListener("click", () => show(g));
     tabs.append(b);
   });
-  show(groups[0]);
+  // 오늘 마감되는 독자 예측(예: 오늘 경기)이 있으면 그 탭을 먼저 연다.
+  const live = items.find((it) => it.closesAt && isOpen(it));
+  show(live ? live.group : groups[0]);
 }
 
 // ── 뉴스레터 구독 ───────────────────────────────────────────────────
