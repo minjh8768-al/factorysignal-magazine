@@ -545,8 +545,10 @@ def _home_feature(r, cls="home-feature"):
             f'<span class="home-meta">{_short_date(r["date"])}</span></div></div>')
 
 
-def home_top_html(rows):
-    """대표 기사 1 + 최신 8. 대표는 최근 발행일의 경제·암호화폐 기사 중 사진 있는 것 우선."""
+def home_top_html(rows, exclude=()):
+    """대표 기사 1 + 최신 8. 대표는 최근 발행일의 경제·암호화폐 기사 중 사진 있는 것 우선.
+    exclude: 바로 위 '오늘의 핵심 3'에 이미 나온 기사 slug (같은 기사가 두 번 보이지 않게)."""
+    rows = [r for r in rows if r["slug"] not in set(exclude)] or rows
     if not rows:
         return ""
     latest = rows[0]["date"]
