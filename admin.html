@@ -66,7 +66,9 @@
   .pfilter { display: flex; gap: 6px; margin-bottom: 12px; }
   .pfilter button { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: .82rem; }
   .pfilter button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
-  .poll { padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .poll { display: block; padding: 14px 8px; margin: 0 -8px; border-bottom: 1px solid var(--line); color: inherit; text-decoration: none; border-radius: 8px; }
+  .poll:hover { background: var(--accent-dim); } .poll:hover .q { color: var(--accent); }
+  .poll .go { float: right; font-size: .8rem; color: var(--accent); font-weight: 700; }
   .poll .q { font-weight: 700; line-height: 1.45; }
   .poll .m { font-size: .8rem; color: var(--ink2); margin-top: 3px; } .poll .m a { color: var(--ink2); }
   .pbar { display: flex; gap: 2px; height: 10px; margin: 10px 0 5px; }
@@ -230,11 +232,12 @@ async function renderPolls() {
     const total = list.reduce((a, p) => a + p.total, 0);
     $("#plist").innerHTML = list.length ? list.map((p) => {
       const y = pct(p.yes, p.total), n = p.total ? 100 - y : 0;
-      return `<div class="poll">
-        <div class="q">${esc(p.question || "(질문 없음 — 기사에서 투표가 빠졌어요)")}</div>
-        <div class="m">${p.url ? `<a href="${esc(p.url)}" target="_blank">${esc(p.title)}</a>` : esc(p.title)}${p.category ? ` · ${esc(p.category)}` : ""}${p.date ? ` · ${esc(p.date)}` : ""}</div>
+      const href = p.url || "/articles/index.html#odds-list";
+      return `<a class="poll" href="${esc(href)}" target="_blank" title="${p.url ? "기사 열기" : "첫 화면 '오늘의 확률' 열기"}">
+        <span class="go">${p.url ? "기사 보기 ↗" : "첫 화면 보기 ↗"}</span><div class="q">${esc(p.question || "(질문 없음 — 기사에서 투표가 빠졌어요)")}</div>
+        <div class="m">${esc(p.title)}${p.category ? ` · ${esc(p.category)}` : ""}${p.date ? ` · ${esc(p.date)}` : ""}</div>
         <div class="pbar" role="img" aria-label="예 ${p.yes}표 ${y}%, 아니오 ${p.no}표 ${n}%">${p.total ? `${p.yes ? `<i class="y" style="flex:${p.yes}"></i>` : ""}${p.no ? `<i class="n" style="flex:${p.no}"></i>` : ""}` : '<i class="z"></i>'}</div>
-        <div class="pnum"><span><b>예 ${y}%</b> (${p.yes}표)</span><span>참여 <b>${p.total}</b>명</span><span><b>아니오 ${n}%</b> (${p.no}표)</span></div></div>`;
+        <div class="pnum"><span><b>예 ${y}%</b> (${p.yes}표)</span><span>참여 <b>${p.total}</b>명</span><span><b>아니오 ${n}%</b> (${p.no}표)</span></div></a>`;
     }).join("") : '<p class="muted">아직 투표가 없어요.</p>';
     $("#psum").textContent = `질문 ${list.length}개 · 참여 ${total.toLocaleString()}표`;
     document.querySelectorAll(".pfilter button").forEach((b) => b.classList.toggle("on", b.dataset.k === pollKind));
