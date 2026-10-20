@@ -156,7 +156,7 @@ function mountInlineSubscribe(container) {
       </div>
       <label class="subscribe-consent">
         <input type="checkbox" name="consent" />
-        <span>[필수] 뉴스레터 발송을 위한 이메일 수집·이용에 동의합니다. 해지 시 즉시 파기합니다.</span>
+        <span>[필수] 뉴스레터 발송을 위한 이메일 수집·이용에 동의합니다. 해지 시 즉시 파기합니다. <a href="https://predictanalytics-news.vercel.app/privacy.html" target="_blank" rel="noopener">자세히</a></span>
       </label>
       <p class="subscribe-status" role="status"></p>
     </form>`;

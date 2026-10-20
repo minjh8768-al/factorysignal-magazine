@@ -1512,3 +1512,4 @@ footer {
 .article-content .subscribe-inline > p { margin-bottom: 12px; }
 .article-content .subscribe-status:empty { display: none; }
 .article-content .ai-note { margin-top: 8px; }
+.subscribe-consent a { text-decoration: underline; color: var(--gray-600); }
