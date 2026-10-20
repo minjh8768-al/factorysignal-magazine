@@ -72,6 +72,8 @@ a {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: 22px var(--pad);
+  /* 넓은 화면에서도 로고·버튼이 본문(.wrap, 최대 --max-w) 좌우 끝과 맞게. %는 화면 폭(스크롤바 제외) 기준. */
+  padding-inline: max(var(--pad), calc((100% - var(--max-w)) / 2 + var(--pad)));
   color: var(--black);
   transition: background 0.25s ease, padding 0.25s ease, border-color 0.25s ease,
     color 0.25s ease;
