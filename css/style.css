@@ -1606,3 +1606,67 @@ footer {
 }
 .odds-note-line { margin: 4px 0 8px; font-size: 0.78rem; color: var(--gray-600); }
 .odds-card.is-reader-only { background: var(--accent-dim); }
+
+/* ---------- 우리 썸네일 (분야 색 + 핵심어) — 2026-10-20 ---------- */
+.article-thumb--brand {
+  position: relative;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 18px 20px;
+  color: var(--white);
+  overflow: hidden;
+}
+.article-thumb--brand::after {           /* 은은한 % 무늬로 '확률 매체' 표시 */
+  content: "%"; position: absolute; right: -10px; bottom: -38px;
+  font-size: 9rem; font-weight: 900; line-height: 1; opacity: 0.12;
+}
+.article-thumb--brand .thumb-cat {
+  position: absolute; top: 14px; left: 16px;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em; opacity: 0.85;
+}
+.article-thumb--brand .thumb-figure {
+  font-size: 2.3rem; font-weight: 900; line-height: 1.1; letter-spacing: -0.02em;
+  word-break: keep-all; position: relative; z-index: 1;
+}
+.article-thumb--brand .thumb-figure--word { font-size: 1.6rem; }
+.article-thumb--brand .thumb-mark {
+  position: absolute; bottom: 12px; left: 16px; font-size: 0.68rem; font-weight: 700; opacity: 0.7;
+}
+.article-thumb--brand .thumb-badge {
+  position: absolute; top: 12px; right: 12px;
+  font-size: 0.66rem; font-weight: 700; padding: 3px 8px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22); color: var(--white);
+}
+
+/* ---------- 첫 화면 아침 브리핑 띠 — 2026-10-20 ---------- */
+.brief-hero { padding: 104px 0 28px; }
+.brief-band {
+  position: relative; overflow: hidden;
+  border-radius: 20px;
+  padding: 40px 44px;
+  background: linear-gradient(135deg, var(--accent), #0b5fb0);
+  color: var(--white);
+}
+.brief-band::after {
+  content: "%"; position: absolute; right: 24px; bottom: -70px;
+  font-size: 16rem; font-weight: 900; line-height: 1; opacity: 0.1; pointer-events: none;
+}
+.brief-date {
+  display: inline-block; margin-bottom: 14px;
+  padding: 5px 12px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 0.85rem; font-weight: 700;
+}
+.brief-band h1 {
+  font-size: clamp(1.6rem, 3.6vw, 2.5rem); line-height: 1.25; letter-spacing: -0.02em;
+  margin-bottom: 12px; word-break: keep-all; position: relative; z-index: 1;
+}
+.brief-lead { font-size: 1rem; line-height: 1.65; opacity: 0.9; margin-bottom: 22px; word-break: keep-all; position: relative; z-index: 1; }
+.brief-cta {
+  display: inline-block; position: relative; z-index: 1;
+  padding: 11px 20px; border-radius: 999px;
+  background: var(--white); color: var(--accent); font-weight: 800; font-size: 0.95rem;
+}
+.brief-cta:hover { background: var(--accent-dim); }
+@media (max-width: 600px) { .brief-band { padding: 28px 22px; } .brief-hero { padding-top: 88px; } }
+.article-thumb--brand { align-items: flex-start; }
+.article-thumb--brand .thumb-figure { max-width: 80%; }

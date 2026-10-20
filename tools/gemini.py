@@ -26,11 +26,12 @@ RESPONSE_SCHEMA = {
         "read_minutes": {"type": "INTEGER"},
         "body_html": {"type": "STRING"},
         "poll_question": {"type": "STRING"},
+        "thumb_keyword": {"type": "STRING"},
     },
     "required": ["title", "description", "slug", "category", "eyebrow",
-                 "read_minutes", "body_html", "poll_question"],
+                 "read_minutes", "body_html", "poll_question", "thumb_keyword"],
     "propertyOrdering": ["title", "description", "slug", "category", "eyebrow",
-                         "read_minutes", "body_html", "poll_question"],
+                         "read_minutes", "body_html", "poll_question", "thumb_keyword"],
 }
 
 PROMPT = f"""너는 한국어 시사 매거진 Factory Magazine의 기자다.
@@ -85,6 +86,8 @@ PROMPT = f"""너는 한국어 시사 매거진 Factory Magazine의 기자다.
   금지: 특정 정당·인물을 지지하는지 묻기, "사야 할까?"처럼 투자·베팅을 권하는 질문,
   오버언더·핸디캡 같은 베팅 용어.
   예: "한국은행이 다음 회의에서 기준금리를 내릴까?" / "비트코인이 연내 10만 달러를 넘을까?"
+- thumb_keyword: 카드 썸네일에 크게 들어갈 핵심 숫자나 짧은 단어 하나. 2~8자.
+  기사의 핵심을 한눈에 보여 주는 것 (예: "5%", "7거래일", "20억 원", "노벨평화상", "준PO").
 - read_minutes: 본문 분량에 맞는 읽기 시간 (정수, 2~5)
 - body_html: 본문. 아래 태그만 쓴다.
   <p> 단락, <h2> 소제목, <blockquote> 직접 인용, <ul><li> 목록, <strong> 강조

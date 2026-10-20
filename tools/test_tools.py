@@ -591,10 +591,11 @@ class DataCardThumb(unittest.TestCase):
     BASE = dict(slug="s", category="경제", eyebrow="E", title="T",
                 description="D", read=3)
 
-    def test_video_article_uses_youtube_thumb(self):
+    def test_video_article_uses_brand_thumb(self):
         import article
         html_ = article.card_html({**self.BASE, "video": "abc123"})
-        self.assertIn("img.youtube.com/vi/abc123", html_)
+        self.assertIn("article-thumb--brand", html_)
+        self.assertNotIn("img.youtube.com", html_)
 
     def test_analysis_article_uses_its_sparkline(self):
         # 영상이 없으면 유튜브 URL이 깨진 이미지가 된다.

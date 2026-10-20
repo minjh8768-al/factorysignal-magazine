@@ -74,6 +74,7 @@ def read_meta(path):
         "kind": _meta(text, "fs:kind"),
         "photo": _meta(text, "fs:photo"),
         "photo_by": _meta(text, "fs:photo_by"),
+        "thumb": _meta(text, "fs:thumb"),
         # 분석 기사는 영상이 없어 카드 썸네일이 깨진다. 기사가 이미 그려 둔
         # 스파크라인 첫 개를 카드에 그대로 쓴다(수치를 두 번 계산하지 않는다).
         "thumb_svg": _first_spark(text),

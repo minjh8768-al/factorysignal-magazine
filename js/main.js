@@ -16,6 +16,15 @@ function apiUrl(name) {
 
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("form.subscribe-form").forEach(wireSubscribeForm);
+  // 첫 화면 브리핑 날짜: 한국 시간 기준 "10월 20일 월요일 아침 브리핑"
+  const briefDate = document.getElementById("brief-date");
+  if (briefDate) {
+    const now = new Date();
+    const day = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "long", day: "numeric", weekday: "long" }).format(now);
+    const hour = Number(new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Seoul", hour: "numeric", hourCycle: "h23" }).format(now));
+    const part = hour < 12 ? "아침" : hour < 18 ? "오후" : "저녁";
+    briefDate.textContent = `${day} ${part} 브리핑`;
+  }
   const oddsList = document.getElementById("odds-list");
   if (oddsList) mountOdds(oddsList);
 

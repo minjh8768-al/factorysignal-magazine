@@ -182,6 +182,15 @@ class Poll(unittest.TestCase):
             self.assertNotIn("fs:poll", h)
 
 
+class ThumbKeyword(unittest.TestCase):
+    def test_keyword_rendered_as_meta(self):
+        h = article.render(dict(FIELDS, thumb_keyword="7거래일"), URL)
+        self.assertIn('<meta name="fs:thumb" content="7거래일" />', h)
+
+    def test_missing_keyword_skipped(self):
+        self.assertNotIn("fs:thumb", article.render(dict(FIELDS), URL))
+
+
 class Eyebrow(unittest.TestCase):
     def test_allowed_label_kept(self):
         self.assertEqual(article.normalize_eyebrow("경제", "금리·정책"), "금리·정책")

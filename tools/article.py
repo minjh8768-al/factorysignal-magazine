@@ -275,6 +275,28 @@ CARDS_START = "<!-- CARDS:START -->"
 CARDS_END = "<!-- CARDS:END -->"
 
 
+# 썸네일에 크게 올릴 '핵심 숫자'. 단위가 붙은 숫자만, 의미가 큰 단위부터 찾는다
+# (예: "미 10년물 국채금리 5%대" → '10년물'이 아니라 '5%').
+_FIGURE_RES = [re.compile(r"\d[\d,.]*\s?" + u) for u in (
+    r"(?:%p|%|bps|bp)",
+    r"(?:조\s?원|억\s?원|만\s?원|천\s?원|원|만\s?달러|억\s?달러|달러)",
+    r"(?:만\s?명|명|배)",
+    r"(?:거래일|연전|연승|연패|차전|년물|개월|위|승|패|골|일|년)",
+)]
+# 숫자가 없으면 제목 속 짧은 인용어 (예: '노벨평화상', '연결')
+_QUOTE_RE = re.compile(r"['‘\"“]([^'’\"”]{2,8})['’\"”]")
+
+
+def key_figure(title):
+    text = html.unescape(title or "")
+    for rx in _FIGURE_RES:
+        m = rx.search(text)
+        if m:
+            return re.sub(r"\s+", " ", m.group(0)).strip()
+    m = _QUOTE_RE.search(text)
+    return m.group(1).strip() if m else ""
+
+
 def thumb_html(meta):
     """카드 썸네일.
 
@@ -286,12 +308,17 @@ def thumb_html(meta):
     스타일까지 이겨서 사진이 통째로 사라졌다. <img> 는 그 싸움 밖에 있다.
     """
     esc = lambda v: html.escape(str(v), quote=True)
-    nl, q = chr(10), chr(39)
+    nl = chr(10)
     if meta.get("video"):
-        src = f"https://img.youtube.com/vi/{esc(meta['video'])}/hqdefault.jpg"
-        return (f'            <div class="article-thumb article-thumb--video" '
-                f'style="background-image:url({q}{src}{q});">'
-                f'<span>▶</span></div>{nl}')
+        # 2026-10-20: 남의 방송 썸네일(채널 로고·자막이 그대로 보임) 대신 우리 썸네일.
+        # 분야 색 배경 + 제목에서 뽑은 핵심 숫자(없으면 꼬리표)를 크게. 영상은 기사 안에 그대로 있다.
+        figure = meta.get("thumb") or key_figure(meta.get("title", ""))
+        big = (f'<strong class="thumb-figure">{esc(figure)}</strong>' if figure
+               else f'<strong class="thumb-figure thumb-figure--word">{esc(meta.get("eyebrow") or meta["category"])}</strong>')
+        return (f'            <div class="article-thumb article-thumb--brand">'
+                f'<span class="thumb-cat">{esc(meta["category"])}</span>{big}'
+                f'<span class="thumb-mark">Factory Magazine</span>'
+                f'<span class="thumb-badge">영상 요약</span></div>{nl}')
     photo = meta.get("photo") or ""
     klass = "article-thumb article-thumb--data"
     img = ""
@@ -399,6 +426,9 @@ def render(fields, url):
     poll = poll_meta(fields.get("poll_question"))
     body = tidy_body(validate_body(fields["body_html"]))
     esc = lambda v: html.escape(str(v), quote=True)
+    # 카드 썸네일 핵심어 (없거나 너무 짧으면 제목에서 숫자를 뽑는 쪽으로 물러선다)
+    thumb = " ".join(str(fields.get("thumb_keyword") or "").split())[:12]
+    thumb_tag = f'<meta name="fs:thumb" content="{esc(thumb)}" />\n' if len(thumb) >= 2 else ""
 
     return f"""<!DOCTYPE html>
 <html lang="ko">
@@ -411,7 +441,7 @@ def render(fields, url):
 <meta name="fs:eyebrow" content="{esc(eyebrow)}" />
 <meta name="fs:read" content="{esc(fields['read_minutes'])}" />
 <meta name="fs:video" content="{esc(vid)}" />
-{poll}<link rel="stylesheet" href="../css/style.css" />
+{poll}{thumb_tag}<link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
 

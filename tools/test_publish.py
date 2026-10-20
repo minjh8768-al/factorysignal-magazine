@@ -35,10 +35,21 @@ class Card(unittest.TestCase):
         self.assertNotIn("#0ea968", card)
         self.assertNotIn("linear-gradient", card)
 
-    def test_uses_youtube_thumbnail(self):
+    def test_uses_own_brand_thumbnail_not_youtube(self):
+        # 2026-10-20: 남의 방송 썸네일 대신 분야 색 + 핵심어 썸네일
         card = article.card_html(META)
-        self.assertIn("article-thumb--video", card)
-        self.assertIn("img.youtube.com/vi/xpYSG58n7Tg/hqdefault.jpg", card)
+        self.assertIn("article-thumb--brand", card)
+        self.assertNotIn("img.youtube.com", card)
+        self.assertIn('class="thumb-figure">떠나지 마라<', card)  # 제목 속 인용어
+
+    def test_thumb_keyword_meta_wins(self):
+        card = article.card_html(dict(META, thumb="동결"))
+        self.assertIn('class="thumb-figure">동결<', card)
+
+    def test_key_figure_prefers_percent(self):
+        self.assertEqual(article.key_figure("미 10년물 국채금리 5%대는 뉴노멀"), "5%")
+        self.assertEqual(article.key_figure("코스피 7거래일 연속 하락"), "7거래일")
+        self.assertEqual(article.key_figure("숫자 없는 제목"), "")
 
     def test_escapes_quotes_in_title(self):
         card = article.card_html(META)
