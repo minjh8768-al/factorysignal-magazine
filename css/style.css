@@ -1407,3 +1407,108 @@ footer {
 .article-card .article-meta > time {
   white-space: nowrap;
 }
+
+/* ---------- 뉴스레터 (articles/subscribe.html, 기사 하단 박스) ---------- */
+.nav-newsletter { font-weight: 600; }
+
+.subscribe-page { padding: 120px 0 80px; }
+.subscribe-page .wrap { max-width: 440px; }
+.subscribe-page h1 { font-size: 1.7rem; text-align: center; margin-bottom: 10px; }
+.subscribe-lead {
+  text-align: center;
+  color: var(--gray-600);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 36px;
+}
+.letter-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  margin-bottom: 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.letter-card:has(input:checked) { border-color: var(--accent); background: var(--accent-dim); }
+.letter-card input { width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; }
+.letter-icon {
+  width: 40px; height: 40px; flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+}
+.letter-text strong { display: block; font-size: 1.02rem; margin-bottom: 4px; }
+.letter-text em {
+  white-space: nowrap;
+  font-style: normal; font-size: 0.75rem; font-weight: 600;
+  color: var(--accent); margin-left: 6px;
+}
+.letter-text span { font-size: 0.85rem; color: var(--gray-600); line-height: 1.5; }
+
+.subscribe-email {
+  width: 100%;
+  padding: 14px 16px;
+  margin: 10px 0 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  font-size: 1rem;
+}
+.subscribe-email:focus { outline: none; border-color: var(--accent); }
+.subscribe-consent {
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: 0.8rem; color: var(--gray-600); line-height: 1.5;
+  margin-bottom: 18px; cursor: pointer;
+}
+.subscribe-consent input { margin-top: 3px; accent-color: var(--accent); flex-shrink: 0; }
+.subscribe-submit {
+  width: 100%;
+  padding: 15px 0;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--white);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.subscribe-submit:hover { background: #0b6fc4; }
+.subscribe-submit:disabled { opacity: 0.6; cursor: default; }
+.subscribe-status { min-height: 1.4em; margin: 12px 0 0; font-size: 0.88rem; color: var(--red, #e03040); text-align: center; }
+.subscribe-status.is-ok { color: var(--cat-economy); }
+.subscribe-fine { font-size: 0.75rem; color: var(--gray-400); text-align: center; margin-top: 8px; }
+
+.subscribe-inline {
+  margin: 24px 0;
+  padding: 22px 24px;
+  border-radius: 14px;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+}
+.subscribe-inline > strong { display: block; font-size: 1.05rem; margin-bottom: 4px; }
+.subscribe-inline > p { font-size: 0.88rem; color: var(--gray-600); margin: 0 0 12px; }
+.subscribe-inline .subscribe-line { display: flex; gap: 8px; }
+.subscribe-inline .subscribe-email { margin: 0 0 10px; flex: 1; min-width: 0; }
+.subscribe-inline .subscribe-submit { width: auto; padding: 0 20px; height: 50px; white-space: nowrap; }
+.subscribe-inline .subscribe-consent { margin-bottom: 0; }
+.subscribe-inline .subscribe-status { text-align: left; }
+
+/* 기사 본문 단락 규칙(.article-content p: 큰 글자·넓은 아래 여백)이 투표·구독 박스 안의
+   작은 안내문과 하단 AI 표기에까지 먹지 않게 한다. */
+.article-content .poll-note,
+.article-content .poll-count,
+.article-content .subscribe-inline > p,
+.article-content .subscribe-status,
+.article-content .ai-note {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--gray-600);
+  margin-bottom: 0;
+}
+.article-content .subscribe-inline > p { margin-bottom: 12px; }
+.article-content .subscribe-status:empty { display: none; }
+.article-content .ai-note { margin-top: 8px; }

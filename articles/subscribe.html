@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>뉴스레터 — Factory Magazine</title>
+<meta name="description" content="세계가 몇 %로 보는지, 매일 아침 3분. Factory Magazine 뉴스레터를 받아보세요." />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <button class="nav-toggle" aria-label="메뉴 열기">
+    <span></span><span></span><span></span>
+  </button>
+  <a href="index.html" class="nav-logo">Factory<span> Magazine</span></a>
+  <button type="button" class="nav-search" aria-label="검색" title="검색 (준비 중)">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+  </button>
+  <div class="nav-links">
+    <a href="https://factorysignal-holdings.vercel.app" class="nav-holdings" target="_blank" rel="noopener">Factory<span> Holdings</span></a>
+    <a href="https://t.me/+dQQkMVnpAqZhMDU9" class="nav-tg" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-2.012 9.483c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.48 14.697l-2.95-.924c-.642-.204-.654-.642.136-.953l11.5-4.432c.537-.194 1.006.131.396.86z"/></svg>텔레그램</a>
+    <a href="https://predictanalytics-news.vercel.app" class="nav-cta" target="_blank" rel="noopener">앱 열기</a>
+  </div>
+</nav>
+
+
+<main class="subscribe-page">
+  <div class="wrap">
+    <h1>뉴스레터 받아보기</h1>
+    <p class="subscribe-lead">세계가 몇 %로 보는지,<br>매일 아침 3분이면 충분해요.</p>
+
+    <form class="subscribe-form" data-source="subscribe-page" novalidate>
+      <label class="letter-card">
+        <input type="checkbox" name="letters" value="daily" checked />
+        <span class="letter-icon" aria-hidden="true">%</span>
+        <span class="letter-text">
+          <strong>오늘의 확률 <em>매일 아침</em></strong>
+          <span>금리·코인·선거… 세계 예측시장이 본 확률 5개와 3줄 요약, 어제 독자 투표 결과까지.</span>
+        </span>
+      </label>
+      <label class="letter-card">
+        <input type="checkbox" name="letters" value="weekly" />
+        <span class="letter-icon" aria-hidden="true">W</span>
+        <span class="letter-text">
+          <strong>주간 코인 브리핑 <em>매주 토요일</em></strong>
+          <span>에디터가 직접 쓰는 한 주 코인 정리, 그리고 지난주 예측을 맞혔는지 틀렸는지 채점 공개.</span>
+        </span>
+      </label>
+
+      <input class="subscribe-email" type="email" name="email" placeholder="이메일 주소" autocomplete="email" required />
+
+      <label class="subscribe-consent">
+        <input type="checkbox" name="consent" />
+        <span><strong>[필수] 개인정보 수집·이용 동의</strong><br>
+        이메일 주소를 뉴스레터 발송 목적으로 수집하며, 구독을 해지하면 지체 없이 파기합니다.
+        동의하지 않을 수 있으나, 이 경우 뉴스레터를 받을 수 없습니다.</span>
+      </label>
+
+      <button type="submit" class="subscribe-submit">구독하기</button>
+      <p class="subscribe-status" role="status"></p>
+      <p class="subscribe-fine">투자 권유나 광고성 상품 안내는 보내지 않습니다. 모든 메일 하단에서 언제든 구독을 해지할 수 있어요.</p>
+    </form>
+  </div>
+</main>
+
+<script src="../js/main.js"></script>
+</body>
+</html>
