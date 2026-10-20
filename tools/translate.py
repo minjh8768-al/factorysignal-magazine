@@ -67,7 +67,7 @@ Rules:
 Fields:
 - title: English headline. Do not translate word-for-word; write a natural English headline.
 - description: one-sentence summary for search results (100-180 characters).
-- eyebrow: the same 2-3 word English label as the Korean article uses.
+- eyebrow: an English translation of the Korean label (the page uses a fixed translation anyway).
 - body_html: the translated body.
 
 Korean article follows.
@@ -193,7 +193,7 @@ def render_en(ko, en):
 <meta name="description" content="{esc(en['description'])}" />
 <link rel="alternate" hreflang="ko" href="{esc(ko['slug'])}.html" />
 <meta name="fs:category" content="{esc(ko['category'])}" />
-<meta name="fs:eyebrow" content="{esc(en['eyebrow'])}" />
+<meta name="fs:eyebrow" content="{esc(article.EYEBROW_EN.get(ko['eyebrow'], en['eyebrow']))}" />
 <meta name="fs:read" content="{esc(ko['read'])}" />
 <meta name="fs:video" content="{esc(vid)}" />
 <meta name="fs:lang" content="en" />
@@ -206,7 +206,7 @@ def render_en(ko, en):
 <header class="article-hero">
   <div class="wrap">
     <a href="index.html" class="back-link">← All articles</a><a href="{esc(ko['slug'])}.html" class="lang-switch">한국어</a>
-    <span class="section-eyebrow">{esc(en['eyebrow'])}</span>
+    <span class="section-eyebrow">{esc(article.EYEBROW_EN.get(ko['eyebrow'], en['eyebrow']))}</span>
     <h1>{esc(en['title'])}</h1>
     <div class="article-meta"><span class="byline-avatar">FS</span><span class="byline-name">{article.BYLINE}</span> · <span>{esc(ko['read'])} min read</span></div>
   </div>

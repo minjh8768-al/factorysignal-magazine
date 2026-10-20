@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """매일 아침 자동 실행: 후보 수집 -> 카테고리별 1편 초안 -> 자동 대조.
 
-    py -3 daily.py              6개 카테고리 각 1편
+    py -3 daily.py              경제·암호화폐 + 돌아가며 2개 분야 (하루 4편)
     py -3 daily.py --cats 정치 경제    지정한 카테고리만
     py -3 daily.py --publish    발행·영어판까지 (권하지 않음 — 아래 참고)
 
@@ -84,6 +84,17 @@ def pick_one_per_category(collect, categories, used):
 
 KNOWN_FLAGS = ("--cats", "--publish")
 
+# 하루 발행량: 양보다 질. 경제·암호화폐는 매일, 나머지 넷은 하루 두 개씩 돌아가며
+# (각 분야가 이틀에 한 번꼴). 2026-10-20 하루 6편 → 4편으로 줄였다.
+DAILY_CORE = ("경제", "암호화폐")
+DAILY_ROTATING = ("정치", "세계", "스포츠", "스타트업")
+
+
+def default_categories(today=None):
+    n = (today or datetime.date.today()).toordinal()
+    k = len(DAILY_ROTATING)
+    return list(DAILY_CORE) + [DAILY_ROTATING[(2 * n) % k], DAILY_ROTATING[(2 * n + 1) % k]]
+
 
 def main(argv):
     # 한글을 출력하므로 무엇보다 먼저 인코딩을 맞춘다. 이 줄이 사용법 출력보다
@@ -110,8 +121,8 @@ def main(argv):
     import draft
     import factcheck
 
-    cats = argv[argv.index("--cats") + 1:] if "--cats" in argv else list(article.CATEGORIES)
-    cats = [c for c in cats if not c.startswith("--")] or list(article.CATEGORIES)
+    cats = argv[argv.index("--cats") + 1:] if "--cats" in argv else default_categories()
+    cats = [c for c in cats if not c.startswith("--")] or default_categories()
     do_publish = "--publish" in argv
 
     log("=" * 70)

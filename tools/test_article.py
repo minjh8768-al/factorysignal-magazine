@@ -134,7 +134,7 @@ class Render(unittest.TestCase):
 
     def test_metadata_survives_round_trip(self):
         for expected in ('<meta name="fs:category" content="정치" />',
-                         '<meta name="fs:eyebrow" content="Policy Watch" />',
+                         '<meta name="fs:eyebrow" content="정책" />',  # 고정 꼬리표로 정규화
                          '<meta name="fs:read" content="6" />',
                          '<meta name="fs:video" content="LZcHNBmWzaY" />'):
             self.assertIn(expected, self.html)
@@ -169,6 +169,28 @@ class Render(unittest.TestCase):
         bad = dict(FIELDS, body_html="<p>a</p><script>x</script>")
         with self.assertRaises(ValueError):
             article.render(bad, URL)
+
+
+class Eyebrow(unittest.TestCase):
+    def test_allowed_label_kept(self):
+        self.assertEqual(article.normalize_eyebrow("경제", "금리·정책"), "금리·정책")
+
+    def test_legacy_english_mapped(self):
+        self.assertEqual(article.normalize_eyebrow("경제", "Fed Watch"), "금리·정책")
+        self.assertEqual(article.normalize_eyebrow("암호화폐", "Crypto Tax Policy"), "규제·정책")
+        self.assertEqual(article.normalize_eyebrow("스포츠", "KBO League"), "야구")
+        self.assertEqual(article.normalize_eyebrow("세계", "US Midterms"), "미국")
+
+    def test_unknown_falls_back_to_default(self):
+        self.assertEqual(article.normalize_eyebrow("정치", "Something Else"), "국내정치")
+
+    def test_analysis_kind_forced(self):
+        self.assertEqual(article.normalize_eyebrow("경제", "Market Watch", "analysis"), "데이터분석")
+
+    def test_every_label_has_english(self):
+        for tags in article.EYEBROWS.values():
+            for t in tags:
+                self.assertIn(t, article.EYEBROW_EN)
 
 
 if __name__ == "__main__":

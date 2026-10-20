@@ -9,7 +9,7 @@ import time
 import urllib.error
 import urllib.request
 
-from article import CATEGORIES
+from article import CATEGORIES, EYEBROWS
 
 ENDPOINT = ("https://generativelanguage.googleapis.com/v1beta/models/"
             "{model}:generateContent?key={key}")
@@ -72,8 +72,8 @@ PROMPT = f"""너는 한국어 시사 매거진 Factory Magazine의 기자다.
   국내 정당·국회·정부 문제는 정치. 해외 정세·국제관계는 세계.
   금리·물가·산업·기업 실적은 경제. 가상자산·블록체인은 암호화폐.
   창업·스타트업·투자유치는 스타트업.
-- eyebrow: 기사 상단과 카드에 붙는 영문 라벨 2~3단어. 쉼표나 마침표를 넣지 마라.
-  예: Politics / Market Watch / Policy Watch / World Affairs / Startup Insights
+- eyebrow: 기사 상단과 카드에 붙는 꼬리표. 고른 category의 목록에서 정확히 하나를 그대로 쓴다.
+{chr(10).join(f"  {c}: {' / '.join(tags)}" for c, tags in EYEBROWS.items())}
 - read_minutes: 본문 분량에 맞는 읽기 시간 (정수, 3~10)
 - body_html: 본문. 아래 태그만 쓴다.
   <p> 단락, <h2> 소제목, <blockquote> 직접 인용, <ul><li> 목록, <strong> 강조

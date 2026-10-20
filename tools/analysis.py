@@ -102,7 +102,7 @@ C. 현재값이 구간 어디에 있는지(현재값_구간내위치_퍼센트)�
 
 구성: 맨 앞에 h2 없는 도입 단락 하나, 이어서 h2 로 나눈 3개 절, 각 절에 2개 단락.
 허용 태그: p, h2, h3, ul, ol, li, strong, em
-title 은 40자 이내, description 은 한 문장, eyebrow 는 영문 2~3단어다.
+title 은 40자 이내, description 은 한 문장, eyebrow 는 아무 값이나 넣어도 된다(발행 때 '데이터분석'으로 고정된다).
 """
 
 
@@ -414,7 +414,7 @@ def render_page(fields, rows, today, macro=(), photo=None, video=None,
 <title>{esc(fields['title'])}{article.TITLE_SUFFIX}</title>
 <meta name="description" content="{esc(fields['description'])}" />
 <meta name="fs:category" content="경제" />
-<meta name="fs:eyebrow" content="{esc(fields['eyebrow'])}" />
+<meta name="fs:eyebrow" content="데이터분석" />
 <meta name="fs:read" content="{esc(fields['read_minutes'])}" />
 <meta name="fs:kind" content="analysis" />
 {plan_meta(plan)}{photo_meta(photo)}{related_meta(video)}
@@ -428,7 +428,7 @@ def render_page(fields, rows, today, macro=(), photo=None, video=None,
 <header class="article-hero">
   <div class="wrap">
     <a href="index.html" class="back-link">← 아티클 목록으로</a>
-    <span class="section-eyebrow">{esc(fields['eyebrow'])}</span>
+    <span class="section-eyebrow">데이터분석</span>
     <h1>{esc(fields['title'])}</h1>
     <div class="article-meta"><span class="byline-avatar">FS</span><span class="byline-name">{article.BYLINE}</span> · <span>{esc(fields['read_minutes'])}분 읽기</span> · <span>{today}</span></div>
   </div>

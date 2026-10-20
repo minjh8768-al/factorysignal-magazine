@@ -10,6 +10,63 @@ from html.parser import HTMLParser
 
 CATEGORIES = ("정치", "경제", "암호화폐", "스포츠", "세계", "스타트업")
 
+# 카드·기사 상단 꼬리표(eyebrow). 예전엔 LLM이 영문 라벨을 마음대로 지어 97종까지
+# 늘어나 분류가 지저분해 보였다. 카테고리마다 이 목록 안에서만 고르게 한다.
+# 각 목록의 첫 항목이 기본값이다.
+EYEBROWS = {
+    "경제": ("시장", "금리·정책", "산업·기업", "데이터분석"),
+    "암호화폐": ("시장", "규제·정책", "산업"),
+    "정치": ("국내정치", "정책", "안보·국방", "법·사법"),
+    "세계": ("국제정세", "미국", "세계경제"),
+    "스포츠": ("종합", "야구", "축구", "농구·배구"),
+    "스타트업": ("창업·투자", "AI·테크", "전략"),
+}
+
+# 영어판 페이지에 쓰는 같은 꼬리표의 고정 번역.
+EYEBROW_EN = {
+    "시장": "Markets", "금리·정책": "Rates & Policy", "산업·기업": "Industry",
+    "데이터분석": "Data Analysis", "규제·정책": "Regulation", "산업": "Industry",
+    "국내정치": "Politics", "정책": "Policy", "안보·국방": "Defense", "법·사법": "Law & Courts",
+    "국제정세": "World Affairs", "미국": "United States", "세계경제": "Global Economy",
+    "종합": "Sports", "야구": "Baseball", "축구": "Football", "농구·배구": "Basketball & Volleyball",
+    "창업·투자": "Startups", "AI·테크": "AI & Tech", "전략": "Strategy",
+}
+
+# 예전 영문 라벨·LLM 출력을 위 목록으로 옮기는 규칙. (카테고리, 패턴, 꼬리표) — 위에서부터 첫 일치.
+_EYEBROW_RULES = (
+    ("경제", r"data|데이터", "데이터분석"),
+    ("경제", r"fed|monetary|policy|tax|rate|금리|정책|세제", "금리·정책"),
+    ("경제", r"ai\b|tech|industry|semiconductor|pop|creator|business|산업|기업", "산업·기업"),
+    ("암호화폐", r"policy|regulat|tax|규제|정책|세", "규제·정책"),
+    ("암호화폐", r"industry|산업", "산업"),
+    ("정치", r"defen[cs]e|security|안보|국방", "안보·국방"),
+    ("정치", r"legal|trial|court|법|사법|재판", "법·사법"),
+    ("정치", r"policy|정책", "정책"),
+    ("세계", r"\bus\b|midterm|미국", "미국"),
+    ("세계", r"economy|경제", "세계경제"),
+    ("스포츠", r"kbo|baseball|야구", "야구"),
+    ("스포츠", r"football|soccer|national team|mls|tactic|축구", "축구"),
+    ("스포츠", r"basketball|volleyball|농구|배구", "농구·배구"),
+    ("스타트업", r"ai\b|tech|silicon|테크", "AI·테크"),
+    ("스타트업", r"strateg|전략", "전략"),
+)
+
+
+def normalize_eyebrow(category, eyebrow, kind=None):
+    """어떤 라벨이 와도 그 카테고리의 고정 꼬리표 중 하나로 바꾼다."""
+    allowed = EYEBROWS.get(category)
+    if not allowed:
+        return eyebrow
+    if kind == "analysis" and "데이터분석" in allowed:
+        return "데이터분석"
+    label = html.unescape(eyebrow or "").strip()
+    if label in allowed:
+        return label
+    for cat, pattern, target in _EYEBROW_RULES:
+        if cat == category and re.search(pattern, label, re.I):
+            return target
+    return allowed[0]
+
 # 브랜드명은 여기 한 곳에만 둔다. 2026-08-03 리브랜딩(factorysignal -> Factory Magazine)
 # 때, render()가 붙이는 제목 접미사와 publish.py가 떼는 접미사가 각각 하드코딩돼 있어서
 # 카드 제목에 " — Factory Magazine"이 그대로 남는 버그가 났다.
@@ -287,6 +344,7 @@ def render(fields, url):
     """
     vid = video_id(url)
     category = validate_category(fields["category"])
+    eyebrow = normalize_eyebrow(category, fields["eyebrow"])
     body = tidy_body(validate_body(fields["body_html"]))
     esc = lambda v: html.escape(str(v), quote=True)
 
@@ -298,7 +356,7 @@ def render(fields, url):
 <title>{esc(fields['title'])}{TITLE_SUFFIX}</title>
 <meta name="description" content="{esc(fields['description'])}" />
 <meta name="fs:category" content="{esc(category)}" />
-<meta name="fs:eyebrow" content="{esc(fields['eyebrow'])}" />
+<meta name="fs:eyebrow" content="{esc(eyebrow)}" />
 <meta name="fs:read" content="{esc(fields['read_minutes'])}" />
 <meta name="fs:video" content="{esc(vid)}" />
 <link rel="stylesheet" href="../css/style.css" />
@@ -310,7 +368,7 @@ def render(fields, url):
 <header class="article-hero">
   <div class="wrap">
     <a href="index.html" class="back-link">← 아티클 목록으로</a>
-    <span class="section-eyebrow">{esc(fields['eyebrow'])}</span>
+    <span class="section-eyebrow">{esc(eyebrow)}</span>
     <h1>{esc(fields['title'])}</h1>
     <div class="article-meta"><span class="byline-avatar">FS</span><span class="byline-name">{BYLINE}</span> · <span>{esc(fields['read_minutes'])}분 읽기</span></div>
   </div>

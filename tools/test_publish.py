@@ -276,7 +276,7 @@ class TitleRoundTrip(unittest.TestCase):
     def test_all_card_fields_survive(self):
         meta = self._parse(article.render(dict(self.FIELDS), self.URL))
         self.assertEqual(meta["category"], "정치")
-        self.assertEqual(meta["eyebrow"], "Politics")
+        self.assertEqual(meta["eyebrow"], "국내정치")  # 고정 꼬리표로 정규화
         self.assertEqual(meta["read"], "8")
         self.assertEqual(meta["video"], "LZcHNBmWzaY")
         self.assertEqual(meta["description"], self.FIELDS["description"])
