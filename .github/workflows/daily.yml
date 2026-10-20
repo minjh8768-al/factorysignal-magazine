@@ -53,21 +53,28 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          TELEGRAM_ADMIN_CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
+          KV_REST_API_URL: ${{ secrets.KV_REST_API_URL }}
+          KV_REST_API_TOKEN: ${{ secrets.KV_REST_API_TOKEN }}
         run: python tools/config_from_env.py
 
       # 입력은 반드시 env 로 받는다. run 블록에 ${{ }} 를 그대로 끼워넣으면
       # 입력 문자열이 셸 명령으로 실행될 수 있다.
-      - name: 초안 생성 · 검수 · 발행
+      # 2026-10-20부터 자동 발행하지 않는다 (AI가 쓰고, 사람이 승인하고, 발행).
+      # 초안만 만들고 다음 단계에서 관리자 텔레그램으로 [발행]/[보류] 승인을 요청한다.
+      - name: 초안 생성 · 검수
         env:
           CATS: ${{ inputs.cats }}
-          # dry_run 이면 --publish 를 빼서 초안까지만 만든다.
-          PUB: ${{ inputs.dry_run == true && ' ' || '--publish' }}
         run: |
           if [ -n "$CATS" ]; then
-            python tools/daily.py $PUB --cats $CATS
+            python tools/daily.py --cats $CATS
           else
-            python tools/daily.py $PUB
+            python tools/daily.py
           fi
+
+      - name: 승인 요청 보내기 (관리자 텔레그램)
+        if: inputs.dry_run != true
+        run: python tools/review.py --send
 
       - name: 바뀐 것이 있으면 커밋
         if: inputs.dry_run != true

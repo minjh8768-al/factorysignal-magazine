@@ -25,6 +25,10 @@ SECRETS = {
     "TELEGRAM_CHAT_ID": "telegram_chat_id",
     "ECOS_API_KEY": "ecos_api_key",
     "PEXELS_API_KEY": "pexels_api_key",
+    # 초안 승인 (review.py): 관리자 개인 텔레그램 + 초안 보관용 Upstash
+    "TELEGRAM_ADMIN_CHAT_ID": "telegram_admin_chat_id",
+    "KV_REST_API_URL": "kv_rest_api_url",
+    "KV_REST_API_TOKEN": "kv_rest_api_token",
 }
 
 # JSON 목록으로 들어오는 것

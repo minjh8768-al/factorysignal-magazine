@@ -1,0 +1,64 @@
+# 승인된 초안 하나를 발행한다. 관리자가 텔레그램에서 [발행]을 누르면 api/review.js 가 실행한다.
+# (수동으로도 실행 가능: Actions → publish-draft → Run workflow → slug 입력)
+name: publish-draft
+
+on:
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: '발행할 초안 slug'
+        required: true
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TZ: Asia/Seoul
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 설정 파일 만들기
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS }}
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_ADMIN_CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
+          KV_REST_API_URL: ${{ secrets.KV_REST_API_URL }}
+          KV_REST_API_TOKEN: ${{ secrets.KV_REST_API_TOKEN }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: python tools/config_from_env.py
+      # 입력은 env 로 받는다 (run 블록에 직접 끼우면 셸 명령으로 실행될 수 있다).
+      - name: 발행
+        env:
+          SLUG: ${{ inputs.slug }}
+        run: |
+          echo "$SLUG" | grep -Eq '^[a-z0-9][a-z0-9-]{2,119}$' || { echo "잘못된 slug"; exit 1; }
+          python tools/review.py --publish "$SLUG"
+      - name: 커밋·푸시
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet --exit-code HEAD -- articles ; then echo "바뀐 것 없음"; exit 0; fi
+          git add -A articles
+          git commit -q -m "chore(publish): 승인된 기사 발행 ${{ inputs.slug }}"
+          git pull --rebase origin ${{ github.ref_name }}
+          git push origin HEAD:master
+          git push origin HEAD:main
+      - name: 독자 텔레그램 그룹에 게시
+        env:
+          SLUG: ${{ inputs.slug }}
+        run: python tools/telegram.py --send || true      # 방금 커밋된 기사 중 경제·암호화폐만 (기존 규칙)
