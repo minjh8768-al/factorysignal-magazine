@@ -67,23 +67,8 @@ document.addEventListener("DOMContentLoaded", () => {
       heroMeta.append(" · ", time);
     }
 
-    // 기사 → Factory Signal 모의 예측으로 넘기는 연결 고리. 가상 포인트라 돈이 들지
-    // 않는다는 점을 문구에 분명히 한다(베팅 유도로 읽히지 않게).
-    const cta = document.createElement("aside");
-    cta.className = "predict-cta";
-    const ctaTitle = document.createElement("strong");
-    const ctaText = document.createElement("p");
-    const ctaLink = document.createElement("a");
-    ctaTitle.textContent = isEn
-      ? "What odds does the world give this?"
-      : "이 이슈, 세계는 몇 %로 보고 있을까요?";
-    ctaText.textContent = isEn
-      ? "See live prediction-market probabilities and make your own call with free virtual points."
-      : "실제 예측시장 확률을 확인하고, 무료 가상 포인트로 직접 예측해 보세요.";
-    ctaLink.href = "https://predictanalytics-news.vercel.app/#markets";
-    ctaLink.textContent = isEn ? "Make a prediction →" : "모의 예측 하러 가기 →";
-    cta.append(ctaTitle, ctaText, ctaLink);
-    articleBody.append(cta);
+    const pollMeta = document.querySelector('meta[name="fs:poll"]');
+    if (pollMeta && pollMeta.content) mountPoll(articleBody, pollMeta.content);
 
     const notice = document.createElement("p");
     notice.className = "source-note ai-note";
@@ -93,3 +78,89 @@ document.addEventListener("DOMContentLoaded", () => {
     articleBody.append(notice);
   }
 });
+
+// ── 기사 하단 예/아니오 투표 ─────────────────────────────────────────
+// 질문은 기사 생성 때 fs:poll 메타로 심긴다. 로그인 없이 한 번 누르면 독자 비율을 보여준다.
+// 저장은 api/vote.js. 매거진이 /blog 아래로 프록시돼 열릴 때도 같은 API에 닿도록 경로를 맞춘다.
+function mountPoll(container, question) {
+  const slug = location.pathname.split("/").pop().replace(/\.html$/, "");
+  const api = (location.pathname.startsWith("/blog/") ? "/blog" : "") + "/api/vote";
+  const storeKey = `fm-poll:${slug}`;
+
+  const box = document.createElement("aside");
+  box.className = "poll-box";
+  const label = document.createElement("span");
+  label.className = "poll-label";
+  label.textContent = "독자 투표";
+  const q = document.createElement("strong");
+  q.className = "poll-question";
+  q.textContent = question;
+  const buttons = document.createElement("div");
+  buttons.className = "poll-buttons";
+  const result = document.createElement("div");
+  result.className = "poll-result";
+  const note = document.createElement("p");
+  note.className = "poll-note";
+  note.textContent = "로그인 없이 참여할 수 있습니다. 결과는 독자들의 생각이며 예측이나 권유가 아닙니다.";
+
+  const choices = [["yes", "예"], ["no", "아니오"]];
+  choices.forEach(([value, text]) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = text;
+    b.addEventListener("click", () => vote(value));
+    buttons.append(b);
+  });
+  box.append(label, q, buttons, result, note);
+  container.append(box);
+
+  function show(data, mine) {
+    const total = (data.yes || 0) + (data.no || 0);
+    const pct = (n) => (total ? Math.round((n / total) * 100) : 0);
+    buttons.hidden = true;
+    result.innerHTML = "";
+    choices.forEach(([value, text]) => {
+      const row = document.createElement("div");
+      row.className = "poll-row" + (value === mine ? " is-mine" : "");
+      const name = document.createElement("span");
+      name.textContent = text + (value === mine ? " ✓" : "");
+      const bar = document.createElement("span");
+      bar.className = "poll-bar";
+      const fill = document.createElement("span");
+      fill.style.width = pct(data[value] || 0) + "%";
+      bar.append(fill);
+      const num = document.createElement("span");
+      num.textContent = pct(data[value] || 0) + "%";
+      row.append(name, bar, num);
+      result.append(row);
+    });
+    const count = document.createElement("p");
+    count.className = "poll-count";
+    count.textContent = `${total.toLocaleString()}명 참여`;
+    result.append(count);
+  }
+
+  async function vote(choice) {
+    buttons.querySelectorAll("button").forEach((b) => (b.disabled = true));
+    try {
+      const r = await fetch(api, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, choice }),
+      });
+      if (!r.ok) throw new Error();
+      localStorage.setItem(storeKey, choice);
+      show(await r.json(), choice);
+    } catch (e) {
+      buttons.querySelectorAll("button").forEach((b) => (b.disabled = false));
+      note.textContent = "지금은 투표를 받을 수 없습니다. 잠시 후 다시 시도해 주세요.";
+    }
+  }
+
+  // 이미 투표한 브라우저면 결과부터 보여준다. 저장소가 아직 없으면(503) 투표 박스를 숨긴다.
+  const mine = localStorage.getItem(storeKey);
+  fetch(`${api}?slug=${encodeURIComponent(slug)}`)
+    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    .then((data) => { if (mine) show(data, mine); })
+    .catch((status) => { if (status === 503) box.remove(); });
+}

@@ -52,6 +52,15 @@ _EYEBROW_RULES = (
 )
 
 
+def poll_meta(question):
+    """독자 투표 질문 메타 태그 한 줄. 질문이 없거나 형식이 어긋나면 빈 문자열 —
+    투표가 빠질 뿐 기사 발행은 막지 않는다 (js/main.js가 메타가 있을 때만 투표를 띄운다)."""
+    q = " ".join(str(question or "").split())
+    if not (8 <= len(q) <= 80) or not q.endswith("?"):
+        return ""
+    return f'<meta name="fs:poll" content="{html.escape(q, quote=True)}" />\n'
+
+
 def normalize_eyebrow(category, eyebrow, kind=None):
     """어떤 라벨이 와도 그 카테고리의 고정 꼬리표 중 하나로 바꾼다."""
     allowed = EYEBROWS.get(category)
@@ -345,6 +354,7 @@ def render(fields, url):
     vid = video_id(url)
     category = validate_category(fields["category"])
     eyebrow = normalize_eyebrow(category, fields["eyebrow"])
+    poll = poll_meta(fields.get("poll_question"))
     body = tidy_body(validate_body(fields["body_html"]))
     esc = lambda v: html.escape(str(v), quote=True)
 
@@ -359,7 +369,7 @@ def render(fields, url):
 <meta name="fs:eyebrow" content="{esc(eyebrow)}" />
 <meta name="fs:read" content="{esc(fields['read_minutes'])}" />
 <meta name="fs:video" content="{esc(vid)}" />
-<link rel="stylesheet" href="../css/style.css" />
+{poll}<link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
 

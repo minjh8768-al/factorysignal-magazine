@@ -25,11 +25,12 @@ RESPONSE_SCHEMA = {
         "eyebrow": {"type": "STRING"},
         "read_minutes": {"type": "INTEGER"},
         "body_html": {"type": "STRING"},
+        "poll_question": {"type": "STRING"},
     },
     "required": ["title", "description", "slug", "category", "eyebrow",
-                 "read_minutes", "body_html"],
+                 "read_minutes", "body_html", "poll_question"],
     "propertyOrdering": ["title", "description", "slug", "category", "eyebrow",
-                         "read_minutes", "body_html"],
+                         "read_minutes", "body_html", "poll_question"],
 }
 
 PROMPT = f"""너는 한국어 시사 매거진 Factory Magazine의 기자다.
@@ -74,6 +75,12 @@ PROMPT = f"""너는 한국어 시사 매거진 Factory Magazine의 기자다.
   창업·스타트업·투자유치는 스타트업.
 - eyebrow: 기사 상단과 카드에 붙는 꼬리표. 고른 category의 목록에서 정확히 하나를 그대로 쓴다.
 {chr(10).join(f"  {c}: {' / '.join(tags)}" for c, tags in EYEBROWS.items())}
+- poll_question: 기사 끝 독자 투표용 예/아니오 질문 하나. 25~45자, 물음표로 끝낸다.
+  기사 주제와 직접 관련되고 아직 결과가 정해지지 않은 '앞으로의 일'을 묻는다.
+  나중에 맞았는지 확인할 수 있게 가능하면 기한을 넣는다 ("연내", "이번 시즌", "다음 회의에서").
+  금지: 특정 정당·인물을 지지하는지 묻기, "사야 할까?"처럼 투자·베팅을 권하는 질문,
+  오버언더·핸디캡 같은 베팅 용어.
+  예: "한국은행이 다음 회의에서 기준금리를 내릴까?" / "비트코인이 연내 10만 달러를 넘을까?"
 - read_minutes: 본문 분량에 맞는 읽기 시간 (정수, 3~10)
 - body_html: 본문. 아래 태그만 쓴다.
   <p> 단락, <h2> 소제목, <blockquote> 직접 인용, <ul><li> 목록, <strong> 강조

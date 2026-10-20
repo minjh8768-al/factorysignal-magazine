@@ -171,6 +171,17 @@ class Render(unittest.TestCase):
             article.render(bad, URL)
 
 
+class Poll(unittest.TestCase):
+    def test_question_rendered_as_meta(self):
+        h = article.render(dict(FIELDS, poll_question="이 법이 연내 시행될까?"), URL)
+        self.assertIn('<meta name="fs:poll" content="이 법이 연내 시행될까?" />', h)
+
+    def test_missing_or_bad_question_is_skipped_not_fatal(self):
+        for q in (None, "", "물음표가 없는 문장입니다", "짧?"):
+            h = article.render(dict(FIELDS, poll_question=q), URL)
+            self.assertNotIn("fs:poll", h)
+
+
 class Eyebrow(unittest.TestCase):
     def test_allowed_label_kept(self):
         self.assertEqual(article.normalize_eyebrow("경제", "금리·정책"), "금리·정책")

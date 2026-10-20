@@ -1339,36 +1339,63 @@ footer {
 }
 .related-video figcaption a{text-decoration:underline}
 
-/* 기사 하단 → Factory Signal 모의 예측 연결 박스 (js/main.js가 삽입) */
-.predict-cta {
+/* 기사 하단 예/아니오 독자 투표 (js/main.js mountPoll이 삽입) */
+.poll-box {
   margin: 48px 0 24px;
   padding: 22px 24px;
   border-radius: 14px;
   background: var(--accent-dim);
   border: 1px solid var(--accent);
 }
-.predict-cta strong {
-  display: block;
-  font-size: 1.05rem;
+.poll-label {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent);
   margin-bottom: 6px;
 }
-.predict-cta p {
-  margin: 0 0 14px;
-  color: var(--gray-600);
-  font-size: 0.92rem;
+.poll-question {
+  display: block;
+  font-size: 1.08rem;
+  line-height: 1.5;
+  margin-bottom: 14px;
 }
-.predict-cta a {
-  display: inline-block;
-  padding: 10px 18px;
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--white);
+.poll-buttons { display: flex; gap: 10px; }
+.poll-buttons button {
+  flex: 1;
+  padding: 12px 0;
+  border-radius: 10px;
+  border: 1px solid var(--accent);
+  background: var(--white);
+  color: var(--accent);
   font-weight: 700;
-  font-size: 0.9rem;
-  border: none;
-  text-decoration: none;
+  font-size: 1rem;
+  cursor: pointer;
 }
-.predict-cta a:hover { opacity: 0.9; color: var(--white); }
+.poll-buttons button:hover { background: var(--accent); color: var(--white); }
+.poll-buttons button:disabled { opacity: 0.5; cursor: default; }
+.poll-row {
+  display: grid;
+  grid-template-columns: 4.5em 1fr 3em;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  font-size: 0.95rem;
+}
+.poll-row.is-mine { font-weight: 700; }
+.poll-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--white);
+  overflow: hidden;
+}
+.poll-bar span { display: block; height: 100%; background: var(--accent); }
+.poll-row span:last-child { text-align: right; }
+.poll-count, .poll-note {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: var(--gray-600);
+}
 
 /* 카드 하단 줄: 날짜가 추가되면서 좁은 카드에서 바이라인이 여러 줄로 꺾였다.
    각 항목은 한 덩어리로 유지하고, 자리가 모자라면 날짜가 다음 줄로 내려가게 한다. */
