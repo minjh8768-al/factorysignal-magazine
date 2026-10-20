@@ -1513,3 +1513,15 @@ footer {
 .article-content .subscribe-status:empty { display: none; }
 .article-content .ai-note { margin-top: 8px; }
 .subscribe-consent a { text-decoration: underline; color: var(--gray-600); }
+
+/* ---------- 개인정보처리방침 (articles/privacy.html) ---------- */
+.policy-page { padding: 120px 0 80px; }
+.policy-page .wrap { max-width: 760px; }
+.policy-page h1 { font-size: 1.8rem; margin-bottom: 6px; }
+.policy-date { color: var(--gray-400); font-size: 0.85rem; margin-bottom: 28px; }
+.policy-page h2 { font-size: 1.15rem; margin: 36px 0 12px; }
+.policy-page p, .policy-page li { font-size: 0.95rem; line-height: 1.75; color: #262220; word-break: keep-all; }
+.policy-page ul { padding-left: 20px; margin: 8px 0; }
+.policy-page table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.88rem; }
+.policy-page th, .policy-page td { border: 1px solid var(--gray-200); padding: 10px; text-align: left; vertical-align: top; word-break: keep-all; }
+.policy-page th { background: var(--gray-100); }

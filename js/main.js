@@ -15,15 +15,6 @@ function apiUrl(name) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  // 상단 메뉴의 '뉴스레터' 링크. 기사 수백 편의 고정 메뉴를 고치지 않고 여기서 넣는다.
-  const navLinks = document.querySelector(".nav-links");
-  if (navLinks && !navLinks.querySelector(".nav-newsletter")) {
-    const a = document.createElement("a");
-    a.className = "nav-newsletter";
-    a.href = (location.pathname.includes("/articles/") ? "" : "articles/") + "subscribe.html";
-    a.textContent = "뉴스레터";
-    navLinks.prepend(a);
-  }
   document.querySelectorAll("form.subscribe-form").forEach(wireSubscribeForm);
 
   const nav = document.querySelector(".nav");
@@ -156,7 +147,7 @@ function mountInlineSubscribe(container) {
       </div>
       <label class="subscribe-consent">
         <input type="checkbox" name="consent" />
-        <span>[필수] 뉴스레터 발송을 위한 이메일 수집·이용에 동의합니다. 해지 시 즉시 파기합니다. <a href="https://predictanalytics-news.vercel.app/privacy.html" target="_blank" rel="noopener">자세히</a></span>
+        <span>[필수] 뉴스레터 발송을 위한 이메일 수집·이용에 동의합니다. 해지 시 즉시 파기합니다. <a href="privacy.html" target="_blank" rel="noopener">자세히</a></span>
       </label>
       <p class="subscribe-status" role="status"></p>
     </form>`;

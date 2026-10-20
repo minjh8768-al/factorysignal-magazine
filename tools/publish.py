@@ -110,7 +110,7 @@ def rebuild_index(apply_changes):
     return rows, new != old
 
 
-SITE_BASE = "https://predictanalytics-news.vercel.app/blog/articles/"
+SITE_BASE = "https://factorysignal-magazine.vercel.app/articles/"  # 도메인을 사면 여기 한 곳만 바꾼다
 SITEMAP = os.path.join(ARTICLES, "sitemap.xml")
 
 

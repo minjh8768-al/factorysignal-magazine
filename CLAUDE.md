@@ -22,10 +22,13 @@ naming convention across all three properties now, not just a one-off style choi
 The footer's "링크" column still legitimately says "Factory Signal" once — that entry links to
 and correctly names the *other* property (the app), leave it alone.
 
-**Public URL stays `predictanalytics-news.vercel.app/blog/`** even though the code now lives
-here — the main app's `vercel.json` has a rewrite that proxies `/blog/*` to this project's own
-Vercel deployment URL. If you need the raw deployment URL (e.g. to update that rewrite), check
-this project's Vercel dashboard; don't assume it matches the repo name exactly.
+**Since 2026-10-20 the magazine stands alone at `factorysignal-magazine.vercel.app`** (until a
+custom domain is bought — then change `SITE_BASE` in `tools/publish.py` and `robots.txt`).
+It deliberately no longer links to the Factory Signal app (no "앱 열기", no app terms/privacy,
+no $SIGNAL footer); it has its own `articles/privacy.html`. The app's old `/blog/*` URLs now
+redirect here. `js/main.js`'s `apiUrl()` still tolerates being served under `/blog/` but that
+path is no longer the public one. The magazine's own serverless functions live in `api/`
+(`vote.js`, `subscribe.js`, Upstash Redis via `KV_REST_API_*` env vars).
 
 Separate again from `factorysignal-holdings`, the parent-company corporate site — also its own
 repo, also linked from here, but a different visual identity (see below). (Repo/URL slugs like
