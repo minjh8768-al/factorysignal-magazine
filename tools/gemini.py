@@ -27,11 +27,12 @@ RESPONSE_SCHEMA = {
         "body_html": {"type": "STRING"},
         "poll_question": {"type": "STRING"},
         "thumb_keyword": {"type": "STRING"},
+        "photo_query": {"type": "STRING"},
     },
     "required": ["title", "description", "slug", "category", "eyebrow",
-                 "read_minutes", "body_html", "poll_question", "thumb_keyword"],
+                 "read_minutes", "body_html", "poll_question", "thumb_keyword", "photo_query"],
     "propertyOrdering": ["title", "description", "slug", "category", "eyebrow",
-                         "read_minutes", "body_html", "poll_question", "thumb_keyword"],
+                         "read_minutes", "body_html", "poll_question", "thumb_keyword", "photo_query"],
 }
 
 PROMPT = f"""너는 한국어 시사 매거진 Factory Magazine의 기자다.
@@ -88,6 +89,9 @@ PROMPT = f"""너는 한국어 시사 매거진 Factory Magazine의 기자다.
   예: "한국은행이 다음 회의에서 기준금리를 내릴까?" / "비트코인이 연내 10만 달러를 넘을까?"
 - thumb_keyword: 카드 썸네일에 크게 들어갈 핵심 숫자나 짧은 단어 하나. 2~8자.
   기사의 핵심을 한눈에 보여 주는 것 (예: "5%", "7거래일", "20억 원", "노벨평화상", "준PO").
+- photo_query: 카드 사진을 찾을 영문 검색어 2~5단어. 무료 스톡 사진에서 찾으므로
+  특정 인물 이름은 쓰지 말고 장면·장소·사물로 쓴다 (예: "federal reserve building",
+  "semiconductor factory", "baseball stadium night", "bitcoin cryptocurrency").
 - read_minutes: 본문 분량에 맞는 읽기 시간 (정수, 2~5)
 - body_html: 본문. 아래 태그만 쓴다.
   <p> 단락, <h2> 소제목, <blockquote> 직접 인용, <ul><li> 목록, <strong> 강조

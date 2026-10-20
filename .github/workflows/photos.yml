@@ -1,0 +1,46 @@
+# 사진이 없는 영상 요약 기사에 카드 사진(Pexels)을 한 번에 붙인다. 수동 실행 전용.
+# Pexels 키가 GitHub 비밀값에만 있어서 PC가 아니라 여기서 돌린다.
+name: photos
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TZ: Asia/Seoul
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 설정 파일 만들기
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS }}
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: python tools/config_from_env.py
+      - name: 사진 붙이기
+        run: python tools/backfill_photos.py --apply
+      - name: 커밋·푸시
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet --exit-code HEAD -- articles ; then echo "바뀐 것 없음"; exit 0; fi
+          git add -A articles
+          git commit -q -m "chore(photos): 영상 요약 기사 카드 사진 일괄 추가"
+          git pull --rebase origin ${{ github.ref_name }}
+          git push origin HEAD:master
+          git push origin HEAD:main

@@ -309,7 +309,14 @@ def thumb_html(meta):
     """
     esc = lambda v: html.escape(str(v), quote=True)
     nl = chr(10)
+    if meta.get("video") and meta.get("photo"):
+        # 뉴스처럼 보이게 실제 사진(Pexels, 상업 이용 무료) + 분야 라벨. 남의 방송 화면은 쓰지 않는다.
+        return (f'            <div class="article-thumb article-thumb--news">'
+                f'<img class="thumb-photo" src="{esc(meta["photo"])}" alt="" loading="lazy" />'
+                f'<span class="thumb-cat">{esc(meta["category"])}</span>'
+                f'<span class="thumb-badge">영상 요약</span></div>{nl}')
     if meta.get("video"):
+        # 사진을 못 찾은 경우의 대체 썸네일: 분야 색 + 핵심어.
         # 2026-10-20: 남의 방송 썸네일(채널 로고·자막이 그대로 보임) 대신 우리 썸네일.
         # 분야 색 배경 + 제목에서 뽑은 핵심 숫자(없으면 꼬리표)를 크게. 영상은 기사 안에 그대로 있다.
         figure = meta.get("thumb") or key_figure(meta.get("title", ""))
@@ -429,6 +436,12 @@ def render(fields, url):
     # 카드 썸네일 핵심어 (없거나 너무 짧으면 제목에서 숫자를 뽑는 쪽으로 물러선다)
     thumb = " ".join(str(fields.get("thumb_keyword") or "").split())[:12]
     thumb_tag = f'<meta name="fs:thumb" content="{esc(thumb)}" />\n' if len(thumb) >= 2 else ""
+    # 카드 사진 (draft.py가 Pexels에서 찾아 넣는다). 없으면 글자 썸네일로 물러선다.
+    photo = fields.get("photo") or {}
+    if photo.get("url"):
+        thumb_tag += f'<meta name="fs:photo" content="{esc(photo["url"])}" />\n'
+        if photo.get("by"):
+            thumb_tag += f'<meta name="fs:photo_by" content="{esc(photo["by"])}" />\n'
 
     return f"""<!DOCTYPE html>
 <html lang="ko">

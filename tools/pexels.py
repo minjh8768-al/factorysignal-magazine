@@ -50,3 +50,57 @@ def photo(cfg, query, index=0, timeout=20):
 
 def for_indicator(cfg, name, index=0):
     return photo(cfg, QUERIES.get(name, DEFAULT_QUERY), index)
+
+
+# ── 영상 요약 기사 카드 사진 (2026-10-20) ─────────────────────────────
+# 새 기사는 Gemini가 photo_query(영문 검색어)를 준다. 그게 없는 예전 기사는 제목 속
+# 핵심어 → 꼬리표 순으로 검색어를 정한다. 스톡 사진에는 특정 인물이 없으므로 인물명이
+# 아니라 장면(장소·사물)으로 찾는다.
+TITLE_QUERIES = (
+    ("비트코인", "bitcoin cryptocurrency"), ("이더리움", "ethereum cryptocurrency"),
+    ("스테이블코인", "digital currency payment"), ("가상자산", "cryptocurrency trading"),
+    ("코인", "cryptocurrency coins"), ("ETF", "stock exchange trading floor"),
+    ("반도체", "semiconductor chip factory"), ("AI", "artificial intelligence technology"),
+    ("데이터센터", "data center servers"), ("코스피", "stock market chart"),
+    ("증시", "stock market trading screen"), ("국채", "government bonds finance"),
+    ("금리", "central bank interest rates"), ("연준", "federal reserve building"),
+    ("FOMC", "federal reserve building"), ("물가", "grocery prices inflation"),
+    ("CPI", "grocery prices inflation"), ("PPI", "factory production line"),
+    ("환율", "currency exchange money"), ("부동산", "apartment buildings seoul"),
+    ("트럼프", "white house washington"), ("백악관", "white house washington"),
+    ("중간선거", "american election voting"), ("이스라엘", "middle east conflict"),
+    ("가자", "middle east conflict"), ("레바논", "middle east conflict"),
+    ("이란", "middle east conflict"), ("우크라이나", "war ruins europe"),
+    ("관광", "tourism travel desert"), ("국회", "parliament building"),
+    ("대통령", "presidential office korea"), ("재판", "courtroom gavel justice"),
+    ("징역", "courtroom gavel justice"), ("검찰", "courtroom gavel justice"),
+    ("야구", "baseball game stadium"), ("KBO", "baseball game stadium"),
+    ("축구", "soccer football match"), ("아시안게임", "athletes sports competition"),
+    ("배드민턴", "badminton match"), ("농구", "basketball game"), ("롤", "esports gaming"),
+    ("인스타그램", "smartphone social media"), ("쇼핑", "online shopping ecommerce"),
+    ("아마존", "online shopping ecommerce"), ("스타트업", "startup office team"),
+)
+EYEBROW_QUERIES = {
+    "시장": "stock market trading", "금리·정책": "central bank interest rates",
+    "산업·기업": "modern factory industry", "데이터분석": "financial market chart",
+    "규제·정책": "cryptocurrency regulation law", "산업": "blockchain technology",
+    "국내정치": "parliament building", "정책": "government policy meeting",
+    "안보·국방": "military security", "법·사법": "courtroom gavel justice",
+    "국제정세": "world news globe", "미국": "white house washington",
+    "세계경제": "global trade shipping containers", "종합": "sports stadium crowd",
+    "야구": "baseball game stadium", "축구": "soccer football match",
+    "농구·배구": "basketball game", "창업·투자": "startup office team",
+    "AI·테크": "artificial intelligence technology", "전략": "business strategy meeting",
+}
+
+
+def query_for(title, eyebrow, category=""):
+    for word, q in TITLE_QUERIES:
+        if word in (title or ""):
+            return q
+    return EYEBROW_QUERIES.get(eyebrow, "news newspaper")
+
+
+def pick_index(slug, n):
+    """같은 검색어를 쓰는 기사끼리 같은 사진이 반복되지 않게 slug로 결과 순번을 고른다."""
+    return sum(ord(c) for c in slug) % max(n, 1)

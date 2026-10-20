@@ -42,6 +42,24 @@ class Card(unittest.TestCase):
         self.assertNotIn("img.youtube.com", card)
         self.assertIn('class="thumb-figure">떠나지 마라<', card)  # 제목 속 인용어
 
+    def test_photo_makes_news_thumbnail(self):
+        card = article.card_html(dict(META, photo="https://images.pexels.com/x.jpg"))
+        self.assertIn("article-thumb--news", card)
+        self.assertIn('src="https://images.pexels.com/x.jpg"', card)
+        self.assertNotIn("thumb-figure", card)
+
+    def test_photo_query_from_title_then_tag(self):
+        import pexels
+        self.assertEqual(pexels.query_for("비트코인 반등론 경계", "시장"), "bitcoin cryptocurrency")
+        self.assertEqual(pexels.query_for("아무 단어 없는 제목", "축구"), "soccer football match")
+        self.assertEqual(pexels.query_for("아무 단어 없는 제목", "모르는꼬리표"), "news newspaper")
+
+    def test_rendered_photo_meta_round_trips(self):
+        html_text = article.render(dict(TitleRoundTrip.FIELDS, photo={"url": "https://p/x.jpg", "by": "Kim"}),
+                                   TitleRoundTrip.URL)
+        self.assertIn('<meta name="fs:photo" content="https://p/x.jpg" />', html_text)
+        self.assertIn('<meta name="fs:photo_by" content="Kim" />', html_text)
+
     def test_thumb_keyword_meta_wins(self):
         card = article.card_html(dict(META, thumb="동결"))
         self.assertIn('class="thumb-figure">동결<', card)

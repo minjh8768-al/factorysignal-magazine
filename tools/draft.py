@@ -26,6 +26,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import article
 import gemini
+import pexels
 import youtube
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -91,6 +92,10 @@ def make_draft(cfg, url, today):
 
         fields["slug"] = article.clean_slug(fields["slug"])
         fields["source_title"] = youtube.source_title(meta)
+        # 카드 사진. Gemini 검색어가 없으면 제목·꼬리표로 정한다. 실패해도 기사는 계속.
+        q = (fields.get("photo_query") or "").strip() or pexels.query_for(
+            fields.get("title", ""), fields.get("eyebrow", ""))
+        fields["photo"] = pexels.photo(cfg, q, pexels.pick_index(fields["slug"], 8))
         try:
             html_text = article.render(fields, url)   # 카테고리·태그·잘림 검증 포함
         except ValueError as e:
