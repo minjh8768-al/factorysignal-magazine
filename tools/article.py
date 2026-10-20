@@ -325,7 +325,7 @@ def thumb_html(meta):
         return (f'            <div class="article-thumb article-thumb--news">'
                 f'<img class="thumb-photo" src="{esc(meta["photo"])}" alt="" loading="lazy"{fallback} />'
                 f'<span class="thumb-cat">{esc(meta["category"])}</span>'
-                f'<span class="thumb-badge">영상 요약</span>{credit}</div>{nl}')
+                f'{credit}</div>{nl}')
     if meta.get("video"):
         # 사진을 못 찾은 경우의 대체 썸네일: 분야 색 + 핵심어.
         # 2026-10-20: 남의 방송 썸네일(채널 로고·자막이 그대로 보임) 대신 우리 썸네일.
@@ -336,7 +336,7 @@ def thumb_html(meta):
         return (f'            <div class="article-thumb article-thumb--brand">'
                 f'<span class="thumb-cat">{esc(meta["category"])}</span>{big}'
                 f'<span class="thumb-mark">Factory Magazine</span>'
-                f'<span class="thumb-badge">영상 요약</span></div>{nl}')
+                f'</div>{nl}')
     photo = meta.get("photo") or ""
     klass = "article-thumb article-thumb--data"
     img = ""

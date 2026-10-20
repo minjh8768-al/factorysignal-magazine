@@ -125,7 +125,7 @@ SUBJECTS = (
     # 실사진이 엉뚱하게 나왔던 인물: 원본 영상 썸네일로
     ("한동훈", VIDEO), ("윤석열", VIDEO), ("이강인", VIDEO), ("안세영", VIDEO), ("롤드컵", VIDEO),
     ("잠실", "Jamsil Baseball Stadium"),
-    ("트럼프", "Donald Trump 2026"), ("백악관", "White House"),
+    ("트럼프", "Donald Trump at the 2026 FIFA World Cup final"), ("백악관", "White House"),
     ("이재명", "Lee Jae-myung"), ("이 대통령", "Lee Jae-myung"),
     ("국회", "National Assembly Proceeding Hall"), ("최태원", "Chey Tae-won"),
     ("연준", "Marriner S. Eccles Federal Reserve Board Building"),
@@ -142,8 +142,9 @@ EYEBROW_SUBJECTS = {"야구": "Jamsil Baseball Stadium"}
 # 검색어별로 파일 이름에 반드시 있어야 하는 낱말 (잠실 '야경'·'철교' 사진 등을 거르려고).
 MUST = {"Jamsil Baseball Stadium": ("baseball",)}
 
-# 검색어별로 쓸 후보 수 상한. 트럼프는 2번째 후보가 붉은 조명의 연출 사진이라 첫 사진만 쓴다.
-POOL_MAX = {"Donald Trump 2026": 1}
+# 검색어별로 쓸 후보 수 상한. 트럼프: 백악관 1월 사진은 붉은 조명의 연출 사진이라 쓰지 않고,
+# 정장 차림의 중립적인 사진(2026 월드컵 결승) 1장만 쓴다. 2번째 후보는 BTS 공연 사진.
+POOL_MAX = {"Donald Trump at the 2026 FIFA World Cup final": 1}
 
 # 제목만으로는 주인공이 드러나지 않는 기사를 직접 지정 (slug → 검색어).
 OVERRIDES = {

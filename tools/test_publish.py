@@ -380,7 +380,7 @@ class CommonsRules(unittest.TestCase):
         self.assertEqual(commons._year_from_title("File:Donald Trump at the 2026 FIFA World Cup.jpg"), 2026)
         self.assertEqual(commons._year_from_title("File:Rescene airport.png"), 0)
         self.assertIn("Jamsil Baseball Stadium", commons.PLACES)       # 장소는 연도 제한 없음
-        self.assertNotIn("Donald Trump 2026", commons.PLACES)
+        self.assertNotIn("Donald Trump at the 2026 FIFA World Cup final", commons.PLACES)
 
     def test_video_thumb_credits_channel_with_fallback(self):
         p = commons_video = __import__("commons").video_thumb("abc123", "연합뉴스TV")
