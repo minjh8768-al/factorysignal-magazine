@@ -1,12 +1,18 @@
-# 승인된 초안 하나를 발행한다. 관리자가 텔레그램에서 [발행]을 누르면 api/review.js 가 실행한다.
-# (수동으로도 실행 가능: Actions → publish-draft → Run workflow → slug 입력)
+# 승인된 초안 하나를 발행한다. 관리자 페이지(/admin.html)에서 [발행]을 누르면 api/admin.js 가
+# 수정이 반영된 기사 HTML(base64)을 입력으로 넘겨 이 워크플로를 실행한다. (2026-10-20)
 name: publish-draft
 
 on:
   workflow_dispatch:
     inputs:
       slug:
-        description: '발행할 초안 slug'
+        description: '기사 slug'
+        required: true
+      date:
+        description: '발행일 YYYY-MM-DD'
+        required: true
+      html_b64:
+        description: '기사 HTML (base64)'
         required: true
 
 concurrency:
@@ -36,18 +42,20 @@ jobs:
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          TELEGRAM_ADMIN_CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT_ID }}
-          KV_REST_API_URL: ${{ secrets.KV_REST_API_URL }}
-          KV_REST_API_TOKEN: ${{ secrets.KV_REST_API_TOKEN }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
         run: python tools/config_from_env.py
       # 입력은 env 로 받는다 (run 블록에 직접 끼우면 셸 명령으로 실행될 수 있다).
-      - name: 발행
+      - name: 발행 (영어판 포함)
         env:
           SLUG: ${{ inputs.slug }}
+          DATE: ${{ inputs.date }}
+          HTML_B64: ${{ inputs.html_b64 }}
         run: |
           echo "$SLUG" | grep -Eq '^[a-z0-9][a-z0-9-]{2,119}$' || { echo "잘못된 slug"; exit 1; }
-          python tools/review.py --publish "$SLUG"
+          echo "$DATE" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' || { echo "잘못된 날짜"; exit 1; }
+          mkdir -p _drafts
+          printf '%s' "$HTML_B64" | base64 -d > "_drafts/${DATE}-${SLUG}.html"
+          python tools/publish.py --apply --en "$SLUG"
       - name: 커밋·푸시
         run: |
           git config user.name  "github-actions[bot]"
@@ -58,7 +66,5 @@ jobs:
           git pull --rebase origin ${{ github.ref_name }}
           git push origin HEAD:master
           git push origin HEAD:main
-      - name: 독자 텔레그램 그룹에 게시
-        env:
-          SLUG: ${{ inputs.slug }}
-        run: python tools/telegram.py --send || true      # 방금 커밋된 기사 중 경제·암호화폐만 (기존 규칙)
+      - name: 독자 텔레그램 그룹에 게시 (경제·암호화폐만, 기존 규칙)
+        run: python tools/telegram.py --send || true

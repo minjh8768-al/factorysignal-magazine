@@ -61,7 +61,8 @@ jobs:
       # 입력은 반드시 env 로 받는다. run 블록에 ${{ }} 를 그대로 끼워넣으면
       # 입력 문자열이 셸 명령으로 실행될 수 있다.
       # 2026-10-20부터 자동 발행하지 않는다 (AI가 쓰고, 사람이 승인하고, 발행).
-      # 초안만 만들고 다음 단계에서 관리자 페이지 승인 대기로 올린다 (수정·발행·보류).
+      # 초안만 만든다. 초안은 아래 '보류된 초안 보관'(artifact)으로 남고, 관리자 페이지
+      # (/admin.html) 승인 대기를 열면 api/admin.js 가 가져가 수정·발행·보류한다.
       - name: 초안 생성 · 검수
         env:
           CATS: ${{ inputs.cats }}
@@ -72,9 +73,6 @@ jobs:
             python tools/daily.py
           fi
 
-      - name: 승인 대기로 올리기 (관리자 페이지 /admin.html)
-        if: inputs.dry_run != true
-        run: python tools/review.py --send
 
       - name: 바뀐 것이 있으면 커밋
         if: inputs.dry_run != true

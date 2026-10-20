@@ -5,7 +5,8 @@
 //   GET  ?view=drafts                승인 대기 초안 목록 (Upstash draft:*)
 //   GET  ?view=draft&slug=           초안 하나 (편집용 필드 + 미리보기 HTML)
 //   POST {action:'save', slug, title, description, poll, body}   초안 수정
-//   POST {action:'publish', slug}    GitHub publish-draft 워크플로 실행 → 1~3분 뒤 사이트 반영
+//   POST {action:'publish', slug}    수정된 HTML을 담아 GitHub publish-draft 워크플로 실행 → 1~3분 뒤 반영
+//   (초안은 승인 대기 화면을 열 때 daily 워크플로의 결과물에서 자동으로 가져온다 — syncDrafts)
 //   POST {action:'skip', slug}       초안 보류(삭제)
 //
 // 환경변수: MAGAZINE_ADMIN_SECRET(비밀번호), GITHUB_DISPATCH_TOKEN(이 저장소 Actions 쓰기), KV_REST_API_*
@@ -96,6 +97,68 @@ function applyEdits(html, f) {
   return html;
 }
 
+// ── 매일 자동 작성 초안 가져오기 ────────────────────────────────────
+// daily 워크플로는 초안을 실행 결과물(artifact 'drafts-N')로 남긴다. 승인 대기 화면을 열 때
+// GitHub 토큰으로 최근 7일 결과물을 받아 Upstash 에 넣는다 (이미 가져온 것은 건너뜀).
+// 이렇게 하면 GitHub 쪽에 저장소 열쇠를 따로 넣지 않아도 된다. (2026-10-20)
+const zlib = require('zlib');
+const DRAFT_TTL = 7 * 24 * 3600;
+const DRAFT_NAME = /^(?:[^/]*\/)?(\d{4}-\d{2}-\d{2})-([a-z0-9][a-z0-9-]{2,119})\.html$/;
+
+function unzip(buf) {
+  // 최소한의 zip 읽기: 끝의 중앙 디렉터리에서 항목 목록을 읽고, 저장(0)·deflate(8)만 푼다.
+  let eocd = buf.length - 22;
+  while (eocd >= 0 && buf.readUInt32LE(eocd) !== 0x06054b50) eocd--;
+  if (eocd < 0) return [];
+  const count = buf.readUInt16LE(eocd + 10);
+  let p = buf.readUInt32LE(eocd + 16);
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    if (buf.readUInt32LE(p) !== 0x02014b50) break;
+    const method = buf.readUInt16LE(p + 10), csize = buf.readUInt32LE(p + 20);
+    const nlen = buf.readUInt16LE(p + 28), xlen = buf.readUInt16LE(p + 30), clen = buf.readUInt16LE(p + 32);
+    const local = buf.readUInt32LE(p + 42);
+    const name = buf.slice(p + 46, p + 46 + nlen).toString('utf8');
+    const start = local + 30 + buf.readUInt16LE(local + 26) + buf.readUInt16LE(local + 28);
+    const raw = buf.slice(start, start + csize);
+    if (method === 0 || method === 8) out.push({ name, data: method === 8 ? zlib.inflateRawSync(raw) : raw });
+    p += 46 + nlen + xlen + clen;
+  }
+  return out;
+}
+
+async function gh(path, opts = {}) {
+  return fetch(`https://api.github.com/repos/${REPO}${path}`, {
+    ...opts,
+    headers: { Authorization: `Bearer ${GH}`, Accept: 'application/vnd.github+json', 'User-Agent': 'factory-magazine', ...(opts.headers || {}) },
+  });
+}
+
+async function syncDrafts() {
+  if (!GH) return;
+  const r = await gh('/actions/artifacts?per_page=30');
+  if (!r.ok) return;
+  const weekAgo = Date.now() - 7 * 864e5;
+  const fresh = ((await r.json()).artifacts || [])
+    .filter((a) => /^drafts-\d+$/.test(a.name) && !a.expired && Date.parse(a.created_at) > weekAgo);
+  if (!fresh.length) return;
+  const seen = await kv(fresh.map((a) => ['SISMEMBER', 'imported-artifacts', String(a.id)]));
+  for (const [i, a] of fresh.entries()) {
+    if (Number(seen[i]) === 1) continue;
+    const z = await gh(`/actions/artifacts/${a.id}/zip`);   // 저장소 주소로 넘겨줄 때 인증 헤더는 빠진다
+    if (!z.ok) continue;
+    const cmds = [];
+    for (const f of unzip(Buffer.from(await z.arrayBuffer()))) {
+      const m = f.name.match(DRAFT_NAME);
+      if (!m) continue;
+      // 이미 발행했거나 보류한 초안을 되살리지 않게 NX(없을 때만)로 넣는다.
+      cmds.push(['SET', `draft:${m[2]}`, JSON.stringify({ date: m[1], html: f.data.toString('utf8') }), 'NX', 'EX', DRAFT_TTL]);
+    }
+    cmds.push(['SADD', 'imported-artifacts', String(a.id)]);
+    await kv(cmds);
+  }
+}
+
 async function stats() {
   const days = [];
   for (let i = 13; i >= 0; i--) days.push(new Date(Date.now() + 9 * 3600e3 - i * 864e5).toISOString().slice(0, 10));
@@ -134,13 +197,15 @@ module.exports = async (req, res) => {
       const view = req.query.view;
       if (view === 'stats') return res.json(await stats());
       if (view === 'drafts') {
+        try { await syncDrafts(); } catch (e) { /* 가져오기 실패해도 이미 있는 초안은 보여 준다 */ }
         const keys = await scan('draft:*');
         const vals = keys.length ? await kv(keys.map((k) => ['GET', k])) : [];
         const list = vals.map((v, i) => {
           const d = JSON.parse(v || '{}');
+          if (d.status === 'published') return null;      // 발행 처리 중·완료 — 목록에서 뺀다
           const f = fields(d.html || '');
           return { slug: keys[i].slice(6), date: d.date, title: f.title, category: f.category, photo: f.photo, poll: f.poll };
-        }).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        }).filter(Boolean).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
         return res.json({ drafts: list });
       }
       if (view === 'draft') {
@@ -174,12 +239,17 @@ module.exports = async (req, res) => {
     }
     if (b.action === 'publish') {
       if (!GH) return res.status(503).json({ error: 'GITHUB_DISPATCH_TOKEN 이 없습니다.' });
-      const r = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/publish-draft.yml/dispatches`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${GH}`, Accept: 'application/vnd.github+json', 'User-Agent': 'factory-magazine' },
-        body: JSON.stringify({ ref: 'main', inputs: { slug } }),
+      // 수정이 반영된 기사 HTML 자체를 워크플로 입력으로 넘긴다 (GitHub 쪽에 저장소 열쇠가 없어도 되게).
+      const d = JSON.parse(v);
+      const html64 = Buffer.from(d.html, 'utf8').toString('base64');
+      if (html64.length > 60000) return res.status(413).json({ error: '기사가 너무 길어 발행 요청에 담을 수 없습니다.' });
+      const r = await gh('/actions/workflows/publish-draft.yml/dispatches', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ref: 'main', inputs: { slug, date: d.date, html_b64: html64 } }),
       });
       if (r.status !== 204) return res.status(502).json({ error: `발행 요청 실패 (GitHub ${r.status})` });
+      d.status = 'published';
+      await kv([['SET', key, JSON.stringify(d), 'EX', 86400]]);
       return res.json({ ok: true });
     }
     return res.status(400).json({ error: 'bad action' });
@@ -189,4 +259,4 @@ module.exports = async (req, res) => {
 };
 
 // 테스트용 (네트워크 없이 편집 로직만)
-module.exports._test = { fields, applyEdits, sanitize };
+module.exports._test = { fields, applyEdits, sanitize, unzip };
