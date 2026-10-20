@@ -73,8 +73,10 @@ module.exports = async (req, res) => {
       }
       const [first] = await redis([['SET', voterKey(req, slug), choice, 'NX', 'EX', DEDUPE_SECONDS]]);
       const counted = first === 'OK';
+      // 날짜별 투표 수(votes:YYYY-MM-DD, 한국 날짜)도 함께 센다 — 관리자 '투표' 화면용. 400일 보관.
+      const day = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
       const cmds = counted
-        ? [['HINCRBY', `poll:${slug}`, choice, 1], ['HGETALL', `poll:${slug}`]]
+        ? [['HINCRBY', `poll:${slug}`, choice, 1], ['INCR', `votes:${day}`], ['EXPIRE', `votes:${day}`, 400 * 86400], ['HGETALL', `poll:${slug}`]]
         : [['HGETALL', `poll:${slug}`]];
       const results = await redis(cmds);
       return res.json({ ...counts(results[results.length - 1]), counted });

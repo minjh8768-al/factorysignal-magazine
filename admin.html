@@ -62,6 +62,19 @@
   .hint { font-size: .78rem; color: var(--ink3); margin-top: 4px; }
   .msg { margin-left: auto; align-self: center; font-size: .85rem; font-weight: 700; }
   .msg.ok { color: var(--green); } .msg.err { color: var(--red); }
+  /* 투표: 예(파랑)·아니오(회색) 한 줄 막대, 2px 틈. 비율은 글자로도 함께 적어 색에만 기대지 않는다. */
+  .pfilter { display: flex; gap: 6px; margin-bottom: 12px; }
+  .pfilter button { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: .82rem; }
+  .pfilter button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .poll { padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .poll .q { font-weight: 700; line-height: 1.45; }
+  .poll .m { font-size: .8rem; color: var(--ink2); margin-top: 3px; } .poll .m a { color: var(--ink2); }
+  .pbar { display: flex; gap: 2px; height: 10px; margin: 10px 0 5px; }
+  .pbar i { display: block; height: 100%; border-radius: 4px; }
+  .pbar .y { background: var(--accent); } .pbar .n { background: #b9bec5; } .pbar .z { background: var(--line); flex: 1; }
+  .pnum { display: flex; justify-content: space-between; font-size: .82rem; color: var(--ink2); font-variant-numeric: tabular-nums; }
+  .pnum b { color: var(--ink); }
+  .tile.link { cursor: pointer; } .tile.link:hover { border-color: var(--accent); }
   .login { max-width: 360px; margin: 18vh auto; } .login input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 10px; margin: 12px 0; }
 </style>
 </head>
@@ -106,6 +119,7 @@ function shell(content) {
     <div class="tabs">
       <button data-t="stats" class="${tab === "stats" ? "on" : ""}">현황</button>
       <button data-t="drafts" class="${tab === "drafts" || tab === "edit" ? "on" : ""}">승인 대기${draftCount ? `<span class="count">${draftCount}</span>` : ""}</button>
+      <button data-t="polls" class="${tab === "polls" ? "on" : ""}">투표</button>
       <button data-t="subs" class="${tab === "subs" ? "on" : ""}">구독자</button>
     </div><div id="view">${content}</div>`;
   $("#logout").onclick = () => { localStorage.removeItem("fm-admin-key"); KEY = ""; renderLogin(); };
@@ -119,6 +133,7 @@ async function render() {
     const d = await api({ view: "drafts" }); draftCount = d.drafts.length;
     if (tab === "stats") return renderStats();
     if (tab === "drafts") return renderDrafts(d.drafts);
+    if (tab === "polls") return renderPolls();
     if (tab === "subs") return renderSubs();
   } catch (e) { if (e.message !== "401") $("#view").innerHTML = `<p class="muted">${esc(e.message)}</p>`; }
 }
@@ -136,7 +151,7 @@ async function renderStats() {
       <div class="tile"><div class="label">오늘 방문자</div><div class="value">${s.uv[i].toLocaleString()}</div><div class="sub">어제 ${s.uv[i - 1].toLocaleString()}명</div></div>
       <div class="tile"><div class="label">오늘 페이지 조회</div><div class="value">${s.pv[i].toLocaleString()}</div><div class="sub">어제 ${s.pv[i - 1].toLocaleString()}회</div></div>
       <div class="tile"><div class="label">뉴스레터 구독자</div><div class="value">${s.subscribers.toLocaleString()}</div><div class="sub">오늘 +${s.newSubsToday} · 최근 7일 +${s.newSubsWeek}</div></div>
-      <div class="tile"><div class="label">독자 투표 참여</div><div class="value">${s.votes.toLocaleString()}</div><div class="sub">투표 ${s.polls}개 누적</div></div>
+      <div class="tile link" id="go-polls" title="투표별로 보기"><div class="label">독자 투표 참여 →</div><div class="value">${s.votes.toLocaleString()}</div><div class="sub">오늘 +${s.votesDaily[i]} · 질문 ${s.polls}개 누적</div></div>
     </div>
     <div class="card"><h2>최근 14일 방문자</h2>
       <div class="chart" id="chart">${bars}<div class="tip" id="tip"></div></div>
@@ -147,6 +162,7 @@ async function renderStats() {
     </div>
     <div class="two"><div class="card"><h2>오늘 많이 본 기사</h2>${top(s.topToday)}</div>
       <div class="card"><h2>어제 많이 본 기사</h2>${top(s.topYesterday)}</div></div>`;
+  $("#go-polls").onclick = () => { tab = "polls"; render(); };
   const chart = $("#chart"), tip = $("#tip");
   chart.querySelectorAll(".bar").forEach((b) => {
     b.onmouseenter = () => { const k = +b.dataset.k; tip.innerHTML = `<b>${md(s.days[k])}</b> 방문자 ${s.uv[k]}명 · 조회 ${s.pv[k]}회`;
@@ -202,6 +218,33 @@ async function renderEdit(slug) {
       setTimeout(() => { tab = "drafts"; render(); }, 2500);
     } catch (e) { msg(e.message); busy(false); }
   };
+}
+
+let pollKind = "all";
+async function renderPolls() {
+  const { polls } = await api({ view: "polls" });
+  shell("");
+  const pct = (a, t) => (t ? Math.round((a / t) * 100) : 0);
+  const draw = () => {
+    const list = polls.filter((p) => pollKind === "all" || p.kind === pollKind);
+    const total = list.reduce((a, p) => a + p.total, 0);
+    $("#plist").innerHTML = list.length ? list.map((p) => {
+      const y = pct(p.yes, p.total), n = p.total ? 100 - y : 0;
+      return `<div class="poll">
+        <div class="q">${esc(p.question || "(질문 없음 — 기사에서 투표가 빠졌어요)")}</div>
+        <div class="m">${p.url ? `<a href="${esc(p.url)}" target="_blank">${esc(p.title)}</a>` : esc(p.title)}${p.category ? ` · ${esc(p.category)}` : ""}${p.date ? ` · ${esc(p.date)}` : ""}</div>
+        <div class="pbar" role="img" aria-label="예 ${p.yes}표 ${y}%, 아니오 ${p.no}표 ${n}%">${p.total ? `${p.yes ? `<i class="y" style="flex:${p.yes}"></i>` : ""}${p.no ? `<i class="n" style="flex:${p.no}"></i>` : ""}` : '<i class="z"></i>'}</div>
+        <div class="pnum"><span><b>예 ${y}%</b> (${p.yes}표)</span><span>참여 <b>${p.total}</b>명</span><span><b>아니오 ${n}%</b> (${p.no}표)</span></div></div>`;
+    }).join("") : '<p class="muted">아직 투표가 없어요.</p>';
+    $("#psum").textContent = `질문 ${list.length}개 · 참여 ${total.toLocaleString()}표`;
+    document.querySelectorAll(".pfilter button").forEach((b) => b.classList.toggle("on", b.dataset.k === pollKind));
+  };
+  $("#view").innerHTML = `<div class="card"><h2>투표별 결과 <span class="muted" id="psum"></span></h2>
+      <div class="pfilter"><button data-k="all">전체</button><button data-k="article">기사 투표</button><button data-k="odds">오늘의 확률</button></div>
+      <div id="plist"></div>
+      <p class="hint">참여가 많은 순서입니다. 같은 사람(같은 인터넷 주소)은 30일 동안 한 번만 셉니다. 날짜별 투표 수는 10월 20일부터 집계해요.</p></div>`;
+  document.querySelectorAll(".pfilter button").forEach((b) => (b.onclick = () => { pollKind = b.dataset.k; draw(); }));
+  draw();
 }
 
 async function renderSubs() {

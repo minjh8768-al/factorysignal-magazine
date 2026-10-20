@@ -2,6 +2,7 @@
 // 모든 요청은 헤더 x-admin-key 가 MAGAZINE_ADMIN_SECRET 과 같아야 한다.
 //
 //   GET  ?view=stats                 최근 14일 방문, 오늘 많이 본 기사, 구독자·투표 수
+//   GET  ?view=polls                 투표별 질문·기사·예/아니오 수 (많이 참여한 순)
 //   GET  ?view=drafts                승인 대기 초안 목록 (Upstash draft:*)
 //   GET  ?view=draft&slug=           초안 하나 (편집용 필드 + 미리보기 HTML)
 //   POST {action:'save', slug, title, description, poll, body}   초안 수정
@@ -11,6 +12,7 @@
 //
 // 환경변수: MAGAZINE_ADMIN_SECRET(비밀번호), GITHUB_DISPATCH_TOKEN(이 저장소 Actions 쓰기), KV_REST_API_*
 const crypto = require('crypto');
+const topics = require('./_odds-topics.json');
 
 const REPO = 'minjh8768-al/factorysignal-magazine';
 const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
@@ -166,6 +168,7 @@ async function stats() {
     ...days.map((d) => ['GET', `pv:${d}`]), ...days.map((d) => ['PFCOUNT', `uv:${d}`]),
     ['ZREVRANGE', `top:${days[13]}`, 0, 9, 'WITHSCORES'], ['ZREVRANGE', `top:${days[12]}`, 0, 9, 'WITHSCORES'],
     ['SCARD', 'subscribers'],
+    ...days.map((d) => ['GET', `votes:${d}`]),
   ]);
   const pv = res.slice(0, 14).map(Number), uv = res.slice(14, 28).map(Number);
   const pairs = (a) => { const o = []; for (let i = 0; i + 1 < (a || []).length; i += 2) o.push({ slug: a[i], views: Number(a[i + 1]) }); return o; };
@@ -184,7 +187,40 @@ async function stats() {
     newSubsToday: kst.filter((d) => d === days[13]).length,
     newSubsWeek: kst.filter((d) => d >= days[7]).length,
     votes, polls: polls.length,
+    votesDaily: res.slice(31, 45).map((v) => Number(v) || 0),
   };
+}
+
+// 투표별 집계. 기사 투표의 질문·제목은 저장소에 없으므로 발행된 기사 페이지의 메타에서 읽는다
+// (투표가 수십 개 수준일 때를 전제로 한 단순한 방식). odds-* 는 '오늘의 확률' 질문.
+async function polls(origin) {
+  const keys = await scan('poll:*');
+  const vals = keys.length ? await kv(keys.map((k) => ['HGETALL', k])) : [];
+  const rows = keys.map((k, i) => {
+    const o = { slug: k.slice(5), yes: 0, no: 0 };
+    const a = vals[i] || [];
+    for (let j = 0; j + 1 < a.length; j += 2) if (a[j] in o) o[a[j]] = Number(a[j + 1]) || 0;
+    o.total = o.yes + o.no;
+    return o;
+  }).sort((a, b) => b.total - a.total).slice(0, 100);
+  await Promise.all(rows.map(async (r) => {
+    if (r.slug.startsWith('odds-')) {
+      const t = topics.find((x) => `odds-${x.key}` === r.slug);
+      Object.assign(r, { kind: 'odds', question: t ? t.question : r.slug, title: '오늘의 확률', category: t ? t.group : '' });
+      return;
+    }
+    r.kind = 'article';
+    r.url = `/articles/${r.slug}.html`;
+    try {
+      const h = await (await fetch(origin + r.url, { signal: AbortSignal.timeout(5000) })).text();
+      const t = h.match(/<title>([^<]*)<\/title>/);
+      r.title = t ? unesc(t[1]).replace(/ — Factory Magazine$/, '') : r.slug;
+      r.question = meta(h, 'fs:poll');
+      r.category = meta(h, 'fs:category');
+      r.date = meta(h, 'fs:date');
+    } catch (e) { r.title = r.slug; }
+  }));
+  return rows;
 }
 
 module.exports = async (req, res) => {
@@ -196,6 +232,7 @@ module.exports = async (req, res) => {
     if (req.method === 'GET') {
       const view = req.query.view;
       if (view === 'stats') return res.json(await stats());
+      if (view === 'polls') return res.json({ polls: await polls(`https://${req.headers.host}`) });
       if (view === 'drafts') {
         try { await syncDrafts(); } catch (e) { /* 가져오기 실패해도 이미 있는 초안은 보여 준다 */ }
         const keys = await scan('draft:*');
