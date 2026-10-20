@@ -10,6 +10,9 @@
 const topics = require('./_odds-topics.json');
 
 const SHOW_AFTER_CLOSE_H = 12;
+// 탭(group)마다 보여 줄 최대 개수. 운영 원칙: 분야별 주제는 3개. 목록에 더 적어 두면
+// 앞의 질문이 끝났을 때 다음 것이 자동으로 채워진다.
+const PER_GROUP = 3;
 
 async function fetchMarket(id) {
   // Gamma API의 목록 필터는 엉뚱한 시장을 돌려줄 때가 있어 단건 경로만 쓴다.
@@ -46,7 +49,9 @@ module.exports = async (req, res) => {
     if (!(yes >= 0 && yes <= 1)) return;
     items.push({ ...base, market: Math.round(yes * 1000) / 10, endDate: (m.endDate || '').slice(0, 10) });
   });
+  const perGroup = {};
+  const capped = items.filter((it) => (perGroup[it.group] = (perGroup[it.group] || 0) + 1) <= PER_GROUP);
   // 5분간 CDN 캐시. 실패가 섞여도 나머지는 보여준다.
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=1800');
-  res.json({ updatedAt: new Date().toISOString(), items });
+  res.json({ updatedAt: new Date().toISOString(), items: capped });
 };
