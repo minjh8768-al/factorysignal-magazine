@@ -1788,3 +1788,31 @@ footer {
 .home-col, .home-row { padding: 0; }
 .home-section { padding: 20px 0 28px; }
 .today-section { padding: 8px 0 24px; }
+
+/* ---------- 첫 화면 여백 늘리기 (빡빡하다는 피드백, 2026-10-20) ---------- */
+.today-section { padding: 16px 0 48px; }
+.home-section { padding: 32px 0 48px; }
+.home-feature { margin-bottom: 52px; gap: 32px; }
+.home-feature-body h3 { margin: 10px 0 14px; line-height: 1.4; }
+.home-feature-body p { margin-bottom: 14px; line-height: 1.75; }
+
+.home-grid { gap: 44px 24px; }                       /* 줄 사이를 넉넉하게 */
+.home-card .article-thumb { margin-bottom: 16px; }
+.home-card strong { line-height: 1.55; margin-bottom: 10px; }
+
+.home-columns { gap: 40px; margin: 24px 0 80px; }
+.home-head { font-size: 1.25rem; margin-bottom: 20px; }
+.home-col .home-card { margin-bottom: 10px; }
+.home-text { padding: 18px 0; }
+.home-text strong { line-height: 1.55; margin-bottom: 6px; }
+
+.home-row { margin-bottom: 80px; }
+.home-feature--row { margin-bottom: 36px; }
+.home-row-list { gap: 32px 40px; }
+.home-mini { gap: 20px; }
+.home-mini .article-thumb { height: 100px; }
+.home-mini h3 { line-height: 1.5; margin-bottom: 8px; }
+.home-mini p { line-height: 1.65; margin-bottom: 8px; }
+
+.home-newsletter { margin: 16px 0 48px; padding: 32px 36px; }
+.home-more { margin-bottom: 40px; }
