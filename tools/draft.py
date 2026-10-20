@@ -95,7 +95,8 @@ def make_draft(cfg, url, today):
         fields["source_title"] = youtube.source_title(meta)
         # 카드 사진: 주인공(인물·팀)이 있으면 커먼즈 실사진, 없거나 못 찾으면 Pexels 장면 사진.
         # 실패해도 기사는 계속(글자 썸네일로 물러선다).
-        subject = (fields.get("photo_subject") or "").strip() or commons.subject_for(fields.get("title", ""))
+        subject = (fields.get("photo_subject") or "").strip() or commons.subject_for(
+            fields.get("title", ""), fields.get("eyebrow", ""), fields.get("slug", ""))
         fields["photo"] = commons.search(subject) if subject else None
         if not fields["photo"]:
             q = (fields.get("photo_query") or "").strip() or pexels.query_for(

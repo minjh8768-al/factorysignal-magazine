@@ -371,6 +371,9 @@ class CommonsRules(unittest.TestCase):
         self.assertEqual(commons.subject_for("한국 축구 대표팀 임시 감독"), "South Korea national football team")
         self.assertEqual(commons.subject_for("'시차 적응' 극복한 LoL 대표팀"), "")   # 축구로 가면 안 됨
         self.assertEqual(commons.subject_for("KIA 타이거즈, 4위 탈환"), "")           # 호랑이 사진 방지
+        self.assertEqual(commons.subject_for("KIA 타이거즈, 4위 탈환", "야구"), "Jamsil Baseball Stadium")
+        self.assertEqual(commons.subject_for("아무 제목", "", "asian-games-football-military-exemption-controversy-2"),
+                         "South Korea national football team")
 
     def test_credit_shown_for_licensed_photo(self):
         card = article.card_html(dict(META, photo="https://x/y.jpg", photo_by="K-POPIT", photo_license="CC BY 4.0"))

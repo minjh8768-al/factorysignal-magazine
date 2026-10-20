@@ -63,6 +63,8 @@ def candidates(query, limit=15, timeout=20):
             continue
         if words and not any(word in title.lower() for word in words):
             continue
+        if not all(m in title.lower() for m in MUST.get(query, ())) or title.lower().endswith(".gif"):
+            continue
         year = re.search(r"(1[89]\d\d|20\d\d)", _strip(meta.get("DateTimeOriginal", {}).get("value")))
         if year and int(year.group(1)) < 1990:      # 1950년대 흑백 대표팀 사진 같은 것
             continue
@@ -100,9 +102,25 @@ SUBJECTS = (
 )
 
 
-def subject_for(title):
-    """제목 속 첫 일치 이름의 검색어. 빈 검색어("")에 걸리면 거기서 멈추고 실사진을 쓰지 않는다."""
+# 제목에 이름이 없을 때 꼬리표로 정하는 주인공. 국내 야구 기사는 잠실야구장 실사진.
+EYEBROW_SUBJECTS = {"야구": "Jamsil Baseball Stadium"}
+
+# 검색어별로 파일 이름에 반드시 있어야 하는 낱말 (잠실 '야경'·'철교' 사진 등을 거르려고).
+MUST = {"Jamsil Baseball Stadium": ("baseball",)}
+
+# 제목만으로는 주인공이 드러나지 않는 기사를 직접 지정 (slug → 검색어).
+OVERRIDES = {
+    "asian-games-football-military-exemption-controversy": "South Korea national football team",
+    "asian-games-football-military-exemption-controversy-2": "South Korea national football team",
+    "asian-games-medal-race-soccer-friendly": "South Korea national football team",
+}
+
+
+def subject_for(title, eyebrow="", slug=""):
+    """기사 주인공 검색어. 빈 검색어("")에 걸리면 거기서 멈추고 실사진을 쓰지 않는다."""
+    if slug in OVERRIDES:
+        return OVERRIDES[slug]
     for word, q in SUBJECTS:
         if word in (title or ""):
             return q
-    return ""
+    return EYEBROW_SUBJECTS.get(eyebrow, "")

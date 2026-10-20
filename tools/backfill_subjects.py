@@ -34,7 +34,8 @@ def main(argv):
         if 'name="fs:video"' not in text:
             continue
         title = html.unescape((re.search(r"<title>(.*?)</title>", text, re.S) or [None, ""])[1])
-        subject = commons.subject_for(title)
+        eyebrow = html.unescape((re.search(r'fs:eyebrow" content="([^"]*)', text) or [None, ""])[1])
+        subject = commons.subject_for(title, eyebrow, os.path.basename(path)[:-5])
         if subject:
             targets.append((path, subject, title))
 
