@@ -97,7 +97,10 @@ def make_draft(cfg, url, today):
         # 실패해도 기사는 계속(글자 썸네일로 물러선다).
         subject = (fields.get("photo_subject") or "").strip() or commons.subject_for(
             fields.get("title", ""), fields.get("eyebrow", ""), fields.get("slug", ""))
-        fields["photo"] = commons.search(subject) if subject else None
+        fields["photo"] = commons.search(subject) if subject and subject != commons.VIDEO else None
+        if subject and not fields["photo"]:
+            # 주인공은 있는데 쓸 실사진이 없다 → 요약하는 원본 영상의 썸네일 (출처 표기)
+            fields["photo"] = commons.video_thumb(vid, meta.get("channel", ""))
         if not fields["photo"]:
             q = (fields.get("photo_query") or "").strip() or pexels.query_for(
                 fields.get("title", ""), fields.get("eyebrow", ""))

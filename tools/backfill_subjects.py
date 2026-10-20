@@ -47,22 +47,26 @@ def main(argv):
         print("드라이런입니다. 실제로 하려면 --apply")
         return 0
 
-    pools = {s: commons.candidates(s) for s in subjects}
+    pools = {s: ([] if s == commons.VIDEO else commons.candidates(s)) for s in subjects}
     done, missing = 0, []
     for path, subject, title in targets:
         pool = pools.get(subject) or []
-        if not pool:
-            # 최근 사진이 없으면 예전에 붙인 실사진(오래된 사진일 수 있음)을 걷어낸다.
-            # 빈자리는 photos 워크플로가 Pexels 장면 사진으로 채운다.
-            missing.append(subject)
-            raw = io.open(path, encoding="utf-8", newline="").read()
-            if "fs:photo_license" in raw:
-                io.open(path, "w", encoding="utf-8", newline="").write(PHOTO_META.sub("", raw))
-            continue
         slug = os.path.basename(path)[:-5]
-        p = pool[pexels.pick_index(slug, len(pool))]
-        esc = lambda v: html.escape(v, quote=True)
         raw = io.open(path, encoding="utf-8", newline="").read()
+        if pool:
+            p = pool[pexels.pick_index(slug, len(pool))]
+        else:
+            # 주인공은 있는데 쓸 실사진이 없다(규칙상 VIDEO이거나 최근 사진 없음) →
+            # 이 기사가 요약한 원본 유튜브 영상의 썸네일을 출처와 함께 쓴다.
+            if subject != commons.VIDEO:
+                missing.append(subject)
+            vid = (re.search(r'fs:video" content="([^"]+)', raw) or [None, ""])[1]
+            src = re.search(r'class="source-note">원본 영상: <a[^>]*>([^<]*)', raw)
+            channel = html.unescape(src.group(1)).split(" · ")[0].strip() if src else ""
+            if not vid:
+                continue
+            p = commons.video_thumb(vid, channel)
+        esc = lambda v: html.escape(v, quote=True)
         nl = "\r\n" if "\r\n" in raw else "\n"
         raw = PHOTO_META.sub("", raw)
         tag = "".join(f'<meta name="fs:photo{suffix}" content="{esc(p[k])}" />{nl}'

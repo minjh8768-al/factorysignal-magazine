@@ -368,9 +368,9 @@ class CommonsRules(unittest.TestCase):
     def test_subject_rules(self):
         import commons
         self.assertEqual(commons.subject_for("걸그룹 리센느, SBS 8뉴스 출연"), "RESCENE")
-        # 대표팀: 최근 한국 대표팀 실사진이 없어(최근 것은 상대팀 사진) 장면 사진으로 둔다
-        self.assertEqual(commons.subject_for("한국 축구 대표팀 임시 감독"), "")
-        self.assertEqual(commons.subject_for("'시차 적응' 극복한 LoL 대표팀"), "")
+        # 대표팀: 쓸 수 있는 최근 실사진이 없어 원본 영상 썸네일로 (VIDEO)
+        self.assertEqual(commons.subject_for("한국 축구 대표팀 임시 감독"), commons.VIDEO)
+        self.assertEqual(commons.subject_for("'시차 적응' 극복한 LoL 대표팀"), commons.VIDEO)
         self.assertEqual(commons.subject_for("KIA 타이거즈, 4위 탈환"), "")           # 호랑이 사진 방지
         self.assertEqual(commons.subject_for("KIA 타이거즈, 4위 탈환", "야구"), "Jamsil Baseball Stadium")
 
@@ -381,6 +381,13 @@ class CommonsRules(unittest.TestCase):
         self.assertEqual(commons._year_from_title("File:Rescene airport.png"), 0)
         self.assertIn("Jamsil Baseball Stadium", commons.PLACES)       # 장소는 연도 제한 없음
         self.assertNotIn("Donald Trump 2026", commons.PLACES)
+
+    def test_video_thumb_credits_channel_with_fallback(self):
+        p = commons_video = __import__("commons").video_thumb("abc123", "연합뉴스TV")
+        card = article.card_html(dict(META, photo=p["url"], photo_by=p["by"], photo_license=p["license"]))
+        self.assertIn("출처: 연합뉴스TV 유튜브", card)
+        self.assertIn("i.ytimg.com/vi/abc123/maxresdefault.jpg", card)
+        self.assertIn("mqdefault.jpg", card)          # 고화질이 없을 때 대체
 
     def test_credit_shown_for_licensed_photo(self):
         card = article.card_html(dict(META, photo="https://x/y.jpg", photo_by="K-POPIT", photo_license="CC BY 4.0"))

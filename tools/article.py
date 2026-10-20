@@ -313,12 +313,17 @@ def thumb_html(meta):
         # 뉴스처럼 보이게 실제 사진 + 분야 라벨. 남의 방송 화면은 쓰지 않는다.
         # 사진은 위키미디어 커먼즈(인물·팀 실사진, CC BY 등) 또는 Pexels(장면). CC BY 계열은
         # 출처 표기가 이용 조건이라 촬영자·라이선스를 사진 위에 작게 단다.
-        credit = ""
-        if meta.get("photo_license"):
+        credit, fallback = "", ""
+        if meta.get("photo_license") == "원본 영상":
+            # 원본 유튜브 영상 썸네일: 채널을 출처로 밝힌다. 고화질(maxres)이 없는 영상은 중간 화질로.
+            credit = f'<span class="thumb-credit">출처: {esc(meta.get("photo_by") or "")} 유튜브</span>'
+            low = meta["photo"].replace("maxresdefault", "mqdefault")
+            fallback = f' onerror="this.onerror=null;this.src=\'{esc(low)}\'"'
+        elif meta.get("photo_license"):
             credit = (f'<span class="thumb-credit">사진: {esc(meta.get("photo_by") or "")} · '
                       f'{esc(meta["photo_license"])}</span>')
         return (f'            <div class="article-thumb article-thumb--news">'
-                f'<img class="thumb-photo" src="{esc(meta["photo"])}" alt="" loading="lazy" />'
+                f'<img class="thumb-photo" src="{esc(meta["photo"])}" alt="" loading="lazy"{fallback} />'
                 f'<span class="thumb-cat">{esc(meta["category"])}</span>'
                 f'<span class="thumb-badge">영상 요약</span>{credit}</div>{nl}')
     if meta.get("video"):

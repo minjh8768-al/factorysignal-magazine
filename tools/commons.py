@@ -100,17 +100,30 @@ def search(query, pick=0):
     return found[pick % len(found)] if found else None
 
 
+# 주인공은 있는데 쓸 수 있는 실사진이 없을 때: 원본 유튜브 영상의 썸네일을 출처와 함께 쓴다.
+# (요약·임베드하는 바로 그 영상의 미리보기. 채널이 요청하면 내린다.) 2026-10-20 사용자 결정.
+VIDEO = "@video"
+
+
+def video_thumb(video_id, channel):
+    """원본 영상 썸네일을 카드 사진 형식으로. maxres가 없는 영상은 카드에서 mqdefault로 바꾼다."""
+    return {"url": f"https://i.ytimg.com/vi/{video_id}/maxresdefault.jpg",
+            "by": channel or "YouTube", "license": "원본 영상", "src": f"https://www.youtube.com/watch?v={video_id}"}
+
+
 # 예전 기사용: 제목 속 이름 → 커먼즈 검색어. 위에서부터 첫 일치. (새 기사는 Gemini photo_subject)
 # 2026-10-20 사진 대조 검수 후 정리: 엉뚱한 사진이 나온 이름(한동훈·윤석열 → 다른 사람,
 # KIA → 실제 호랑이, 코스피 → 자동차, KBO·LoL·이강인·안세영·야구 대표팀·아시안게임·아마존)은 뺐다.
 # 사람을 잘못 붙이는 것은 사진이 없는 것보다 훨씬 나쁘다 — 새 이름은 결과를 눈으로 확인하고 넣는다.
 SUBJECTS = (
     ("리센느", "RESCENE"), ("손흥민", "Son Heung-min"),
-    ("LoL", ""),                     # 'LoL 대표팀'이 축구 대표팀으로 가지 않게 여기서 멈춘다
-    ("야구 대표팀", ""),             # 커먼즈 결과가 대표팀 사진이 아니었다
+    ("LoL", VIDEO),                  # 'LoL 대표팀'이 축구 대표팀으로 가지 않게 여기서 멈춘다
+    ("야구 대표팀", VIDEO),          # 커먼즈 결과가 대표팀 사진이 아니었다
     # 축구 대표팀: 커먼즈의 최근 사진이 상대팀(요르단) 단체 사진이었고 한국 대표팀 최근 사진은 없었다.
     # 옛날 사진·남의 팀 사진보다 장면 사진이 낫다 → 실사진을 쓰지 않는다.
-    ("축구대표팀", ""), ("축구 대표팀", ""), ("대표팀", ""),
+    ("축구대표팀", VIDEO), ("축구 대표팀", VIDEO), ("대표팀", VIDEO),
+    # 실사진이 엉뚱하게 나왔던 인물: 원본 영상 썸네일로
+    ("한동훈", VIDEO), ("윤석열", VIDEO), ("이강인", VIDEO), ("안세영", VIDEO), ("롤드컵", VIDEO),
     ("잠실", "Jamsil Baseball Stadium"),
     ("트럼프", "Donald Trump 2026"), ("백악관", "White House"),
     ("이재명", "Lee Jae-myung"), ("이 대통령", "Lee Jae-myung"),
