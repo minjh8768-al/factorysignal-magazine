@@ -206,6 +206,7 @@ function liveCard(m, my) {
       showMine(b.dataset.c, d.readers, b.dataset.c === "yes" ? m.market : 100 - m.market);
     } catch (e) {
       actions.querySelectorAll("button").forEach((x) => (x.disabled = false));
+      if (e.status === 401) return showLogin(actions);
       const err = document.createElement("span");
       err.className = "pm-readers";
       err.textContent = e.message;
@@ -213,6 +214,21 @@ function liveCard(m, my) {
     }
   }));
   return el;
+}
+
+// 로그인해야 예측할 수 있다 (2026-10-20). 로그인하고 나면 첫 화면으로 돌아온다.
+let authStatus = null;
+async function showLogin(actions) {
+  if (actions.querySelector(".pm-login")) return;
+  authStatus = authStatus || (await getJSON(`${apiUrl("auth")}?status=1`).catch(() => ({})));
+  const next = encodeURIComponent(location.pathname.replace(/^\/blog/, ""));
+  const btn = (p, label) => authStatus[p]
+    ? `<a class="pf-btn pf-${p}" href="${apiUrl("auth")}?start=${p}&next=${next}">${label}</a>`
+    : `<span class="pf-btn pf-${p} is-off">${label} (준비 중)</span>`;
+  const box = document.createElement("div");
+  box.className = "pm-login";
+  box.innerHTML = `<p>로그인하면 예측하고, 적중 기록을 모을 수 있어요.</p><div class="pf-login">${btn("kakao", "카카오로 로그인")}${btn("google", "Google로 로그인")}</div>`;
+  actions.after(box);
 }
 
 function resultRow(m, my) {
@@ -252,7 +268,7 @@ async function mountProfile() {
   const loginButtons = `<div class="pf-login">${btn("kakao", "카카오로 계속하기")}${btn("google", "Google로 계속하기")}</div>`;
   const u = me.user;
   if (!u) {
-    head.innerHTML = `<h1>내 예측 기록</h1><p class="pf-lead">아직 예측한 질문이 없어요. <a href="index.html">진행 중인 예측</a>에서 예/아니오를 골라 보세요.<br>로그인하면 다른 기기에서도 기록을 이어 볼 수 있어요.</p>${loginButtons}<p class="pf-msg">${esc(loginMsg)}</p>`;
+    head.innerHTML = `<h1>내 예측 기록</h1><p class="pf-lead">로그인하면 예측할 수 있고, 적중률과 기록이 여기에 쌓여요.</p>${loginButtons}<p class="pf-msg">${esc(loginMsg)}</p>`;
   } else {
     const via = u.provider === "kakao" ? "카카오" : "Google";
     head.innerHTML = `

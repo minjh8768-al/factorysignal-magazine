@@ -1,12 +1,13 @@
 // 내 예측과 프로필 (2026-10-20).
 //   GET  /api/me                              → { user, stats, preds }  (예측한 적 없으면 user: null)
 //   POST /api/me { action:'predict', id, choice:'yes'|'no' }   가상 예측 (질문당 한 번, 바꿀 수 없음)
+//        2026-10-20 사용자 결정: 로그인(구글·카카오)해야 예측할 수 있다. 아니면 401.
 //   POST /api/me { action:'nick', nick }      닉네임 바꾸기
 //   POST /api/me { action:'logout' }
 // 돈·포인트는 없다. 예/아니오를 골라 두고 결과가 나면 맞혔는지만 센다.
 // 저장(Upstash): user:{uid} 해시(nick, createdAt, provider), pred:{uid} 해시(질문id → {c, at, p}),
 //               poll:pm-{id} 해시(yes/no 독자 수).
-const { kv, hpairs, markets, readUid, setUid, clearUid, newUid, ready } = require('./_lib');
+const { kv, hpairs, markets, readUid, clearUid, ready } = require('./_lib');
 
 const NICK_RE = /^[\p{L}\p{N}_.\- ]{2,12}$/u;
 
@@ -73,16 +74,12 @@ module.exports = async (req, res) => {
       if (!/^\d{1,12}$/.test(id) || (choice !== 'yes' && choice !== 'no')) return res.status(400).json({ error: 'bad request' });
       const m = (await markets()).find((x) => x.id === id);
       if (!m || m.status !== 'live') return res.status(409).json({ error: '예측이 마감된 질문이에요.' });
-      if (!uid) {
-        uid = newUid();
-        setUid(res, uid);
-      }
+      const [provider] = uid ? await kv([['HGET', `user:${uid}`, 'provider']]) : [null];
+      if (!provider) return res.status(401).json({ error: '로그인하면 예측할 수 있어요.', login: true });
       const now = new Date().toISOString();
-      const [isNew, first] = await kv([
-        ['HSETNX', `user:${uid}`, 'createdAt', now],
+      const [first] = await kv([
         ['HSETNX', `pred:${uid}`, id, JSON.stringify({ c: choice, at: now, p: m.market, q: m.q })],
       ]);
-      if (isNew === 1) await kv([['HSETNX', `user:${uid}`, 'nick', `예측러${String(parseInt(uid.slice(0, 6), 16) % 10000).padStart(4, '0')}`]]);
       if (first !== 1) return res.status(409).json({ error: '이미 예측한 질문이에요.' });
       const [, counts] = await kv([['HINCRBY', `poll:pm-${id}`, choice, 1], ['HGETALL', `poll:pm-${id}`]]);
       const c = hpairs(counts);

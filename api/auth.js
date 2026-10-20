@@ -14,6 +14,8 @@ const G_ID = process.env.GOOGLE_CLIENT_ID, G_SECRET = process.env.GOOGLE_CLIENT_
 const K_ID = process.env.KAKAO_REST_API_KEY, K_SECRET = process.env.KAKAO_CLIENT_SECRET;
 const enabled = { google: Boolean(G_ID && G_SECRET), kakao: Boolean(K_ID) };
 const BACK = '/articles/profile.html';
+// 로그인 뒤 돌아갈 곳 (?next=). 우리 사이트의 /articles/ 페이지만 허용한다.
+const safeNext = (n) => (/^\/articles\/[a-z0-9-]+\.html$/.test(String(n || '')) ? String(n) : BACK);
 
 const redirectUri = (req) => `https://${req.headers.host}/api/auth`;
 const cookie = (req, name) => (String(req.headers.cookie || '').match(new RegExp(`(?:^|;\\s*)${name}=([\\w-]+)`)) || [])[1];
@@ -71,7 +73,8 @@ module.exports = async (req, res) => {
     if (!enabled[provider]) return go(res, `${BACK}?login=unavailable`);
     const nonce = crypto.randomBytes(16).toString('hex');
     const state = `${provider}.${nonce}`;
-    const c = `fm_oauth=${nonce}; Path=/api/auth; Max-Age=600; HttpOnly; Secure; SameSite=Lax`;
+    const c = [`fm_oauth=${nonce}; Path=/api/auth; Max-Age=600; HttpOnly; Secure; SameSite=Lax`,
+      `fm_next=${encodeURIComponent(safeNext(q.next))}; Path=/api/auth; Max-Age=600; HttpOnly; Secure; SameSite=Lax`];
     const url = provider === 'google'
       ? `https://accounts.google.com/o/oauth2/v2/auth?${new URLSearchParams({ client_id: G_ID, redirect_uri: redirectUri(req), response_type: 'code', scope: 'openid', state, prompt: 'select_account' })}`
       : `https://kauth.kakao.com/oauth/authorize?${new URLSearchParams({ client_id: K_ID, redirect_uri: redirectUri(req), response_type: 'code', state })}`;
@@ -104,7 +107,8 @@ module.exports = async (req, res) => {
         ]);
       }
       setUid(res, uid);
-      return go(res, `${BACK}?login=ok`);
+      const next = safeNext(decodeURIComponent((String(req.headers.cookie || '').match(/(?:^|;\s*)fm_next=([^;]+)/) || [])[1] || ''));
+      return go(res, `${next}?login=ok`);
     } catch (e) {
       return go(res, `${BACK}?login=failed`);
     }

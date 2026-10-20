@@ -1887,3 +1887,8 @@ footer {
 .pf-row strong { display: block; font-size: 0.95rem; line-height: 1.45; word-break: keep-all; }
 .pf-row span { font-size: 0.8rem; color: var(--gray-600); }
 .brief-hero + .pm-section { padding-top: 12px; }
+.pm-login { border-top: 1px dashed var(--gray-200); padding-top: 10px; }
+.pm-login p { font-size: 0.85rem; color: var(--gray-600); margin-bottom: 8px; }
+.pm-login .pf-login { margin-top: 0; }
+.pm-login .pf-btn { padding: 8px 14px; font-size: 0.85rem; }
+.pm-grid { align-items: start; }
