@@ -94,7 +94,9 @@ function renderLogin(msg = "") {
     <button class="btn primary" id="go" style="width:100%">들어가기</button>
     <p class="muted" style="margin-top:10px;color:var(--red)">${esc(msg)}</p></div>`;
   const go = () => { KEY = $("#pw").value.trim(); localStorage.setItem("fm-admin-key", KEY); render(); };
-  $("#go").onclick = go; $("#pw").onkeydown = (e) => e.key === "Enter" && go();
+  // 주의: on-속성 처리기가 false를 돌려주면 브라우저가 키 입력 자체를 막는다 (글자가 안 써지던 원인).
+  $("#go").onclick = go;
+  $("#pw").addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
 }
 
 function shell(content) {
