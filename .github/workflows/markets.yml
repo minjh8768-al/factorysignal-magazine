@@ -1,0 +1,57 @@
+# 첫 화면 예측 질문 관리 (2026-10-20). Polymarket에서 지금 가장 뜨거운 질문 10개를 골라
+# 한국어로 옮기고, 끝난 질문의 결과를 기록한다 → data/markets.json.
+# 한국 IP는 Polymarket이 막지만 GitHub 러너(미국)에서는 열린다.
+# 4시간마다. 결과가 나면 그 자리를 다음 뜨거운 질문이 채운다.
+name: markets
+
+on:
+  schedule:
+    - cron: '17 */4 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TZ: Asia/Seoul
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 설정 파일 만들기
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS }}
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: python tools/config_from_env.py
+
+      - name: 질문 목록 갱신
+        run: python tools/markets.py
+
+      - name: 바뀌었으면 커밋·푸시
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -z "$(git status --porcelain data)" ]; then echo "변경 없음"; exit 0; fi
+          git add data/markets.json
+          git commit -q -m "chore(markets): 예측 질문 갱신 $(date +%Y-%m-%dT%H:%M)"
+          git pull --rebase origin ${{ github.ref_name }}
+          git push origin HEAD:master
+          git push origin HEAD:main
