@@ -35,6 +35,17 @@ def _strip(s):
     return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", s or "")).strip()
 
 
+MIN_PERSON_YEAR = 2023
+
+
+def _year_from_title(title):
+    m = re.search(r"\b(20[12]\d)\b", title) or re.search(r"(?<!\d)([12]\d)(?:0[1-9]|1[0-2])[0-3]\d(?!\d)", title)
+    if not m:
+        return 0
+    y = m.group(1)
+    return int(y) if len(y) == 4 else 2000 + int(y)
+
+
 def candidates(query, limit=15, timeout=20):
     """조건(라이선스·크기·가로 비율)을 통과한 사진 목록 [{url, by, license, src}], 검색 순위순."""
     params = {
@@ -65,13 +76,22 @@ def candidates(query, limit=15, timeout=20):
             continue
         if not all(m in title.lower() for m in MUST.get(query, ())) or title.lower().endswith(".gif"):
             continue
+        # 촬영 연도: 메타데이터 → 없으면 파일 이름 속 연도 (예: '240611 대한민국 vs 중국' → 2024)
         year = re.search(r"(1[89]\d\d|20\d\d)", _strip(meta.get("DateTimeOriginal", {}).get("value")))
-        if year and int(year.group(1)) < 1990:      # 1950년대 흑백 대표팀 사진 같은 것
+        year = int(year.group(1)) if year else _year_from_title(title)
+        if year and year < 1990:      # 1950년대 흑백 대표팀 사진 같은 것
+            continue
+        # 사람·팀은 최근 사진만 (2010년 갤럭시S 행사 사진이 대표팀 기사에 붙었다). 연도를
+        # 모르는 사진도 오래됐을 수 있으니 뺀다. 건물·장소는 연도를 따지지 않는다.
+        if query not in PLACES and (not year or year < MIN_PERSON_YEAR):
             continue
         by = _strip(meta.get("Artist", {}).get("value"))[:60] or "Wikimedia Commons"
+        # 다른 인물과 함께 찍힌 사진('A and B', 'with')은 엉뚱한 기사에서 오해를 살 수 있어 뒤로 미룬다.
+        solo = not re.search(r"(?i)[ _](and|with|meets|&)[ _]", title)
         out.append({"url": ii.get("thumburl") or ii.get("url"), "by": by,
-                    "license": lic, "src": ii.get("descriptionurl", "")})
-    return out
+                    "license": lic, "src": ii.get("descriptionurl", ""), "solo": solo})
+    solos = [c for c in out if c["solo"]]
+    return (solos or out)[:POOL_MAX.get(query, 99)]
 
 
 def search(query, pick=0):
@@ -88,10 +108,11 @@ SUBJECTS = (
     ("리센느", "RESCENE"), ("손흥민", "Son Heung-min"),
     ("LoL", ""),                     # 'LoL 대표팀'이 축구 대표팀으로 가지 않게 여기서 멈춘다
     ("야구 대표팀", ""),             # 커먼즈 결과가 대표팀 사진이 아니었다
-    ("축구대표팀", "South Korea national football team"), ("축구 대표팀", "South Korea national football team"),
-    ("대표팀", "South Korea national football team"),
+    # 축구 대표팀: 커먼즈의 최근 사진이 상대팀(요르단) 단체 사진이었고 한국 대표팀 최근 사진은 없었다.
+    # 옛날 사진·남의 팀 사진보다 장면 사진이 낫다 → 실사진을 쓰지 않는다.
+    ("축구대표팀", ""), ("축구 대표팀", ""), ("대표팀", ""),
     ("잠실", "Jamsil Baseball Stadium"),
-    ("트럼프", "Donald Trump"), ("백악관", "White House"),
+    ("트럼프", "Donald Trump 2026"), ("백악관", "White House"),
     ("이재명", "Lee Jae-myung"), ("이 대통령", "Lee Jae-myung"),
     ("국회", "National Assembly Proceeding Hall"), ("최태원", "Chey Tae-won"),
     ("연준", "Marriner S. Eccles Federal Reserve Board Building"),
@@ -108,11 +129,11 @@ EYEBROW_SUBJECTS = {"야구": "Jamsil Baseball Stadium"}
 # 검색어별로 파일 이름에 반드시 있어야 하는 낱말 (잠실 '야경'·'철교' 사진 등을 거르려고).
 MUST = {"Jamsil Baseball Stadium": ("baseball",)}
 
+# 검색어별로 쓸 후보 수 상한. 트럼프는 2번째 후보가 붉은 조명의 연출 사진이라 첫 사진만 쓴다.
+POOL_MAX = {"Donald Trump 2026": 1}
+
 # 제목만으로는 주인공이 드러나지 않는 기사를 직접 지정 (slug → 검색어).
 OVERRIDES = {
-    "asian-games-football-military-exemption-controversy": "South Korea national football team",
-    "asian-games-football-military-exemption-controversy-2": "South Korea national football team",
-    "asian-games-medal-race-soccer-friendly": "South Korea national football team",
 }
 
 
@@ -124,3 +145,11 @@ def subject_for(title, eyebrow="", slug=""):
         if word in (title or ""):
             return q
     return EYEBROW_SUBJECTS.get(eyebrow, "")
+
+
+# 건물·장소 — 오래된 사진이어도 괜찮은 검색어 (사람·팀은 MIN_PERSON_YEAR 이후 사진만).
+PLACES = {
+    "White House", "National Assembly Proceeding Hall", "Marriner S. Eccles Federal Reserve Board Building",
+    "Bank of Korea", "Gaza Strip", "Beirut", "Petra Jordan", "Nvidia", "Samsung Electronics",
+    "VivaTech", "Jamsil Baseball Stadium",
+}

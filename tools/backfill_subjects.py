@@ -52,7 +52,12 @@ def main(argv):
     for path, subject, title in targets:
         pool = pools.get(subject) or []
         if not pool:
+            # 최근 사진이 없으면 예전에 붙인 실사진(오래된 사진일 수 있음)을 걷어낸다.
+            # 빈자리는 photos 워크플로가 Pexels 장면 사진으로 채운다.
             missing.append(subject)
+            raw = io.open(path, encoding="utf-8", newline="").read()
+            if "fs:photo_license" in raw:
+                io.open(path, "w", encoding="utf-8", newline="").write(PHOTO_META.sub("", raw))
             continue
         slug = os.path.basename(path)[:-5]
         p = pool[pexels.pick_index(slug, len(pool))]

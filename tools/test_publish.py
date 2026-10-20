@@ -368,12 +368,19 @@ class CommonsRules(unittest.TestCase):
     def test_subject_rules(self):
         import commons
         self.assertEqual(commons.subject_for("걸그룹 리센느, SBS 8뉴스 출연"), "RESCENE")
-        self.assertEqual(commons.subject_for("한국 축구 대표팀 임시 감독"), "South Korea national football team")
-        self.assertEqual(commons.subject_for("'시차 적응' 극복한 LoL 대표팀"), "")   # 축구로 가면 안 됨
+        # 대표팀: 최근 한국 대표팀 실사진이 없어(최근 것은 상대팀 사진) 장면 사진으로 둔다
+        self.assertEqual(commons.subject_for("한국 축구 대표팀 임시 감독"), "")
+        self.assertEqual(commons.subject_for("'시차 적응' 극복한 LoL 대표팀"), "")
         self.assertEqual(commons.subject_for("KIA 타이거즈, 4위 탈환"), "")           # 호랑이 사진 방지
         self.assertEqual(commons.subject_for("KIA 타이거즈, 4위 탈환", "야구"), "Jamsil Baseball Stadium")
-        self.assertEqual(commons.subject_for("아무 제목", "", "asian-games-football-military-exemption-controversy-2"),
-                         "South Korea national football team")
+
+    def test_person_photos_must_be_recent(self):
+        import commons
+        self.assertEqual(commons._year_from_title("File:240611 대한민국 vs 중국.jpg"), 2024)
+        self.assertEqual(commons._year_from_title("File:Donald Trump at the 2026 FIFA World Cup.jpg"), 2026)
+        self.assertEqual(commons._year_from_title("File:Rescene airport.png"), 0)
+        self.assertIn("Jamsil Baseball Stadium", commons.PLACES)       # 장소는 연도 제한 없음
+        self.assertNotIn("Donald Trump 2026", commons.PLACES)
 
     def test_credit_shown_for_licensed_photo(self):
         card = article.card_html(dict(META, photo="https://x/y.jpg", photo_by="K-POPIT", photo_license="CC BY 4.0"))
