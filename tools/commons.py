@@ -124,6 +124,7 @@ SUBJECTS = (
     ("축구대표팀", VIDEO), ("축구 대표팀", VIDEO), ("대표팀", VIDEO),
     # 실사진이 엉뚱하게 나왔던 인물: 원본 영상 썸네일로
     ("한동훈", VIDEO), ("윤석열", VIDEO), ("이강인", VIDEO), ("안세영", VIDEO), ("롤드컵", VIDEO),
+    ("병역특례", VIDEO), ("금메달", VIDEO),
     ("잠실", "Jamsil Baseball Stadium"),
     ("트럼프", "Donald Trump at the 2026 FIFA World Cup final"), ("백악관", "White House"),
     ("이재명", "Lee Jae-myung"), ("이 대통령", "Lee Jae-myung"),
@@ -137,7 +138,9 @@ SUBJECTS = (
 
 
 # 제목에 이름이 없을 때 꼬리표로 정하는 주인공. 국내 야구 기사는 잠실야구장 실사진.
-EYEBROW_SUBJECTS = {"야구": "Jamsil Baseball Stadium"}
+# 스포츠는 대부분 특정 선수·팀·경기 이야기라 일반 장면 사진이 어울리지 않는다 → 원본 영상 썸네일.
+# 국내 야구는 잠실야구장 실사진. (2026-10-20 "금메달 땄지만 씁쓸한 귀국" 기사에 외국 아마추어 축구 사진이 붙음)
+EYEBROW_SUBJECTS = {"야구": "Jamsil Baseball Stadium", "축구": VIDEO, "종합": VIDEO, "농구·배구": VIDEO}
 
 # 검색어별로 파일 이름에 반드시 있어야 하는 낱말 (잠실 '야경'·'철교' 사진 등을 거르려고).
 MUST = {"Jamsil Baseball Stadium": ("baseball",)}
