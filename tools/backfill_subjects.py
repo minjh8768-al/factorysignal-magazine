@@ -28,7 +28,7 @@ def main(argv):
     apply_changes = "--apply" in argv
     targets = []
     for path in sorted(glob.glob(os.path.join(ROOT, "articles", "*.html"))):
-        if path.endswith(("index.html", "-en.html", "subscribe.html", "privacy.html")):
+        if path.endswith(("index.html", "all.html", "-en.html", "subscribe.html", "privacy.html")):
             continue
         text = io.open(path, encoding="utf-8").read()
         if 'name="fs:video"' not in text:

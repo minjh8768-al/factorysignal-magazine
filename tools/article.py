@@ -499,3 +499,81 @@ def render(fields, url):
 </body>
 </html>
 """
+
+
+# ── 첫 화면 구역 (2026-10-20, 뉴닉식 구성) ────────────────────────────
+# 첫 화면은 기사 목록 하나가 끝없이 이어지면 허전해 보여서, 구역으로 나눈다:
+#   대표 기사 1 + 최신 8 (HOME-TOP) / 분야별 3단·가로형 구역 (HOME-SECTIONS).
+# 전체 목록과 분야 필터는 articles/all.html 로 옮겼다. 구역은 인덱스 재생성 때마다
+# 최신 기사로 다시 채워진다. rows: publish.published() 결과 + 'line'(요약 한 줄).
+HOME_TOP_START, HOME_TOP_END = "<!-- HOME-TOP:START -->", "<!-- HOME-TOP:END -->"
+HOME_SEC_START, HOME_SEC_END = "<!-- HOME-SECTIONS:START -->", "<!-- HOME-SECTIONS:END -->"
+HOME_COLUMNS = (("경제", ("경제",)), ("암호화폐", ("암호화폐",)), ("정치·세계", ("정치", "세계")))
+HOME_ROWS = (("스포츠", ("스포츠",)), ("스타트업", ("스타트업",)))
+
+
+def _short_date(d):
+    return d[5:].replace("-", ".") if d else ""
+
+
+def _home_card(r):
+    esc = lambda v: html.escape(str(v), quote=True)
+    return (f'<a class="home-card" href="{esc(r["slug"])}.html" data-category="{esc(r["category"])}">\n'
+            + thumb_html(r) +
+            f'<strong>{esc(r["title"])}</strong>'
+            f'<span class="home-meta">{esc(r["category"])} · {_short_date(r["date"])}</span></a>')
+
+
+def _home_text(r):
+    esc = lambda v: html.escape(str(v), quote=True)
+    return (f'<a class="home-text" href="{esc(r["slug"])}.html"><strong>{esc(r["title"])}</strong>'
+            f'<span class="home-meta">{_short_date(r["date"])}</span></a>')
+
+
+def _home_feature(r, cls="home-feature"):
+    esc = lambda v: html.escape(str(v), quote=True)
+    return (f'<div class="{cls}" data-category="{esc(r["category"])}">'
+            f'<a class="home-feature-img" href="{esc(r["slug"])}.html">\n' + thumb_html(r) + '</a>'
+            f'<div class="home-feature-body"><span class="home-cat">{esc(r["category"])}</span>'
+            f'<a href="{esc(r["slug"])}.html"><h3>{esc(r["title"])}</h3></a>'
+            f'<p>{esc(r.get("line") or r["description"])}</p>'
+            f'<span class="home-meta">{_short_date(r["date"])}</span></div></div>')
+
+
+def home_top_html(rows):
+    """대표 기사 1 + 최신 8. 대표는 최근 발행일의 경제·암호화폐 기사 중 사진 있는 것 우선."""
+    if not rows:
+        return ""
+    latest = rows[0]["date"]
+    pool = [r for r in rows if r["date"] == latest]
+    feature = next((r for r in pool if r["category"] in _TODAY_FIRST and r.get("photo")),
+                   next((r for r in pool if r.get("photo")), rows[0]))
+    rest = [r for r in rows if r is not feature][:8]
+    return ("\n" + _home_feature(feature) +
+            '\n<div class="home-grid">\n' + "\n".join(_home_card(r) for r in rest) + "\n</div>\n")
+
+
+def home_sections_html(rows, skip=8):
+    """분야별 구역. 맨 위(대표+최신 8)에 나온 기사는 되도록 빼고 고른다."""
+    esc = lambda v: html.escape(str(v), quote=True)
+    shown = {r["slug"] for r in rows[:skip + 1]}
+    pick = lambda cats, n: ([r for r in rows if r["category"] in cats and r["slug"] not in shown]
+                            or [r for r in rows if r["category"] in cats])[:n]
+    out = ['\n<div class="home-columns">']
+    for title, cats in HOME_COLUMNS:
+        items = pick(cats, 4)
+        if not items:
+            continue
+        out.append(f'<section class="home-col"><a class="home-head" href="all.html?cat={esc(cats[0])}">'
+                   f'{esc(title)} <span>›</span></a>' + _home_card(items[0]) +
+                   "".join(_home_text(r) for r in items[1:]) + "</section>")
+    out.append("</div>")
+    for title, cats in HOME_ROWS:
+        items = pick(cats, 5)
+        if not items:
+            continue
+        out.append(f'<section class="home-row"><a class="home-head" href="all.html?cat={esc(cats[0])}">'
+                   f'{esc(title)} <span>›</span></a>' + _home_feature(items[0], "home-feature home-feature--row") +
+                   '<div class="home-row-list">' + "".join(_home_feature(r, "home-mini") for r in items[1:]) +
+                   "</div></section>")
+    return "\n".join(out) + "\n"

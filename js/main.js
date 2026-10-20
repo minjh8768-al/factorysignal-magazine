@@ -16,6 +16,16 @@ function apiUrl(name) {
 
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("form.subscribe-form").forEach(wireSubscribeForm);
+  // 전체 기사(all.html?cat=경제): 첫 화면 분야 링크로 들어오면 그 분야 필터를 켠 채로 연다.
+  const catParam = new URLSearchParams(location.search).get("cat");
+  if (catParam) {
+    // 필터 버튼의 클릭 처리기는 이 함수 아래쪽에서 붙으므로 한 박자 뒤에 누른다.
+    setTimeout(() => {
+      const tab = [...document.querySelectorAll(".filter-tab")].find((t) => t.dataset.filter === catParam);
+      if (tab) tab.click();
+    }, 0);
+  }
+
   // 첫 화면 브리핑 날짜: 한국 시간 기준 "10월 20일 월요일 아침 브리핑"
   const briefDate = document.getElementById("brief-date");
   if (briefDate) {

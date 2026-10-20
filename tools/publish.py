@@ -26,6 +26,7 @@ ROOT = os.path.dirname(HERE)
 DRAFTS = os.path.join(ROOT, "_drafts")
 ARTICLES = os.path.join(ROOT, "articles")
 INDEX = os.path.join(ARTICLES, "index.html")
+ALL = os.path.join(ARTICLES, "all.html")      # 전체 기사 목록 + 분야 필터 (2026-10-20 분리)
 
 DATE_PREFIX = re.compile(r"^(\d{4}-\d{2}-\d{2})-(.+)\.html$")
 
@@ -108,24 +109,48 @@ def first_summary(text):
     return html.unescape(re.sub(r"<[^>]+>", "", m.group(1))).strip() if m else ""
 
 
-def rebuild_index(apply_changes):
-    rows = published()
-    cards = [article.card_html(m) for m in rows]
-    with open(INDEX, encoding="utf-8") as f:
+def _rewrite(path, fn, apply_changes):
+    """파일을 읽어 fn(text)로 바꾸고, 달라졌으면 저장. 바뀌었는지 돌려준다."""
+    if not os.path.exists(path):
+        return False
+    with open(path, encoding="utf-8") as f:
         old = f.read()
-    new = article.replace_cards(old, cards)
-    if article.TODAY_START in new:
-        today = [dict(slug=r["slug"], category=r["category"], title=r["title"],
-                      line=first_summary(r["_text"]) or r["description"])
-                 for r in article.pick_today(rows)]
-        new = article.replace_between(new, article.TODAY_START, article.TODAY_END,
-                                      article.today_html(today))
+    new = fn(old)
     if apply_changes and new != old:
-        with open(INDEX, "w", encoding="utf-8") as f:
+        with open(path, "w", encoding="utf-8") as f:
             f.write(new)
+    return new != old
+
+
+def rebuild_index(apply_changes):
+    """전체 목록(all.html)의 카드와 첫 화면(index.html)의 구역을 최신 기사로 다시 채운다.
+    2026-10-20부터 첫 화면은 구역형(뉴닉식), 전체 카드 목록은 all.html."""
+    rows = published()
+    for r in rows:
+        r["line"] = first_summary(r["_text"]) or r["description"]
+    cards = [article.card_html(m) for m in rows]
+
+    changed = _rewrite(ALL, lambda t: article.replace_cards(t, cards), apply_changes)
+
+    def home(text):
+        if article.TODAY_START in text:
+            today = [dict(slug=r["slug"], category=r["category"], title=r["title"], line=r["line"])
+                     for r in article.pick_today(rows)]
+            text = article.replace_between(text, article.TODAY_START, article.TODAY_END,
+                                           article.today_html(today))
+        if article.HOME_TOP_START in text:
+            text = article.replace_between(text, article.HOME_TOP_START, article.HOME_TOP_END,
+                                           article.home_top_html(rows))
+            text = article.replace_between(text, article.HOME_SEC_START, article.HOME_SEC_END,
+                                           article.home_sections_html(rows))
+        if article.CARDS_START in text:          # 예전 구조(카드 목록이 첫 화면에 있던 때)
+            text = article.replace_cards(text, cards)
+        return text
+
+    changed = _rewrite(INDEX, home, apply_changes) or changed
     if apply_changes:
         write_sitemap()
-    return rows, new != old
+    return rows, changed
 
 
 SITE_BASE = "https://factorysignal-magazine.vercel.app/articles/"  # 도메인을 사면 여기 한 곳만 바꾼다

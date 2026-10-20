@@ -705,12 +705,12 @@ section {
   max-width: 85%;
 }
 
-.article-card[data-category="정치"] .article-thumb { background: linear-gradient(135deg, var(--cat-politics), #4c3fb0); }
-.article-card[data-category="경제"] .article-thumb { background: linear-gradient(135deg, var(--cat-economy), #087a4c); }
-.article-card[data-category="암호화폐"] .article-thumb { background: linear-gradient(135deg, var(--cat-crypto), #a05e04); }
-.article-card[data-category="스포츠"] .article-thumb { background: linear-gradient(135deg, var(--cat-sports), #1e5bb8); }
-.article-card[data-category="세계"] .article-thumb { background: linear-gradient(135deg, var(--cat-world), #a02330); }
-.article-card[data-category="스타트업"] .article-thumb { background: linear-gradient(135deg, var(--cat-startup), #0a6b62); }
+[data-category="정치"] .article-thumb { background: linear-gradient(135deg, var(--cat-politics), #4c3fb0); }
+[data-category="경제"] .article-thumb { background: linear-gradient(135deg, var(--cat-economy), #087a4c); }
+[data-category="암호화폐"] .article-thumb { background: linear-gradient(135deg, var(--cat-crypto), #a05e04); }
+[data-category="스포츠"] .article-thumb { background: linear-gradient(135deg, var(--cat-sports), #1e5bb8); }
+[data-category="세계"] .article-thumb { background: linear-gradient(135deg, var(--cat-world), #a02330); }
+[data-category="스타트업"] .article-thumb { background: linear-gradient(135deg, var(--cat-startup), #0a6b62); }
 
 .article-thumb--video {
   background-size: cover;
@@ -1685,12 +1685,12 @@ footer {
   font-size: 0.75rem; font-weight: 800; color: var(--white); max-width: none;
   padding: 3px 9px; border-radius: 999px; letter-spacing: 0;
 }
-.article-card[data-category="정치"] .article-thumb--news .thumb-cat { background: var(--cat-politics); }
-.article-card[data-category="경제"] .article-thumb--news .thumb-cat { background: var(--cat-economy); }
-.article-card[data-category="암호화폐"] .article-thumb--news .thumb-cat { background: var(--cat-crypto); }
-.article-card[data-category="스포츠"] .article-thumb--news .thumb-cat { background: var(--cat-sports); }
-.article-card[data-category="세계"] .article-thumb--news .thumb-cat { background: var(--cat-world); }
-.article-card[data-category="스타트업"] .article-thumb--news .thumb-cat { background: var(--cat-startup); }
+[data-category="정치"] .article-thumb--news .thumb-cat { background: var(--cat-politics); }
+[data-category="경제"] .article-thumb--news .thumb-cat { background: var(--cat-economy); }
+[data-category="암호화폐"] .article-thumb--news .thumb-cat { background: var(--cat-crypto); }
+[data-category="스포츠"] .article-thumb--news .thumb-cat { background: var(--cat-sports); }
+[data-category="세계"] .article-thumb--news .thumb-cat { background: var(--cat-world); }
+[data-category="스타트업"] .article-thumb--news .thumb-cat { background: var(--cat-startup); }
 .article-thumb--news .thumb-badge {
   position: absolute; top: 12px; right: 12px; z-index: 1;
   font-size: 0.66rem; font-weight: 700; padding: 3px 8px; border-radius: 999px;
@@ -1704,3 +1704,87 @@ footer {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .article-thumb--news .thumb-photo { object-position: center 30%; }   /* 인물 사진의 얼굴이 덜 잘리게 */
+
+/* ---------- 첫 화면 구역 (뉴닉식) — 2026-10-20 ---------- */
+.brief-hero--compact { padding-bottom: 8px; }
+.brief-hero--compact .brief-band { padding: 28px 36px; }
+.brief-hero--compact .brief-band h1 { font-size: clamp(1.4rem, 3vw, 2rem); margin-bottom: 8px; }
+.brief-hero--compact .brief-lead { margin-bottom: 16px; }
+.cat-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 16px; }
+.cat-bar a {
+  padding: 7px 14px; border-radius: 999px; border: 1px solid var(--gray-200);
+  font-size: 0.88rem; font-weight: 600; background: var(--white);
+}
+.cat-bar a:hover { border-color: var(--accent); color: var(--accent); }
+.cat-bar .cat-bar-all { margin-left: auto; background: var(--black); color: var(--white); border-color: var(--black); }
+
+.home-section { padding: 20px 0 28px; }
+.home-feature { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: center; margin-bottom: 28px; }
+@media (min-width: 860px) { .home-feature { grid-template-columns: 1.15fr 1fr; gap: 28px; } }
+.home-feature-img { display: block; border-radius: 14px; overflow: hidden; }
+.home-feature .article-thumb { height: 300px; }
+.home-cat { font-size: 0.78rem; font-weight: 800; color: var(--accent); }
+.home-feature-body h3 { font-size: 1.5rem; line-height: 1.35; margin: 6px 0 10px; word-break: keep-all; }
+.home-feature-body h3:hover { color: var(--accent); }
+.home-feature-body p { color: var(--gray-600); line-height: 1.65; font-size: 0.95rem; margin-bottom: 8px; word-break: keep-all; }
+.home-meta { font-size: 0.75rem; color: var(--gray-400); }
+
+.home-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+@media (min-width: 860px) { .home-grid { grid-template-columns: repeat(4, 1fr); } }
+.home-card { display: block; }
+.home-card .article-thumb { height: 150px; border-radius: 10px; margin-bottom: 10px; }
+.home-card strong {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  font-size: 0.95rem; line-height: 1.45; margin-bottom: 4px; word-break: keep-all;
+}
+.home-card:hover strong { color: var(--accent); }
+
+.home-columns { display: grid; grid-template-columns: 1fr; gap: 28px; margin-bottom: 36px; }
+@media (min-width: 860px) { .home-columns { grid-template-columns: repeat(3, 1fr); } }
+.home-head { display: inline-block; font-size: 1.15rem; font-weight: 800; margin-bottom: 14px; }
+.home-head span { color: var(--gray-400); margin-left: 2px; }
+.home-head:hover { color: var(--accent); }
+.home-col .home-card .article-thumb { height: 170px; }
+.home-text { display: block; padding: 12px 0; border-top: 1px solid var(--gray-200); }
+.home-text strong {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  font-size: 0.92rem; line-height: 1.45; margin-bottom: 2px; word-break: keep-all;
+}
+.home-text:hover strong { color: var(--accent); }
+
+.home-row { margin-bottom: 36px; }
+.home-feature--row .article-thumb { height: 240px; }
+.home-feature--row .home-feature-body h3 { font-size: 1.3rem; }
+.home-row-list { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 860px) { .home-row-list { grid-template-columns: repeat(2, 1fr); } }
+.home-mini { display: grid; grid-template-columns: 140px 1fr; gap: 14px; align-items: start; }
+.home-mini .article-thumb { height: 92px; border-radius: 8px; }
+.home-mini .thumb-badge, .home-mini .thumb-credit, .home-mini .thumb-mark { display: none; }
+.home-mini .thumb-figure { font-size: 1.1rem; }
+.home-mini .home-cat { display: none; }
+.home-mini h3 { font-size: 0.95rem; line-height: 1.4; margin: 0 0 4px; word-break: keep-all; }
+.home-mini p {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  font-size: 0.82rem; color: var(--gray-600); line-height: 1.5; margin-bottom: 2px;
+}
+
+.home-newsletter {
+  display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between;
+  padding: 26px 30px; border-radius: 16px; background: var(--accent-dim); margin-bottom: 24px;
+}
+.home-newsletter strong { display: block; font-size: 1.15rem; margin-bottom: 4px; }
+.home-newsletter p { color: var(--gray-600); font-size: 0.92rem; }
+.home-newsletter .brief-cta { background: var(--accent); color: var(--white); }
+.home-more { text-align: center; margin-bottom: 20px; }
+.home-more a {
+  display: inline-block; padding: 10px 22px; border-radius: 999px;
+  border: 1px solid var(--gray-200); font-weight: 700; font-size: 0.92rem;
+}
+.home-more a:hover { border-color: var(--accent); color: var(--accent); }
+
+.all-hero { padding: 110px 0 10px; }
+.all-hero h1 { font-size: 1.8rem; margin-top: 8px; }
+/* 사이트 공통 section 여백(위아래 큰 패딩)이 첫 화면 구역 사이에 큰 빈칸을 만들어서 끈다 */
+.home-col, .home-row { padding: 0; }
+.home-section { padding: 20px 0 28px; }
+.today-section { padding: 8px 0 24px; }
