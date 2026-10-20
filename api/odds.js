@@ -23,14 +23,15 @@ module.exports = async (req, res) => {
     if (s.status !== 'fulfilled') return;
     const m = s.value;
     if (m.closed || m.active === false) return;
-    let yes;
-    try { yes = Number(JSON.parse(m.outcomePrices || '[]')[0]); } catch { yes = NaN; }
-    if (!(yes >= 0 && yes <= 1)) return;
     const t = topics[i];
+    // 보통 0번이 'Yes'. 두 팀 경기 시장은 결과가 [팀A, 팀B]라서 우리 질문의 팀 쪽 번호를 쓴다.
+    let yes;
+    try { yes = Number(JSON.parse(m.outcomePrices || '[]')[t.outcomeIndex || 0]); } catch { yes = NaN; }
+    if (!(yes >= 0 && yes <= 1)) return;
     items.push({
       key: t.key,
       question: t.question,
-      category: t.category,
+      group: t.group,
       market: Math.round(yes * 1000) / 10,
       endDate: (m.endDate || '').slice(0, 10),
     });

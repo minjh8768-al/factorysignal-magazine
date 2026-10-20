@@ -1581,3 +1581,22 @@ footer {
 .odds-q { margin-bottom: 6px; }
 .odds-actions { margin-top: 8px; }
 .odds-actions button { padding: 6px 0; font-size: 0.85rem; }
+
+/* 오늘의 확률 — 탭 + 한 줄 요약형 카드 (2026-10-20 압축) */
+.odds-tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.odds-tabs button {
+  padding: 6px 14px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--gray-200); background: var(--white);
+  font-size: 0.85rem; font-weight: 600; color: var(--gray-600);
+}
+.odds-tabs button.active { background: var(--black); border-color: var(--black); color: var(--white); }
+.odds-body { display: flex; flex-direction: column; gap: 8px; }
+.odds-card { padding: 10px 12px; border-radius: 10px; background: var(--gray-100); }
+.odds-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.odds-top .odds-q { margin: 0; font-size: 0.9rem; }
+.odds-market { flex-shrink: 0; font-size: 0.78rem; color: var(--gray-600); white-space: nowrap; }
+.odds-market b { font-size: 0.95rem; color: var(--black); }
+.odds-card > .odds-track { display: block; height: 4px; margin: 7px 0 8px; }
+.odds-card .odds-actions { margin: 0; gap: 6px; }
+.odds-card .odds-actions button { flex: 0 0 auto; padding: 4px 16px; font-size: 0.8rem; }
+.odds-card .odds-mine { font-size: 0.78rem; }
