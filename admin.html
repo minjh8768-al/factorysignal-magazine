@@ -232,7 +232,7 @@ async function renderPolls() {
     const total = list.reduce((a, p) => a + p.total, 0);
     $("#plist").innerHTML = list.length ? list.map((p) => {
       const y = pct(p.yes, p.total), n = p.total ? 100 - y : 0;
-      const href = p.url || "/articles/index.html#odds-list";
+      const href = p.url || "/articles/index.html";
       return `<a class="poll" href="${esc(href)}" target="_blank" title="${p.url ? "기사 열기" : "첫 화면 '오늘의 확률' 열기"}">
         <span class="go">${p.url ? "기사 보기 ↗" : "첫 화면 보기 ↗"}</span><div class="q">${esc(p.question || "(질문 없음 — 기사에서 투표가 빠졌어요)")}</div>
         <div class="m">${esc(p.title)}${p.category ? ` · ${esc(p.category)}` : ""}${p.date ? ` · ${esc(p.date)}` : ""}</div>
@@ -243,7 +243,7 @@ async function renderPolls() {
     document.querySelectorAll(".pfilter button").forEach((b) => b.classList.toggle("on", b.dataset.k === pollKind));
   };
   $("#view").innerHTML = `<div class="card"><h2>투표별 결과 <span class="muted" id="psum"></span></h2>
-      <div class="pfilter"><button data-k="all">전체</button><button data-k="article">기사 투표</button><button data-k="odds">오늘의 확률</button></div>
+      <div class="pfilter"><button data-k="all">전체</button><button data-k="article">기사 투표</button><button data-k="odds">예측 질문</button></div>
       <div id="plist"></div>
       <p class="hint">참여가 많은 순서입니다. 같은 사람(같은 인터넷 주소)은 30일 동안 한 번만 셉니다. 날짜별 투표 수는 10월 20일부터 집계해요.</p></div>`;
   document.querySelectorAll(".pfilter button").forEach((b) => (b.onclick = () => { pollKind = b.dataset.k; draw(); }));

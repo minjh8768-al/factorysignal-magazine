@@ -13,6 +13,7 @@
 // 환경변수: MAGAZINE_ADMIN_SECRET(비밀번호), GITHUB_DISPATCH_TOKEN(이 저장소 Actions 쓰기), KV_REST_API_*
 const crypto = require('crypto');
 const topics = require('./_odds-topics.json');
+const { DATA } = require('./_lib');
 
 const REPO = 'minjh8768-al/factorysignal-magazine';
 const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
@@ -204,6 +205,11 @@ async function polls(origin) {
     return o;
   }).sort((a, b) => b.total - a.total).slice(0, 100);
   await Promise.all(rows.map(async (r) => {
+    if (r.slug.startsWith('pm-')) {
+      const m = (DATA.markets || []).find((x) => `pm-${x.id}` === r.slug);
+      Object.assign(r, { kind: 'odds', question: m ? m.q : r.slug, title: m && m.status === 'resolved' ? `예측 질문 · 결과 ${m.outcome === 'yes' ? '예' : '아니오'}` : '예측 질문', category: m ? m.cat : '' });
+      return;
+    }
     if (r.slug.startsWith('odds-')) {
       const t = topics.find((x) => `odds-${x.key}` === r.slug);
       Object.assign(r, { kind: 'odds', question: t ? t.question : r.slug, title: '오늘의 확률', category: t ? t.group : '' });

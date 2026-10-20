@@ -1818,3 +1818,72 @@ footer {
 
 .home-newsletter { margin: 16px 0 48px; padding: 32px 36px; }
 .home-more { margin-bottom: 40px; }
+
+/* ── 2026-10-20 개편: 핫한 질문 10개 + 가상 예측 + 결과 + 내 기록 ───────────── */
+.pm-section { padding: 0 0 44px; }
+.pm-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.pm-head h2 { font-size: 1.25rem; }
+.pm-sub { font-size: 0.82rem; color: var(--gray-400); }
+.pm-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 860px) { .pm-grid { grid-template-columns: 1fr 1fr; } }
+.pm-card { display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; border-radius: 14px; background: var(--white); border: 1px solid var(--gray-200); }
+.pm-meta { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--gray-600); }
+.pm-cat { font-weight: 700; color: var(--accent); }
+.pm-q { font-size: 1.02rem; line-height: 1.45; word-break: keep-all; flex: 1; }
+.pm-odds { display: flex; align-items: center; gap: 10px; }
+.pm-track { flex: 1; height: 6px; border-radius: 999px; background: var(--gray-100); overflow: hidden; }
+.pm-track span { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+.pm-num { font-size: 0.8rem; color: var(--gray-600); white-space: nowrap; }
+.pm-num b { font-size: 1.05rem; color: var(--black); font-variant-numeric: tabular-nums; }
+.pm-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; min-height: 36px; }
+.pm-actions button { flex: 1; padding: 8px 0; border-radius: 10px; border: 1px solid var(--gray-200); background: var(--gray-100); font-weight: 700; font-size: 0.9rem; cursor: pointer; }
+.pm-actions button:hover { background: var(--accent); border-color: var(--accent); color: var(--white); }
+.pm-actions button:disabled { opacity: 0.5; cursor: default; }
+.pm-mine { font-size: 0.85rem; color: var(--accent); }
+.pm-readers { font-size: 0.78rem; color: var(--gray-400); margin-left: auto; }
+.pm-results { display: flex; flex-direction: column; background: var(--white); border: 1px solid var(--gray-200); border-radius: 14px; padding: 4px 18px; }
+.pm-result { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-top: 1px solid var(--gray-200); }
+.pm-result:first-child { border-top: none; }
+.pm-result-body { flex: 1; min-width: 0; }
+.pm-result-body strong { display: block; font-size: 0.95rem; line-height: 1.45; word-break: keep-all; }
+.pm-result-body span { font-size: 0.8rem; color: var(--gray-600); }
+.pm-outcome { flex-shrink: 0; width: 56px; text-align: center; padding: 6px 0; border-radius: 8px; font-weight: 800; font-size: 0.85rem; }
+.pm-outcome.is-yes { background: var(--accent-dim); color: var(--accent); }
+.pm-outcome.is-no { background: var(--gray-100); color: var(--gray-600); }
+.pm-win, .pm-lose, .pm-wait { flex-shrink: 0; font-size: 0.78rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; }
+.pm-win { background: #e6f7ef; color: #0b8a55; }
+.pm-win::before { content: "✓ "; }
+.pm-lose { background: #fdecee; color: #c42536; }
+.pm-lose::before { content: "✕ "; }
+.pm-wait { color: var(--gray-600); font-weight: 600; }
+.pm-fine p, .pm-fine-text { font-size: 0.75rem; color: var(--gray-400); line-height: 1.6; word-break: keep-all; }
+.pm-fine-text { margin-top: 20px; }
+
+.profile-page { padding: 104px 0 56px; }
+.pf-head h1 { font-size: 1.6rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pf-edit { font-size: 0.78rem; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--gray-200); background: var(--white); cursor: pointer; }
+.pf-lead { margin-top: 8px; color: var(--gray-600); font-size: 0.92rem; line-height: 1.6; }
+.pf-lead a { color: var(--accent); text-decoration: underline; }
+.pf-login { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.pf-btn { display: inline-block; padding: 11px 18px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; }
+.pf-kakao { background: #fee500; color: #191919; }
+.pf-google { background: var(--white); color: var(--black); border: 1px solid var(--gray-200); }
+.pf-btn.is-off { opacity: 0.45; cursor: default; }
+.pf-msg { margin-top: 8px; font-size: 0.85rem; color: var(--accent); font-weight: 700; }
+.pf-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 24px 0; }
+@media (min-width: 860px) { .pf-tiles { grid-template-columns: repeat(4, 1fr); } }
+.pf-tile { background: var(--white); border: 1px solid var(--gray-200); border-radius: 14px; padding: 16px 18px; }
+.pf-label { font-size: 0.8rem; color: var(--gray-600); }
+.pf-value { font-size: 1.9rem; font-weight: 800; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+.pf-sub { font-size: 0.76rem; color: var(--gray-400); }
+.pf-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+.pf-tabs button { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--gray-200); background: var(--white); font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+.pf-tabs button.active { background: var(--black); border-color: var(--black); color: var(--white); }
+.pf-list { background: var(--white); border: 1px solid var(--gray-200); border-radius: 14px; padding: 4px 18px; }
+.pf-list .odds-empty { padding: 16px 0; }
+.pf-row { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid var(--gray-200); }
+.pf-row:first-child { border-top: none; }
+.pf-row > div { flex: 1; min-width: 0; }
+.pf-row strong { display: block; font-size: 0.95rem; line-height: 1.45; word-break: keep-all; }
+.pf-row span { font-size: 0.8rem; color: var(--gray-600); }
+.brief-hero + .pm-section { padding-top: 12px; }

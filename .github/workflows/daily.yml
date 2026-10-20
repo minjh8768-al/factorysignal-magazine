@@ -6,8 +6,10 @@
 name: daily
 
 on:
-  schedule:
-    - cron: '0 0 * * *'          # 매일 09:00 KST
+  # 2026-10-20 자동 실행 중지 — 사이트를 '핫한 예측 질문 10개' 중심으로 바꿨다 (markets.yml).
+  # 일반 뉴스 기사는 더 만들지 않는다. 필요하면 Actions 탭에서 수동 실행.
+  # schedule:
+  #   - cron: '0 0 * * *'          # 매일 09:00 KST
   workflow_dispatch:              # 수동 실행 (Actions 탭에서 버튼)
     inputs:
       cats:

@@ -31,17 +31,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 0);
   }
 
-  // 첫 화면 브리핑 날짜: 한국 시간 기준 "10월 20일 월요일 아침 브리핑"
+  // 첫 화면 날짜: 한국 시간 기준 "10월 20일 화요일 오후의 예측"
   const briefDate = document.getElementById("brief-date");
   if (briefDate) {
     const now = new Date();
     const day = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "long", day: "numeric", weekday: "long" }).format(now);
     const hour = Number(new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Seoul", hour: "numeric", hourCycle: "h23" }).format(now));
     const part = hour < 12 ? "아침" : hour < 18 ? "오후" : "저녁";
-    briefDate.textContent = `${day} ${part} 브리핑`;
+    briefDate.textContent = `${day} ${part}의 예측`;
   }
-  const oddsList = document.getElementById("odds-list");
-  if (oddsList) mountOdds(oddsList);
+  if (document.getElementById("pm-live")) mountMarkets();
+  if (document.getElementById("pf-head")) mountProfile();
 
   const nav = document.querySelector(".nav");
   const toggle = document.querySelector(".nav-toggle");
@@ -113,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const pollMeta = document.querySelector('meta[name="fs:poll"]');
     if (pollMeta && pollMeta.content) mountPoll(articleBody, pollMeta.content);
-    if (!isEn) mountInlineSubscribe(articleBody);
+    // 2026-10-20: 기사 하단 뉴스레터 박스는 뺐다 (구독자 모으기는 당분간 목표가 아님).
 
     const notice = document.createElement("p");
     notice.className = "source-note ai-note";
@@ -124,110 +124,180 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// ── 첫 화면 '오늘의 확률 & 예측' ─────────────────────────────────────
-// 시장 확률은 api/odds.js(미국 리전에서 Polymarket 조회), 독자 예측은 api/vote.js에
-// 'odds-<key>' 슬러그로 저장한다. 분야(group)별 탭으로 나누고, 카드는 한 줄 요약형.
-// 독자 비율은 참여한 뒤에만, 그리고 참여자가 READER_MIN명 이상일 때만 보여 준다
-// (먼저 보면 따라가게 되고, 1~2명일 때의 100%·0%는 의미가 없어서).
+// ── 첫 화면 예측 (2026-10-20 개편) ─────────────────────────────────────
+// 질문·확률은 api/markets.js(미국 리전에서 Polymarket 조회, 핫한 10개), 내 예측은 api/me.js.
+// 예측은 질문당 한 번이고 바꿀 수 없다. 독자 비율은 내가 고른 뒤, READER_MIN명 이상일 때만
+// 보여 준다(먼저 보면 따라가게 되고, 1~2명일 때의 100%·0%는 의미가 없어서).
 const READER_MIN = 10;
+const pct = (n) => `${Math.round(n)}%`;
+const choiceKo = (c) => (c === "yes" ? "예" : "아니오");
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-async function mountOdds(list) {
-  const pct = (n) => `${Math.round(n)}%`;
-  let items;
+function dday(iso) {
+  const ms = Date.parse(iso) - Date.now();
+  if (!(ms > 0)) return "마감";
+  const h = ms / 3600e3;
+  if (h < 24) return `${Math.max(1, Math.round(h))}시간 남음`;
+  return `D-${Math.ceil(h / 24)}`;
+}
+
+function readersLine(r, mine) {
+  const total = ((r && r.yes) || 0) + ((r && r.no) || 0);
+  if (!mine) return "";
+  if (total < READER_MIN) return `독자 ${total}명 참여 · ${READER_MIN}명부터 비율 공개`;
+  return `독자 ${pct((r.yes / total) * 100)}가 예 (${total.toLocaleString()}명)`;
+}
+
+async function getJSON(url, opts) {
+  const r = await fetch(url, opts);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error(d.error || `오류 ${r.status}`), { status: r.status });
+  return d;
+}
+
+async function mountMarkets() {
+  const liveEl = document.getElementById("pm-live");
+  const resEl = document.getElementById("pm-resolved");
+  let data, me;
   try {
-    items = (await (await fetch(apiUrl("odds"))).json()).items || [];
+    [data, me] = await Promise.all([
+      getJSON(apiUrl("markets")),
+      getJSON(apiUrl("me"), { credentials: "same-origin" }).catch(() => ({ preds: [] })),
+    ]);
   } catch (e) {
-    items = [];
-  }
-  if (!items.length) {
-    list.innerHTML = '<p class="odds-empty">지금은 확률을 불러올 수 없어요. 잠시 후 다시 확인해 주세요.</p>';
+    liveEl.innerHTML = '<p class="odds-empty">지금은 질문을 불러올 수 없어요. 잠시 후 다시 확인해 주세요.</p>';
+    resEl.innerHTML = "";
     return;
   }
-  let readers = {};
-  try {
-    const slugs = items.map((it) => `odds-${it.key}`).join(",");
-    readers = await (await fetch(`${apiUrl("vote")}?slugs=${encodeURIComponent(slugs)}`)).json();
-  } catch (e) { /* 독자 수 없이도 시장 확률은 보여 준다 */ }
+  const mine = Object.fromEntries((me.preds || []).map((p) => [p.id, p]));
 
-  const groups = [...new Set(items.map((it) => it.group))];
-  const tabs = document.createElement("div");
-  tabs.className = "odds-tabs";
-  const body = document.createElement("div");
-  body.className = "odds-body";
-  list.innerHTML = "";
-  list.append(tabs, body);
+  liveEl.innerHTML = "";
+  if (!data.live.length) liveEl.innerHTML = '<p class="odds-empty">새 질문을 고르는 중이에요.</p>';
+  data.live.forEach((m) => liveEl.append(liveCard(m, mine[m.id])));
 
-  const isOpen = (it) => !it.closesAt || Date.now() < Date.parse(it.closesAt);
-  const readerText = (data, mine) => {
-    const total = (data.yes || 0) + (data.no || 0);
-    const minePart = mine ? `내 예측 ${mine === "yes" ? "예" : "아니오"} · ` : "";
-    if (total < READER_MIN) return `${minePart}독자 ${total}명 참여 (${READER_MIN}명부터 비율 공개)`;
-    return `${minePart}독자 ${pct((data.yes / total) * 100)} 예 (${total.toLocaleString()}명)`;
+  resEl.innerHTML = "";
+  if (!data.resolved.length) resEl.innerHTML = '<p class="odds-empty">아직 결과가 나온 질문이 없어요. 첫 결과는 곧 나와요.</p>';
+  data.resolved.forEach((m) => resEl.append(resultRow(m, mine[m.id])));
+}
+
+function liveCard(m, my) {
+  const el = document.createElement("article");
+  el.className = "pm-card";
+  const open = m.status === "live";
+  el.innerHTML = `
+    <div class="pm-meta"><span class="pm-cat">${esc(m.cat)}</span><span>${open ? dday(m.endDate) : "결과 확인 중"}</span></div>
+    <h3 class="pm-q">${esc(m.q)}</h3>
+    <div class="pm-odds"><span class="pm-track"><span style="width:${m.market}%"></span></span><span class="pm-num">시장 <b>${pct(m.market)}</b></span></div>
+    <div class="pm-actions"></div>`;
+  const actions = el.querySelector(".pm-actions");
+  const showMine = (choice, readers, odds) => {
+    actions.innerHTML = `<span class="pm-mine">내 예측 <b>${choiceKo(choice)}</b>${odds != null ? ` · 고를 때 시장 ${pct(odds)}` : ""}</span><span class="pm-readers">${esc(readersLine(readers, choice))}</span>`;
   };
-
-  const card = (it) => {
-    const slug = `odds-${it.key}`;
-    const readerOnly = it.market === null;
-    const el = document.createElement("div");
-    el.className = "odds-card" + (readerOnly ? " is-reader-only" : "");
-    // 시장이 없는 한국 이슈(KBO 등)는 '독자 예측' 배지와 경기 정보 줄을 단다.
-    const right = readerOnly
-      ? '<span class="odds-badge">독자 예측</span>'
-      : `<span class="odds-market" title="해외 예측시장 확률">시장 <b>${pct(it.market)}</b></span>`;
-    el.innerHTML = `
-      <div class="odds-top"><p class="odds-q"></p>${right}</div>
-      ${readerOnly ? '<p class="odds-note-line"></p>' : `<span class="odds-track"><span style="width:${it.market}%"></span></span>`}
-      <div class="odds-actions"><button type="button" data-choice="yes">예</button><button type="button" data-choice="no">아니오</button></div>`;
-    el.querySelector(".odds-q").textContent = it.question;
-    if (readerOnly) el.querySelector(".odds-note-line").textContent = it.note;
-    const actions = el.querySelector(".odds-actions");
-    const done = (data, mine, closed) => {
-      actions.innerHTML = "";
-      const s = document.createElement("span");
-      s.className = "odds-mine";
-      s.textContent = (closed ? "투표 마감 · " : "") + readerText(data, mine);
-      actions.append(s);
-    };
-    const mine = localStorage.getItem(`fm-poll:${slug}`);
-    if (!isOpen(it)) {
-      done(readers[slug] || {}, mine, true);
-      return el;
+  if (my) { showMine(my.choice, m.readers, my.pickedOdds); return el; }
+  if (!open) { actions.innerHTML = '<span class="pm-readers">예측 마감</span>'; return el; }
+  actions.innerHTML = '<button type="button" data-c="yes">예</button><button type="button" data-c="no">아니오</button>';
+  actions.querySelectorAll("button").forEach((b) => b.addEventListener("click", async () => {
+    actions.querySelectorAll("button").forEach((x) => (x.disabled = true));
+    try {
+      const d = await getJSON(apiUrl("me"), {
+        method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "predict", id: m.id, choice: b.dataset.c }),
+      });
+      showMine(b.dataset.c, d.readers, b.dataset.c === "yes" ? m.market : 100 - m.market);
+    } catch (e) {
+      actions.querySelectorAll("button").forEach((x) => (x.disabled = false));
+      const err = document.createElement("span");
+      err.className = "pm-readers";
+      err.textContent = e.message;
+      actions.append(err);
     }
-    if (mine && readers[slug]) done(readers[slug], mine);
-    actions.querySelectorAll("button").forEach((b) => b.addEventListener("click", async () => {
-      actions.querySelectorAll("button").forEach((x) => (x.disabled = true));
-      try {
-        const r = await fetch(apiUrl("vote"), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ slug, choice: b.dataset.choice }),
-        });
-        if (!r.ok) throw new Error();
-        localStorage.setItem(`fm-poll:${slug}`, b.dataset.choice);
-        done(await r.json(), b.dataset.choice);
-      } catch (e) {
-        actions.querySelectorAll("button").forEach((x) => (x.disabled = false));
-      }
-    }));
-    return el;
-  };
+  }));
+  return el;
+}
 
-  const show = (group) => {
-    tabs.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.group === group));
-    body.innerHTML = "";
-    items.filter((it) => it.group === group).forEach((it) => body.append(card(it)));
+function resultRow(m, my) {
+  const el = document.createElement("div");
+  el.className = "pm-result";
+  const total = (m.readers.yes || 0) + (m.readers.no || 0);
+  const readers = total >= READER_MIN ? ` · 독자 ${pct((m.readers.yes / total) * 100)} 예` : "";
+  const badge = my ? (my.choice === m.outcome ? '<span class="pm-win">적중</span>' : '<span class="pm-lose">빗나감</span>') : "";
+  el.innerHTML = `
+    <span class="pm-outcome is-${m.outcome}">${choiceKo(m.outcome)}</span>
+    <div class="pm-result-body"><strong>${esc(m.q)}</strong>
+      <span>${m.final != null ? `시장은 마감 전 '예'를 ${pct(m.final)}로 봤어요` : "결과 확정"}${readers}${my ? ` · 내 예측 ${choiceKo(my.choice)}` : ""}</span></div>
+    ${badge}`;
+  return el;
+}
+
+// ── 내 예측 기록 (profile.html) ─────────────────────────────────────
+async function mountProfile() {
+  const head = document.getElementById("pf-head");
+  const tiles = document.getElementById("pf-tiles");
+  const list = document.getElementById("pf-list");
+  const tabs = document.getElementById("pf-tabs");
+  let me, auth;
+  try {
+    [me, auth] = await Promise.all([
+      getJSON(apiUrl("me"), { credentials: "same-origin" }),
+      getJSON(`${apiUrl("auth")}?status=1`).catch(() => ({})),
+    ]);
+  } catch (e) {
+    head.innerHTML = `<p class="odds-empty">${esc(e.message)}</p>`;
+    return;
+  }
+  const loginMsg = { ok: "로그인했어요.", failed: "로그인에 실패했어요. 다시 시도해 주세요.", unavailable: "이 로그인은 아직 준비 중이에요." }[new URLSearchParams(location.search).get("login")] || "";
+  const btn = (p, label) => auth[p]
+    ? `<a class="pf-btn pf-${p}" href="${apiUrl("auth")}?start=${p}">${label}</a>`
+    : `<span class="pf-btn pf-${p} is-off">${label} (준비 중)</span>`;
+  const loginButtons = `<div class="pf-login">${btn("kakao", "카카오로 계속하기")}${btn("google", "Google로 계속하기")}</div>`;
+  const u = me.user;
+  if (!u) {
+    head.innerHTML = `<h1>내 예측 기록</h1><p class="pf-lead">아직 예측한 질문이 없어요. <a href="index.html">진행 중인 예측</a>에서 예/아니오를 골라 보세요.<br>로그인하면 다른 기기에서도 기록을 이어 볼 수 있어요.</p>${loginButtons}<p class="pf-msg">${esc(loginMsg)}</p>`;
+  } else {
+    const via = u.provider === "kakao" ? "카카오" : "Google";
+    head.innerHTML = `
+      <h1><span id="pf-nick">${esc(u.nick)}</span> <button type="button" class="pf-edit" id="pf-edit">닉네임 바꾸기</button></h1>
+      <p class="pf-lead">${u.provider ? `${via} 계정으로 로그인됨 · <a href="#" id="pf-logout">로그아웃</a>` : "손님으로 예측 중이에요. 로그인하면 이 기록이 계정에 저장돼 다른 기기에서도 볼 수 있어요."}</p>
+      ${u.provider ? "" : loginButtons}<p class="pf-msg">${esc(loginMsg)}</p>`;
+    document.getElementById("pf-edit").onclick = async () => {
+      const nick = prompt("새 닉네임 (2~12자)", u.nick);
+      if (!nick) return;
+      try {
+        await getJSON(apiUrl("me"), { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "nick", nick }) });
+        document.getElementById("pf-nick").textContent = nick.trim();
+      } catch (e) { alert(e.message); }
+    };
+    const out = document.getElementById("pf-logout");
+    if (out) out.onclick = async (e) => {
+      e.preventDefault();
+      await fetch(apiUrl("me"), { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) });
+      location.href = "profile.html";
+    };
+  }
+
+  const s = me.stats;
+  tiles.innerHTML = [
+    ["적중률", s.accuracy == null ? "–" : `${s.accuracy}%`, s.resolved ? `결과 나온 ${s.resolved}개 중` : "결과가 나오면 계산돼요"],
+    ["적중", s.wins, `연속 ${s.streak} · 최고 연속 ${s.best}`],
+    ["역발상 적중", s.upset, "시장이 50% 미만으로 본 쪽을 맞힘"],
+    ["예측한 질문", s.total, `진행 중 ${s.open}`],
+  ].map(([l, v, sub]) => `<div class="pf-tile"><div class="pf-label">${l}</div><div class="pf-value">${v}</div><div class="pf-sub">${sub}</div></div>`).join("");
+
+  const draw = (t) => {
+    tabs.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.t === t));
+    const rows = me.preds.filter((p) => (t === "open" ? p.result === "open" : p.result !== "open"));
+    list.innerHTML = rows.length ? rows.map((p) => {
+      const badge = p.result === "win" ? '<span class="pm-win">적중</span>'
+        : p.result === "lose" ? '<span class="pm-lose">빗나감</span>'
+        : p.status === "closed" ? '<span class="pm-wait">결과 확인 중</span>'
+        : p.result === "unknown" ? '<span class="pm-wait">확인 불가</span>'
+        : `<span class="pm-wait">${p.market != null ? `지금 시장 ${pct(p.market)}` : ""}</span>`;
+      return `<div class="pf-row"><div><strong>${esc(p.q)}</strong>
+        <span>${esc(p.cat)} · 내 예측 <b>${choiceKo(p.choice)}</b> · 고를 때 시장 ${pct(p.pickedOdds)}${p.outcome ? ` · 결과 ${choiceKo(p.outcome)}` : ""}</span></div>${badge}</div>`;
+    }).join("") : `<p class="odds-empty">${t === "open" ? "진행 중인 예측이 없어요." : "아직 결과가 나온 예측이 없어요."}</p>`;
   };
-  groups.forEach((g) => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.dataset.group = g;
-    b.textContent = g;
-    b.addEventListener("click", () => show(g));
-    tabs.append(b);
-  });
-  // 오늘 마감되는 독자 예측(예: 오늘 경기)이 있으면 그 탭을 먼저 연다.
-  const live = items.find((it) => it.closesAt && isOpen(it));
-  show(live ? live.group : groups[0]);
+  tabs.querySelectorAll("button").forEach((b) => (b.onclick = () => draw(b.dataset.t)));
+  draw("open");
 }
 
 // ── 뉴스레터 구독 ───────────────────────────────────────────────────

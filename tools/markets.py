@@ -89,6 +89,18 @@ def is_binary(m):
     return [o.lower() for o in _jl(m.get("outcomes"), [])] == ["yes", "no"]
 
 
+def _words(title):
+    import re
+    stop = {"the", "a", "of", "in", "on", "by", "will", "be", "x", "vs", "and", "to", "2026", "2027"}
+    return {w for w in re.findall(r"[a-z0-9]+", title.lower()) if w not in stop and len(w) > 1}
+
+
+def similar(a, b):
+    """사건 제목이 거의 같은 주제인지 (예: 'US x Iran ceasefire…'와 'US-Iran ceasefire…')."""
+    wa, wb = _words(a), _words(b)
+    return bool(wa and wb) and len(wa & wb) / min(len(wa), len(wb)) >= 0.6
+
+
 def category(labels):
     for cat, tags in CAT_TAGS:
         if labels & tags:
@@ -229,6 +241,7 @@ def main():
     live = [m for m in markets if m.get("status") == "live"]
     have = {m["id"] for m in markets}
     have_events = {m.get("event") for m in live}
+    have_titles = [m.get("eventTitle", "") for m in live]
     per_cat = {}
     for m in live:
         per_cat[m["cat"]] = per_cat.get(m["cat"], 0) + 1
@@ -239,8 +252,11 @@ def main():
             break
         if c["id"] in have or c["event"] in have_events or per_cat.get(c["cat"], 0) >= CAT_MAX:
             continue
+        if any(similar(c["eventTitle"], t) for t in have_titles):   # 같은 주제 두 번 금지
+            continue
         picks.append(c)
         have_events.add(c["event"])
+        have_titles.append(c["eventTitle"])
         per_cat[c["cat"]] = per_cat.get(c["cat"], 0) + 1
     print(f"진행 중 {len(live)}개, 빈자리 {max(room, 0)}개, 새 후보 {len(picks)}개")
 
@@ -258,7 +274,7 @@ def main():
                 continue
             markets.append({
                 "id": c["id"], "q": ko[c["id"]], "en": c["en"], "cat": c["cat"],
-                "event": c["event"], "endDate": c["endDate"], "last": c["last"],
+                "event": c["event"], "eventTitle": c["eventTitle"], "endDate": c["endDate"], "last": c["last"],
                 "addedAt": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "status": "live",
             })
             print(f"  추가 [{c['cat']}] {ko[c['id']]}  ({c['last']}%)")

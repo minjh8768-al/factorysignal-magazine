@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>내 예측 기록 — Factory Magazine</title>
+<meta name="robots" content="noindex" />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <button class="nav-toggle" aria-label="메뉴 열기">
+    <span></span><span></span><span></span>
+  </button>
+  <a href="index.html" class="nav-logo">Factory<span> Magazine</span></a>
+  <button type="button" class="nav-search" aria-label="검색" title="검색 (준비 중)">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+  </button>
+  <div class="nav-links">
+    <a href="https://factorysignal-holdings.vercel.app" class="nav-holdings" target="_blank" rel="noopener">Factory<span> Holdings</span></a>
+    <a href="profile.html" class="nav-cta">내 예측 기록</a>
+  </div>
+</nav>
+
+
+<main class="profile-page">
+  <div class="wrap">
+    <!-- 내 예측 기록 (2026-10-20). 데이터는 api/me.js, 로그인은 api/auth.js. -->
+    <div class="pf-head" id="pf-head"><p class="odds-empty">불러오는 중…</p></div>
+    <div class="pf-tiles" id="pf-tiles"></div>
+    <div class="pf-tabs" id="pf-tabs">
+      <button type="button" data-t="open" class="active">진행 중</button>
+      <button type="button" data-t="done">결과 나옴</button>
+    </div>
+    <div class="pf-list" id="pf-list"></div>
+    <p class="pm-fine-text">가상 예측입니다. 돈이나 포인트가 오가지 않습니다. 확률은 해외 예측시장(Polymarket) 가격을 옮긴 참고 정보입니다.</p>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-logo">Factory<span> Magazine</span></a>
+        <p class="footer-tagline">노이즈 속에서, 신호를 찾습니다.</p>
+        <p>세계가 몇 %로 보는지, 확률로 읽는 뉴스를 만드는 매체입니다.</p>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h4>예측</h4>
+          <ul>
+            <li><a href="index.html">진행 중인 예측</a></li>
+            <li><a href="profile.html">내 예측 기록</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>링크</h4>
+          <ul>
+            <li><a href="all.html">지난 기사</a></li>
+            <li><a href="privacy.html">개인정보처리방침</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Factory Magazine</span>
+    </div>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+</body>
+</html>

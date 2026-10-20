@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Factory Magazine — 확률로 읽는 뉴스</title>
-<meta name="description" content="세계가 몇 %로 보는지, 확률로 읽는 뉴스. 경제·코인 중심으로 매일 아침 3분에 정리합니다." />
+<title>Factory Magazine — 세계는 몇 %로 보고 있을까</title>
+<meta name="description" content="지금 세계에서 가장 뜨거운 질문 10개. 해외 예측시장 확률을 보고 예/아니오로 가상 예측해 보세요. 결과가 나면 내 적중률이 쌓입니다." />
 <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
@@ -19,7 +19,7 @@
   </button>
   <div class="nav-links">
     <a href="https://factorysignal-holdings.vercel.app" class="nav-holdings" target="_blank" rel="noopener">Factory<span> Holdings</span></a>
-    <a href="subscribe.html" class="nav-cta">뉴스레터 받기</a>
+    <a href="profile.html" class="nav-cta">내 예측 기록</a>
   </div>
 </nav>
 
@@ -27,123 +27,41 @@
 <header class="brief-hero brief-hero--compact">
   <div class="wrap">
     <div class="brief-band">
-      <p class="brief-date" id="brief-date">오늘의 브리핑</p>
-      <h1>오늘, 세계는 몇 %로 보고 있을까요?</h1>
-      <p class="brief-lead">핵심 뉴스와 오늘의 확률, 3분이면 충분해요.</p>
-      <a href="subscribe.html" class="brief-cta">매일 아침 받아보기 →</a>
+      <p class="brief-date" id="brief-date">오늘의 예측</p>
+      <h1>세계는 몇 %로 보고 있을까요? 당신의 예측은?</h1>
+      <p class="brief-lead">지금 가장 뜨거운 질문 10개. 예/아니오를 골라 두면 결과가 날 때 적중 여부가 기록돼요.</p>
+      <a href="profile.html" class="brief-cta">내 예측 기록 보기 →</a>
     </div>
-    <nav class="cat-bar" aria-label="분야">
-      <a href="all.html?cat=경제">경제</a><a href="all.html?cat=암호화폐">암호화폐</a>
-      <a href="all.html?cat=정치">정치</a><a href="all.html?cat=세계">세계</a>
-      <a href="all.html?cat=스포츠">스포츠</a><a href="all.html?cat=스타트업">스타트업</a>
-      <a href="all.html" class="cat-bar-all">전체 기사</a>
-    </nav>
   </div>
 </header>
 
-<section class="today-section">
+<!-- 2026-10-20 개편(이사님 방향): 매거진이 아니라 '핫한 질문 10개 + 가상 예측 + 결과 + 내 기록'.
+     질문은 data/markets.json(tools/markets.py, 4시간마다) → api/markets.js. 예측은 api/me.js. -->
+<section class="pm-section">
   <div class="wrap">
-    <div class="today-grid">
-      <div class="today-col">
-        <h2 class="today-title">오늘의 핵심 3</h2>
-        <!-- TODAY:START -->
-        <ol class="today-list">
-          <li class="today-item" data-category="암호화폐"><span class="today-num">1</span><a href="bitcoin-elliott-wave-bear-market-analysis.html"><strong>비트코인 반등론 경계…&quot;엘리어트 파동상 아직 하락 조정 안 끝났다&quot;</strong><span>비트코인 온체인 지표를 근거로 한 상승 전환 전망이 시장에서 잇따르고 있어요.</span></a></li>
-          <li class="today-item" data-category="스포츠"><span class="today-num">2</span><a href="asian-games-football-military-exemption-controversy-2.html"><strong>금메달 땄지만 씁쓸한 귀국... &quot;군대 안 간다&quot; 세리머니에 병역특례 폐지론 불붙었다</strong><span>아시안게임 축구 대표팀 일부 선수들의 경솔한 발언과 세리머니가 논란이 되었어요.</span></a></li>
-          <li class="today-item" data-category="세계"><span class="today-num">3</span><a href="white-house-press-secretary-fired-nobel-peace-prize.html"><strong>백악관 &#x27;최단기 대변인&#x27; 해임 논란과 트럼프의 &#x27;노벨평화상&#x27; 반발</strong><span>취임 5일 만에 경질된 백악관 대변인의 이력 논란부터 노벨평화상 수상을 둘러싼 도널드 트럼프 대통령의 주장을 심층 분석한다.</span></a></li>
-        </ol>
-        <!-- TODAY:END -->
-      </div>
-      <div class="today-col">
-        <h2 class="today-title">오늘의 확률 &amp; 예측</h2>
-        <div class="odds-list" id="odds-list"><p class="odds-empty">불러오는 중…</p></div>
-        <p class="odds-note">시장 확률은 해외 예측시장(Polymarket) 가격을 옮긴 정보입니다. 독자 비율은 예측에 참여하면 보여요. 투자·베팅 권유가 아닙니다.</p>
-      </div>
-    </div>
+    <div class="pm-head"><h2>진행 중인 예측</h2><span class="pm-sub" id="pm-updated"></span></div>
+    <div class="pm-grid" id="pm-live"><p class="odds-empty">불러오는 중…</p></div>
   </div>
 </section>
 
-<section class="home-section">
+<section class="pm-section">
   <div class="wrap">
-    <!-- HOME-TOP:START -->
-<div class="home-feature" data-category="경제"><a class="home-feature-img" href="us-10year-treasury-yield-5percent-new-normal.html">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/5/54/2025_construction_Eccles_Federal_Reserve_Building_Washington_DC_2025-12-17_13-01-38_1.jpg/960px-2025_construction_Eccles_Federal_Reserve_Building_Washington_DC_2025-12-17_13-01-38_1.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=imageinfo&amp;utm_content=thumbnail" alt="" loading="lazy" /><span class="thumb-cat">경제</span><span class="thumb-credit">사진: G. Edward Johnson · CC BY 4.0</span></div>
-</a><div class="home-feature-body"><span class="home-cat">경제</span><a href="us-10year-treasury-yield-5percent-new-normal.html"><h3>미 10년물 국채금리 5%대는 뉴노멀... &quot;연준 금리 인상 기반 여전히 유효&quot;</h3></a><p>장재철 피나클 경제연구소 대표는 미 국채 10년물 금리 5%대 진입을 뉴노멀로 평가하고, 실질금리 상승과 국채 공급 확대가 금리를 압박하는 한편 물가·고용 지표가 연준의 추가 인상 가능성을 뒷받침하고 있다고 분석했다.</p><span class="home-meta">10.19</span></div></div>
-<div class="home-grid">
-<a class="home-card" href="presidential-approval-rating-and-policy-issues.html" data-category="정치">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://images.pexels.com/photos/28682355/pexels-photo-28682355.jpeg?auto=compress&amp;cs=tinysrgb&amp;fit=crop&amp;h=627&amp;w=1200" alt="" loading="lazy" /><span class="thumb-cat">정치</span></div>
-<strong>대통령 지지율 반등 속 부동산·증시·국감 후반전이 정국 변수</strong><span class="home-meta">정치 · 10.19</span></a>
-<a class="home-card" href="krw-stablecoin-regulation-issuance-debate.html" data-category="암호화폐">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://images.pexels.com/photos/14911427/pexels-photo-14911427.jpeg?auto=compress&amp;cs=tinysrgb&amp;fit=crop&amp;h=627&amp;w=1200" alt="" loading="lazy" /><span class="thumb-cat">암호화폐</span></div>
-<strong>원화 스테이블코인 발행 주체 두고 금융권·핀테크 이견… 11월 정부안 제출 목표</strong><span class="home-meta">암호화폐 · 10.19</span></a>
-<a class="home-card" href="kospi-crash-ai-profitability-concerns.html" data-category="경제">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://images.pexels.com/photos/8566534/pexels-photo-8566534.jpeg?auto=compress&amp;cs=tinysrgb&amp;fit=crop&amp;h=627&amp;w=1200" alt="" loading="lazy" /><span class="thumb-cat">경제</span></div>
-<strong>코스피 7거래일 연속 하락세… &#x27;AI 불확실성&#x27;과 금리 우려에 증시 흔들</strong><span class="home-meta">경제 · 10.19</span></a>
-<a class="home-card" href="instagram-ai-monetization-side-hustle.html" data-category="경제">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://images.pexels.com/photos/8439071/pexels-photo-8439071.jpeg?auto=compress&amp;cs=tinysrgb&amp;fit=crop&amp;h=627&amp;w=1200" alt="" loading="lazy" /><span class="thumb-cat">경제</span></div>
-<strong>&quot;핸드폰 하나로 20억 원 번다&quot;… 인스타그램 AI 수익화 노하우 공개</strong><span class="home-meta">경제 · 10.19</span></a>
-<a class="home-card" href="senior-secretariat-meeting-civil-livelihood.html" data-category="정치">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b9/Lee_Jae-myung_and_Bongbong_Marcos_in_Manila_%282026%29_06.jpg/960px-Lee_Jae-myung_and_Bongbong_Marcos_in_Manila_%282026%29_06.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=imageinfo&amp;utm_content=thumbnail" alt="" loading="lazy" /><span class="thumb-cat">정치</span><span class="thumb-credit">사진: Presidential Communications Office · Public domain</span></div>
-<strong>이 대통령 &quot;부마항쟁·5·18 헌법 전문 수록 실천할 때… 민생과 안전에 정부 역량 집중&quot;</strong><span class="home-meta">정치 · 10.18</span></a>
-<a class="home-card" href="lebanon-frontline-report-airstrikes-paramedics.html" data-category="세계">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/The_Corniche_Beirut%2C_Beirut%2C_Lebanon.jpg/960px-The_Corniche_Beirut%2C_Beirut%2C_Lebanon.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=imageinfo&amp;utm_content=thumbnail" alt="" loading="lazy" /><span class="thumb-cat">세계</span><span class="thumb-credit">사진: Vyacheslav Argenberg · CC BY 4.0</span></div>
-<strong>&quot;의료진 표적 공격은 전쟁범죄&quot;... 폭격 쏟아지는 레바논 전선 현장 취재</strong><span class="home-meta">세계 · 10.18</span></a>
-<a class="home-card" href="korea-football-team-tactics-evaluation.html" data-category="스포츠">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://i.ytimg.com/vi/xPP8B1VDwdQ/maxresdefault.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/xPP8B1VDwdQ/mqdefault.jpg'" /><span class="thumb-cat">스포츠</span><span class="thumb-credit">출처: 올스 유튜브</span></div>
-<strong>이영표·설기현·조원희가 진단한 대표팀 4연전… &quot;아시안컵까지 감독 기회 줘야&quot;</strong><span class="home-meta">스포츠 · 10.18</span></a>
-<a class="home-card" href="fomc-review-fed-rate-hike-pce-target.html" data-category="경제">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/2025_construction_Eccles_Federal_Reserve_Building_Washington_DC_2025-12-17_13-25-19.jpg/960px-2025_construction_Eccles_Federal_Reserve_Building_Washington_DC_2025-12-17_13-25-19.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=imageinfo&amp;utm_content=thumbnail" alt="" loading="lazy" /><span class="thumb-cat">경제</span><span class="thumb-credit">사진: G. Edward Johnson · CC BY 4.0</span></div>
-<strong>FOMC 리뷰... Fed, PCE 2% 목표 달성까지 긴축 기조 유지 전망</strong><span class="home-meta">경제 · 10.18</span></a>
-</div>
-<!-- HOME-TOP:END -->
+    <div class="pm-head"><h2>결과가 나온 예측</h2><span class="pm-sub">시장은 마감 직전 몇 %로 봤을까</span></div>
+    <div class="pm-results" id="pm-resolved"><p class="odds-empty">불러오는 중…</p></div>
   </div>
 </section>
 
-<section class="home-section">
+<section class="pm-section" id="pm-articles-section" hidden>
   <div class="wrap">
-    <!-- HOME-SECTIONS:START -->
-<div class="home-columns">
-<section class="home-col"><a class="home-head" href="all.html?cat=경제">경제 <span>›</span></a><a class="home-card" href="amazon-blocks-ai-shopping-agents.html" data-category="경제">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://images.pexels.com/photos/8438996/pexels-photo-8438996.jpeg?auto=compress&amp;cs=tinysrgb&amp;fit=crop&amp;h=627&amp;w=1200" alt="" loading="lazy" /><span class="thumb-cat">경제</span></div>
-<strong>AI 쇼핑 에이전트 막아선 아마존... &quot;광고 수익과 고객 데이터 지키기&quot;</strong><span class="home-meta">경제 · 10.18</span></a><a class="home-text" href="us-ppi-inflation-spike-rate-hike-recession.html"><strong>미국 PPI 물가 &#x27;발작&#x27; 수준 급등... &quot;금리 인상 경계와 경기 침체 공포 동시 확산&quot;</strong><span class="home-meta">10.17</span></a><a class="home-text" href="ai-infrastructure-optical-communication-bottleneck.html"><strong>AI 데이터센터의 새 병목 &#x27;연결&#x27;… 대안으로 떠오른 광통신 생태계 분석</strong><span class="home-meta">10.17</span></a><a class="home-text" href="us-treasury-yield-market-warning.html"><strong>브라이언 김 &quot;미 10년물 국채 금리 6% 상승 시간문제… 자산 시장 충격 대비해야&quot;</strong><span class="home-meta">10.16</span></a></section>
-<section class="home-col"><a class="home-head" href="all.html?cat=암호화폐">암호화폐 <span>›</span></a><a class="home-card" href="crypto-tax-delay-bill-and-market-updates.html" data-category="암호화폐">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://images.pexels.com/photos/39277901/pexels-photo-39277901.jpeg?auto=compress&amp;cs=tinysrgb&amp;fit=crop&amp;h=627&amp;w=1200" alt="" loading="lazy" /><span class="thumb-cat">암호화폐</span></div>
-<strong>가상자산 과세 유예 법안 발의 추진… 주요 암호화폐 인프라 개선 움직임</strong><span class="home-meta">암호화폐 · 10.18</span></a><a class="home-text" href="crypto-market-liquidity-and-market-makers.html"><strong>이준복 대표 &quot;가상자산 유동성 위축… 마켓메이커 제도화 시급&quot;</strong><span class="home-meta">10.17</span></a><a class="home-text" href="bitcoin-october-correction-support-levels.html"><strong>비트코인 10월 조정 &quot;숨고르기 과정... 8만 2500달러 지지 여부 관건&quot;</strong><span class="home-meta">10.12</span></a><a class="home-text" href="digital-dollar-expansion-krw-stablecoin.html"><strong>블록체인 삼킨 &#x27;디지털 달러&#x27;… 원화 스테이블코인 논의가 급물살 타는 이유</strong><span class="home-meta">10.11</span></a></section>
-<section class="home-col"><a class="home-head" href="all.html?cat=정치">정치·세계 <span>›</span></a><a class="home-card" href="us-midterm-election-white-house-security.html" data-category="정치">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/3/33/Font_Gate_of_the_White_House_on_a_Warm_Sunny_Day.jpg/960px-Font_Gate_of_the_White_House_on_a_Warm_Sunny_Day.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=imageinfo&amp;utm_content=thumbnail" alt="" loading="lazy" /><span class="thumb-cat">정치</span><span class="thumb-credit">사진: Mathieu Landretti · CC BY-SA 4.0</span></div>
-<strong>백악관 대변인 나흘 만에 경질…미 중간선거 앞두고 안보·정치 갈등 고조</strong><span class="home-meta">정치 · 10.17</span></a><a class="home-text" href="presidential-secretary-appointment-and-han-investigation.html"><strong>임광현 비서실장 발탁 배경과 한동훈 사법리스크 논란 집중 분석</strong><span class="home-meta">10.17</span></a><a class="home-text" href="jordan-tourism-crisis-us-military-dilemma.html"><strong>관광객 급감에 미군 주둔 논란까지…요르단의 딜레마</strong><span class="home-meta">10.17</span></a><a class="home-text" href="im-gwang-hyeon-presidential-chief-staff.html"><strong>신임 대통령 비서실장에 임광현 전 국세청장 임명... &quot;민생 경제 집중할 실무형 인사&quot;</strong><span class="home-meta">10.16</span></a></section>
-</div>
-<section class="home-row"><a class="home-head" href="all.html?cat=스포츠">스포츠 <span>›</span></a><div class="home-feature home-feature--row" data-category="스포츠"><a class="home-feature-img" href="ahn-se-young-badminton-association-reform.html">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://i.ytimg.com/vi/_czq5lJGJpQ/maxresdefault.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/_czq5lJGJpQ/mqdefault.jpg'" /><span class="thumb-cat">스포츠</span><span class="thumb-credit">출처: KBS News 유튜브</span></div>
-</a><div class="home-feature-body"><span class="home-cat">스포츠</span><a href="ahn-se-young-badminton-association-reform.html"><h3>“부상 겪으며 실망 커”... 안세영 작심 발언이 가져온 스포츠계 개혁</h3></a><p>파리 올림픽 금메달 직후 대한배드민턴협회의 부조리를 폭로한 안세영 선수의 발언을 계기로 선수 보호 규정 신설과 후원 계약 자율화 등 한국 스포츠계의 체질 개선이 이뤄졌다.</p><span class="home-meta">10.11</span></div></div><div class="home-row-list"><div class="home-mini" data-category="스포츠"><a class="home-feature-img" href="kbo-season-final-battle-3rd-place.html">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://upload.wikimedia.org/wikipedia/commons/d/d5/Jamsil_Baseball_Stadium_.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=imageinfo&amp;utm_content=thumbnail_unscaled" alt="" loading="lazy" /><span class="thumb-cat">스포츠</span><span class="thumb-credit">사진: Nam-ho Park · CC BY 2.0</span></div>
-</a><div class="home-feature-body"><span class="home-cat">스포츠</span><a href="kbo-season-final-battle-3rd-place.html"><h3>&quot;4위 우승은 없다&quot;…KBO 정규시즌 막판 3위 싸움과 홈런왕 경쟁 재조명</h3></a><p>프로야구 정규시즌 마감을 앞두고 한국시리즈 우승 확률이 걸린 3위 자리를 차지하기 위한 기아와 LG의 끝장 승부 및 홈런왕·MVP 경쟁 구도를 다룬다.</p><span class="home-meta">10.09</span></div></div><div class="home-mini" data-category="스포츠"><a class="home-feature-img" href="asian-games-football-military-exemption-controversy.html">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://i.ytimg.com/vi/XjSekJGcshc/maxresdefault.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/XjSekJGcshc/mqdefault.jpg'" /><span class="thumb-cat">스포츠</span><span class="thumb-credit">출처: SBS 뉴스 유튜브</span></div>
-</a><div class="home-feature-body"><span class="home-cat">스포츠</span><a href="asian-games-football-military-exemption-controversy.html"><h3>아시안게임 축구대표팀 &#x27;병역특례&#x27; 언행 논란…여야 한목소리로 제도 개편 촉구</h3></a><p>아시안게임 금메달을 딴 축구 대표팀 일부 선수들의 병역 면제 관련 발언과 전역모 인증샷이 논란을 일으키며 병역특례 제도 개편 논의로 확산하고 있다.</p><span class="home-meta">10.08</span></div></div><div class="home-mini" data-category="스포츠"><a class="home-feature-img" href="korea-baseball-team-returns-gold-medal.html">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://i.ytimg.com/vi/H-hFdMsQbGs/maxresdefault.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/H-hFdMsQbGs/mqdefault.jpg'" /><span class="thumb-cat">스포츠</span><span class="thumb-credit">출처: KBS News 유튜브</span></div>
-</a><div class="home-feature-body"><span class="home-cat">스포츠</span><a href="korea-baseball-team-returns-gold-medal.html"><h3>‘금메달 쾌거’ 야구 대표팀 귀국… 감독 “압박감 극복한 선수들 자랑스러워”</h3></a><p>아시안게임에서 금메달을 목에 건 한국 야구 대표팀이 귀국했다. 지도부와 선수들은 인터뷰에서 부담감을 털어내고 이뤄낸 우승 소감과 향후 과제를 밝혔다.</p><span class="home-meta">10.05</span></div></div><div class="home-mini" data-category="스포츠"><a class="home-feature-img" href="national-football-team-player-interview.html">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://i.ytimg.com/vi/IBWFbQ8hz0Y/maxresdefault.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/IBWFbQ8hz0Y/mqdefault.jpg'" /><span class="thumb-cat">스포츠</span><span class="thumb-credit">출처: SBS 뉴스 유튜브</span></div>
-</a><div class="home-feature-body"><span class="home-cat">스포츠</span><a href="national-football-team-player-interview.html"><h3>대표팀 첫 소집 및 복귀 선수 인터뷰, &quot;경쟁과 적응 통해 최선 다할 것&quot;</h3></a><p>축구 국가대표팀에 소집된 선수들이 새 감독 체제에서의 적응 각오, 주전 경쟁, 유럽 진출 경험 및 대표팀 복귀 소감을 밝혔다.</p><span class="home-meta">10.03</span></div></div></div></section>
-<section class="home-row"><a class="home-head" href="all.html?cat=스타트업">스타트업 <span>›</span></a><div class="home-feature home-feature--row" data-category="스타트업"><a class="home-feature-img" href="k-greentech-startups-vivatech.html">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://i.ytimg.com/vi/NS7CyjCfUw0/maxresdefault.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='https://i.ytimg.com/vi/NS7CyjCfUw0/mqdefault.jpg'" /><span class="thumb-cat">스타트업</span><span class="thumb-credit">출처: 티타임즈TV 유튜브</span></div>
-</a><div class="home-feature-body"><span class="home-cat">스타트업</span><a href="k-greentech-startups-vivatech.html"><h3>유럽 규제 넘어 글로벌 시장으로… 비바테크서 주목받은 K-그린테크 스타트업</h3></a><p>유럽 최대 스타트업 행사 비바테크 현장에서 산업 인프라의 탄소 배출을 줄이고 자원 효율을 높이는 한국의 그린테크 스타트업 5곳이 주목받았다.</p><span class="home-meta">10.16</span></div></div><div class="home-row-list"><div class="home-mini" data-category="스타트업"><a class="home-feature-img" href="serial-entrepreneur-minseok-lee-startup-story.html">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://images.pexels.com/photos/6804609/pexels-photo-6804609.jpeg?auto=compress&amp;cs=tinysrgb&amp;fit=crop&amp;h=627&amp;w=1200" alt="" loading="lazy" /><span class="thumb-cat">스타트업</span></div>
-</a><div class="home-feature-body"><span class="home-cat">스타트업</span><a href="serial-entrepreneur-minseok-lee-startup-story.html"><h3>15번 창업해 3번 엑싯한 99년생 이민석 “적당한 엑싯보다 세상 바꿀 스타트업 만든다”</h3></a><p>보스턴대 컴퓨터사이언스 전공 출신 이민석 대표가 15번의 창업과 3번의 엑싯을 거치며 배운 연쇄 창업 경험과 샌프란시스코 실리콘밸리 도전기를 들려준다.</p><span class="home-meta">10.12</span></div></div><div class="home-mini" data-category="스타트업"><a class="home-feature-img" href="young-entrepreneur-vertical-commerce-ai.html">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://images.pexels.com/photos/8294752/pexels-photo-8294752.jpeg?auto=compress&amp;cs=tinysrgb&amp;fit=crop&amp;h=627&amp;w=1200" alt="" loading="lazy" /><span class="thumb-cat">스타트업</span></div>
-</a><div class="home-feature-body"><span class="home-cat">스타트업</span><a href="young-entrepreneur-vertical-commerce-ai.html"><h3>15만 원으로 시작해 월 매출 3억 원... 2002년생 청년의 &#x27;AI·버티컬 커머스&#x27; 전략</h3></a><p>대학 휴학 후 15만 원의 자본으로 의류 쇼핑몰을 시작한 2002년생 서정민 대표가 버티컬 커머스 플랫폼과 AI 배경 생성 기술을 활용해 월 매출 3억~4억 원을 달성한 노하우를 밝혔다.</p><span class="home-meta">10.09</span></div></div><div class="home-mini" data-category="스타트업"><a class="home-feature-img" href="startup-founder-overcoming-business-debt.html">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://images.pexels.com/photos/6803532/pexels-photo-6803532.jpeg?auto=compress&amp;cs=tinysrgb&amp;fit=crop&amp;h=627&amp;w=1200" alt="" loading="lazy" /><span class="thumb-cat">스타트업</span></div>
-</a><div class="home-feature-body"><span class="home-cat">스타트업</span><a href="startup-founder-overcoming-business-debt.html"><h3>&quot;사업 접는 순간 패배 인정&quot;... 14년 차 대표가 전하는 위기 극복법</h3></a><p>창업 14년 차를 맞은 대표가 사업 운용 중 겪은 자금난과 적자 시기의 위기 극복 과정, 그리고 초보 사장들에게 필요한 마음가짐을 공유했다.</p><span class="home-meta">10.05</span></div></div><div class="home-mini" data-category="스타트업"><a class="home-feature-img" href="paul-graham-yc-startup-ambition-ai.html">
-            <div class="article-thumb article-thumb--news"><img class="thumb-photo" src="https://images.pexels.com/photos/6914058/pexels-photo-6914058.jpeg?auto=compress&amp;cs=tinysrgb&amp;fit=crop&amp;h=627&amp;w=1200" alt="" loading="lazy" /><span class="thumb-cat">스타트업</span></div>
-</a><div class="home-feature-body"><span class="home-cat">스타트업</span><a href="paul-graham-yc-startup-ambition-ai.html"><h3>폴 그레이엄 &quot;요즘 스타트업, 과거보다 훨씬 거대한 문제 도전해&quot;</h3></a><p>Y콤비네이터 창립자 폴 그레이엄이 YC 47번째 기수를 맞아 스타트업의 야망과 성공 요인, AI 시대의 비용 구조 변화 및 AGI에 대한 견해를 밝혔다.</p><span class="home-meta">10.04</span></div></div></div></section>
-<!-- HOME-SECTIONS:END -->
-    <aside class="home-newsletter">
-      <div>
-        <strong>매일 아침, 확률로 읽는 뉴스 3분</strong>
-        <p>세계 예측시장이 본 확률과 오늘의 핵심 뉴스를 메일로 받아보세요. 무료예요.</p>
-      </div>
-      <a href="subscribe.html" class="brief-cta">뉴스레터 받아보기 →</a>
-    </aside>
-    <div class="home-more"><a href="all.html">전체 기사 보기 ›</a></div>
+    <div class="pm-head"><h2>예측 기사</h2><span class="pm-sub">이 질문들을 두고 무슨 일이 벌어지고 있나</span></div>
+    <!-- MARKET-ARTICLES:START -->
+    <!-- MARKET-ARTICLES:END -->
+  </div>
+</section>
+
+<section class="pm-section pm-fine">
+  <div class="wrap">
+    <p>확률은 해외 예측시장(Polymarket)의 가격을 옮긴 참고 정보입니다. 이 사이트의 예측은 돈이나 포인트가 오가지 않는 가상 예측이며, 투자·베팅 권유가 아닙니다.</p>
   </div>
 </section>
 
@@ -157,16 +75,16 @@
       </div>
       <div class="footer-cols">
         <div class="footer-col">
-          <h4>아티클</h4>
+          <h4>예측</h4>
           <ul>
-            <li><a href="index.html">전체 아티클</a></li>
-            <li><a href="bitcoin-the-perfect-ledger.html">마켓 워치</a></li>
+            <li><a href="index.html">진행 중인 예측</a></li>
+            <li><a href="profile.html">내 예측 기록</a></li>
           </ul>
         </div>
         <div class="footer-col">
           <h4>링크</h4>
           <ul>
-            <li><a href="subscribe.html">뉴스레터</a></li>
+            <li><a href="all.html">지난 기사</a></li>
             <li><a href="privacy.html">개인정보처리방침</a></li>
           </ul>
         </div>
