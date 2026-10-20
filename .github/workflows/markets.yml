@@ -8,6 +8,11 @@ on:
   schedule:
     - cron: '17 */4 * * *'
   workflow_dispatch:
+    inputs:
+      backfill:
+        description: '최근 결과가 난 실제 시장으로 결과 목록 채우기 (개수, 0이면 안 함)'
+        required: false
+        default: '0'
 
 concurrency:
   group: publish
@@ -43,7 +48,14 @@ jobs:
         run: python tools/config_from_env.py
 
       - name: 질문 목록 갱신
-        run: python tools/markets.py
+        env:
+          BACKFILL: ${{ inputs.backfill }}
+        run: |
+          if [ "${BACKFILL:-0}" -gt 0 ] 2>/dev/null; then
+            python tools/markets.py --backfill "$BACKFILL"
+          else
+            python tools/markets.py
+          fi
 
       - name: 바뀌었으면 커밋·푸시
         run: |

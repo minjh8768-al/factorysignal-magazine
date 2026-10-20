@@ -3,6 +3,7 @@
 
     py -3 markets.py              목록 갱신 (새 시장 추가 + 끝난 시장 결과 기록)
     py -3 markets.py --dry        저장하지 않고 무엇을 할지만 출력
+    py -3 markets.py --backfill 10   최근 8일 안에 결과가 난 실제 시장으로 '결과' 목록 채우기
 
 한국 IP에서는 Polymarket API가 막혀(451) 있다. 이 스크립트는 GitHub Actions(미국)
 에서 돈다. 로컬에서 시험할 때는 환경변수 PM_PROXY 에 Factory Signal의
@@ -101,6 +102,18 @@ def similar(a, b):
     return bool(wa and wb) and len(wa & wb) / min(len(wa), len(wb)) >= 0.6
 
 
+def as_question(m, e):
+    """예/아니오 시장이면 그 질문, 두 팀 경기의 '최종 승자' 시장이면 'Will A beat B?'.
+    세트별(Game 1 Winner)·핸디캡·합계 같은 부가 시장은 None."""
+    outs = _jl(m.get("outcomes"), [])
+    if [o.lower() for o in outs] == ["yes", "no"]:
+        return m.get("question", "")
+    q = (m.get("question") or "").strip()
+    if len(outs) == 2 and q == (e.get("title") or "").strip() and " vs" in q:
+        return f"Will {outs[0]} beat {outs[1]}? ({q})"
+    return None
+
+
 def category(labels):
     for cat, tags in CAT_TAGS:
         if labels & tags:
@@ -133,7 +146,10 @@ def candidates(now):
             continue
         best = None
         for m in e.get("markets") or []:
-            if m.get("closed") or not m.get("active") or not is_binary(m):
+            if m.get("closed") or not m.get("active"):
+                continue
+            en = as_question(m, e)
+            if not en:
                 continue
             p = yes_price(m)
             if p is None or not (0.08 <= p <= 0.92):
@@ -154,7 +170,7 @@ def candidates(now):
             score = vol * (1.2 - abs(p - 0.5) / 2) * (2 if boosted else 1)
             if not best or score > best[0]:
                 best = (score, {
-                    "id": str(m["id"]), "en": m.get("question", ""),
+                    "id": str(m["id"]), "en": en,
                     "group": m.get("groupItemTitle") or "", "eventTitle": e.get("title", ""),
                     "cat": cat, "event": e.get("slug", ""), "endDate": end[:19] + "Z",
                     "last": round(p * 1000) / 10,
@@ -165,6 +181,94 @@ def candidates(now):
     return [c for _, c in out]
 
 
+BACKFILL_TAGS = ("politics", "geopolitics", "economy", "fed-rates", "crypto", "tech", "ai",
+                 "south-korea", "league-of-legends", "soccer", "nba", "mlb")
+CLOB = "https://clob.polymarket.com"
+
+
+def _ts(s):
+    s = (s or "").replace(" ", "T").replace("+00", "+00:00").replace("Z", "+00:00")
+    if s.endswith("+00:00:00"):
+        s = s[:-3]
+    try:
+        return datetime.datetime.fromisoformat(s)
+    except ValueError:
+        return None
+
+
+def price_before(token, when):
+    """when 시각 직전의 '첫째 결과' 가격(0~1). 이력이 없으면 None."""
+    url_base = f"{CLOB}/prices-history"
+    params = dict(market=token, startTs=int(when.timestamp()) - 12 * 3600,
+                  endTs=int(when.timestamp()), fidelity=10)
+    proxy = os.environ.get("PM_PROXY")
+    url = (proxy + url_base + "&" if proxy else url_base + "?") + urllib.parse.urlencode(params)
+    with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=30) as r:
+        hist = json.loads(r.read().decode("utf-8")).get("history") or []
+    return float(hist[-1]["p"]) if hist else None
+
+
+def recent_resolved(now, n, have):
+    cutoff = now - datetime.timedelta(days=8)
+    events, seen = [], set()
+    for slug in BACKFILL_TAGS:
+        try:
+            events += _get("/events", closed="true", tag_slug=slug, order="volume", ascending="false",
+                           limit=60, end_date_min=(now - datetime.timedelta(days=10)).strftime("%Y-%m-%dT%H:%M:%SZ"))
+        except Exception as e:
+            print(f"  태그 {slug} 실패: {e}")
+    out = []
+    for e in events:
+        if e.get("id") in seen:
+            continue
+        seen.add(e.get("id"))
+        labels = {t.get("label", "") for t in e.get("tags") or []}
+        cat = category(labels)
+        if not cat or labels & SKIP_TAGS:
+            continue
+        best = None
+        for m in e.get("markets") or []:
+            closed_at = _ts(m.get("closedTime"))
+            if not m.get("closed") or not closed_at or closed_at < cutoff or str(m["id"]) in have:
+                continue
+            en = as_question(m, e)
+            p_end = yes_price(m)
+            if not en or p_end is None or 0.01 < p_end < 0.99:
+                continue            # 결과가 0/1로 확정된 것만
+            vol = float(m.get("volumeNum") or m.get("volume") or 0)
+            if not best or vol > best[0]:
+                best = (vol, m, en, closed_at, p_end)
+        if not best:
+            continue
+        vol, m, en, closed_at, p_end = best
+        score = vol * (3 if labels & BOOST_TAGS else 1)
+        out.append((score, {"m": m, "en": en, "cat": cat, "e": e, "closed_at": closed_at, "yes": p_end >= 0.99}))
+    out.sort(key=lambda x: -x[0])
+
+    picks, per_cat = [], {}
+    for vol, c in out:
+        if len(picks) >= n:
+            break
+        if per_cat.get(c["cat"], 0) >= 3 or any(similar(c["e"].get("title", ""), x["e"].get("title", "")) for x in picks):
+            continue
+        m = c["m"]
+        start = _ts(m.get("gameStartTime"))
+        # 경기는 시작 직전, 그 밖(지표 발표·가격 등)은 마감 하루 전 — 결과를 모를 때의 기대치.
+        when = start - datetime.timedelta(minutes=5) if start and start < c["closed_at"] else c["closed_at"] - datetime.timedelta(hours=24)
+        try:
+            token = _jl(m.get("clobTokenIds"), [])[0]
+            p = price_before(token, when)
+        except Exception as ex:
+            print(f"  가격 이력 실패 {m['id']}: {ex}")
+            continue
+        if p is None or not (0.05 <= p <= 0.95):
+            continue                # 결과가 뻔했던 것은 보여 줄 가치가 적다
+        c.update(final=round(p * 1000) / 10)
+        picks.append(c)
+        per_cat[c["cat"]] = per_cat.get(c["cat"], 0) + 1
+    return picks
+
+
 TRANSLATE_PROMPT = """아래는 해외 예측시장의 예/아니오 질문들이다. 한국 독자용 질문으로 옮겨라.
 규칙:
 - 자연스러운 한국어 의문문 한 문장, 물음표로 끝낸다. 60자 이내.
@@ -173,6 +277,8 @@ TRANSLATE_PROMPT = """아래는 해외 예측시장의 예/아니오 질문들�
 - 인물·팀·국가는 한국 언론에서 쓰는 표기로 쓴다 (Trump→트럼프, Fed→연준).
 - 베팅·돈을 거는 표현은 쓰지 않는다. 질문 내용만 옮긴다.
 - 원문에 없는 내용을 더하지 않는다.
+- "Will A beat B? (경기명)" 꼴은 "A가 B를 이길까?"로 옮기고, 대회명이 있으면 앞에 붙인다
+  (예: "롤드컵 플레이인: T1이 G2를 이길까?"). BO5 같은 표기는 빼도 된다.
 입력(JSON 목록): 각 항목의 en(질문), group(선택지 이름), eventTitle(사건 제목)을 참고한다.
 출력: {"items": [{"id": "...", "q": "한국어 질문"}]} — 입력의 모든 id에 대해."""
 
@@ -232,6 +338,7 @@ def refresh_live(markets, now):
 
 def main():
     dry = "--dry" in sys.argv
+    backfill = int(sys.argv[sys.argv.index("--backfill") + 1]) if "--backfill" in sys.argv else 0
     limit = int(sys.argv[sys.argv.index("--max") + 1]) if "--max" in sys.argv else ADD_PER_RUN
     now = datetime.datetime.now(datetime.timezone.utc)
     data = load()
@@ -281,6 +388,31 @@ def main():
     elif dry:
         for c in picks:
             print(f"  후보 [{c['cat']}] {c['en']}  ({c['last']}%, ~{c['endDate'][:10]})")
+
+    if backfill:
+        done = recent_resolved(now, backfill, {m["id"] for m in markets})
+        for c in done:
+            print(f"  최근 결과 후보 [{c['cat']}] {c['en']} → {'예' if c['yes'] else '아니오'} (마감 전 {c['final']}%)")
+        if done and not dry:
+            items = [{"id": str(c["m"]["id"]), "en": c["en"], "group": c["m"].get("groupItemTitle") or "",
+                      "eventTitle": c["e"].get("title", "")} for c in done]
+            try:
+                with open(os.path.join(HERE, "config.json"), encoding="utf-8") as f:
+                    ko = translate(json.load(f), items)
+            except Exception as ex:
+                print(f"  번역 실패: {str(ex)[:300]}")
+                ko = {}
+            for c in done:
+                mid = str(c["m"]["id"])
+                if mid not in ko:
+                    continue
+                markets.append({
+                    "id": mid, "q": ko[mid], "en": c["en"], "cat": c["cat"], "event": c["e"].get("slug", ""),
+                    "eventTitle": c["e"].get("title", ""), "endDate": (c["m"].get("endDate") or "")[:19] + "Z",
+                    "last": c["final"], "addedAt": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "status": "resolved",
+                    "outcome": "yes" if c["yes"] else "no", "final": c["final"], "backfill": True,
+                    "resolvedAt": c["closed_at"].strftime("%Y-%m-%dT%H:%M:%SZ"),
+                })
 
     # 결과 난 것은 최근 것만 남긴다.
     resolved = sorted((m for m in markets if m.get("status") == "resolved"),
