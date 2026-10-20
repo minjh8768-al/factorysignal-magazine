@@ -132,7 +132,7 @@ SUBJECTS = (
     ("FOMC", "Marriner S. Eccles Federal Reserve Board Building"),
     ("한국은행", "Bank of Korea"), ("가자", "Gaza Strip"), ("레바논", "Beirut"),
     ("요르단", "Petra Jordan"), ("엔비디아", "Nvidia"), ("삼성", "Samsung Electronics"),
-    ("비바테크", "VivaTech"),
+    ("비바테크", VIDEO),               # 커먼즈 사진이 다른 나라(튀니지) 대표단 사진이었다
 )
 
 
