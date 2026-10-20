@@ -1574,3 +1574,10 @@ footer {
 .odds-actions button:disabled { opacity: 0.5; cursor: default; }
 .odds-mine { font-size: 0.82rem; color: var(--accent); font-weight: 700; }
 .odds-note { margin-top: 12px; font-size: 0.75rem; color: var(--gray-400); line-height: 1.5; word-break: keep-all; }
+/* .odds-bar의 display:grid가 hidden 속성을 이겨서 투표 전 '독자' 줄이 보이던 문제 */
+.odds-bar[hidden] { display: none; }
+.today-grid { align-items: start; }
+.odds-card { padding: 12px 14px; }
+.odds-q { margin-bottom: 6px; }
+.odds-actions { margin-top: 8px; }
+.odds-actions button { padding: 6px 0; font-size: 0.85rem; }
