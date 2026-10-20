@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>관리자 — Factory Magazine</title>
+<!-- 관리자 페이지 (2026-10-20). 현황 · 승인 대기 초안 수정/발행/보류 · 구독자.
+     API: api/admin.js (헤더 x-admin-key = MAGAZINE_ADMIN_SECRET). main.js를 싣지 않는다 —
+     관리자 방문이 방문 통계에 섞이지 않게. -->
+<style>
+  :root { --ink:#111; --ink2:#555; --ink3:#999; --line:#e5e5e5; --bg:#f7f7f7; --accent:#1f8ce6; --accent-dim:#eaf1fe; --red:#e03040; --green:#0ea968; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; color: var(--ink); background: var(--bg); }
+  button, input, textarea { font: inherit; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  header h1 { font-size: 1.2rem; } header h1 span { color: var(--accent); }
+  .tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+  .tabs button { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-weight: 600; }
+  .tabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .tabs .count { margin-left: 4px; background: var(--red); color: #fff; border-radius: 999px; padding: 0 7px; font-size: .75rem; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+  .card h2 { font-size: 1rem; margin-bottom: 14px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .tile { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+  .tile .label { font-size: .8rem; color: var(--ink2); }
+  .tile .value { font-size: 1.9rem; font-weight: 800; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+  .tile .sub { font-size: .78rem; color: var(--ink3); }
+  /* 14일 방문자 막대 — 한 계열이라 범례 없이 제목이 이름을 대신한다. 막대 위 끝만 둥글게, 막대 사이 2px. */
+  .chart { position: relative; display: flex; align-items: flex-end; gap: 2px; height: 180px; padding-top: 10px; border-bottom: 1px solid var(--line); }
+  .bar { flex: 1; position: relative; height: 100%; display: flex; align-items: flex-end; cursor: default; }
+  .bar span { display: block; width: 100%; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 2px; }
+  .bar:hover span { filter: brightness(0.9); }
+  .xlabels { display: flex; gap: 2px; font-size: .7rem; color: var(--ink3); margin-top: 6px; }
+  .xlabels div { flex: 1; text-align: center; }
+  .tip { position: absolute; pointer-events: none; background: var(--ink); color: #fff; font-size: .78rem; padding: 6px 9px; border-radius: 6px; white-space: nowrap; transform: translate(-50%, -110%); display: none; z-index: 2; }
+  details { margin-top: 10px; font-size: .82rem; color: var(--ink2); }
+  table { border-collapse: collapse; width: 100%; font-size: .85rem; margin-top: 8px; }
+  td, th { border-bottom: 1px solid var(--line); padding: 7px 4px; text-align: left; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .two { display: grid; grid-template-columns: 1fr; gap: 16px; } @media (min-width: 860px) { .two { grid-template-columns: 1fr 1fr; } }
+  .top li { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: .88rem; list-style: none; }
+  .top a { color: var(--ink); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .muted { color: var(--ink3); font-size: .85rem; }
+  .draft { display: grid; grid-template-columns: 120px 1fr auto; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .draft img { width: 120px; height: 72px; object-fit: cover; border-radius: 8px; background: var(--line); }
+  .draft .t { font-weight: 700; line-height: 1.4; } .draft .m { font-size: .8rem; color: var(--ink2); margin-top: 4px; }
+  .btn { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-weight: 700; font-size: .88rem; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.danger { color: var(--red); border-color: #f3c3c9; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .editor label { display: block; font-size: .8rem; font-weight: 700; color: var(--ink2); margin: 14px 0 6px; }
+  .editor input, .editor textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+  .editor .body { min-height: 320px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 8px; background: #fff; line-height: 1.75; outline: none; }
+  .editor .body:focus, .editor input:focus, .editor textarea:focus { border-color: var(--accent); }
+  .editor .body h2 { font-size: 1.05rem; margin: 18px 0 8px; } .editor .body p { margin-bottom: 12px; }
+  .editor .body blockquote { border-left: 3px solid var(--accent); padding-left: 12px; color: var(--ink2); margin: 12px 0; }
+  .editor .body ul { padding-left: 20px; margin-bottom: 12px; }
+  .editor .photo { display: flex; gap: 14px; align-items: center; } .editor .photo img { width: 200px; height: 112px; object-fit: cover; border-radius: 8px; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; position: sticky; bottom: 0; background: var(--bg); padding: 12px 0; }
+  .hint { font-size: .78rem; color: var(--ink3); margin-top: 4px; }
+  .msg { margin-left: auto; align-self: center; font-size: .85rem; font-weight: 700; }
+  .msg.ok { color: var(--green); } .msg.err { color: var(--red); }
+  .login { max-width: 360px; margin: 18vh auto; } .login input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 10px; margin: 12px 0; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+const API = (location.pathname.startsWith("/blog/") ? "/blog" : "") + "/api/admin";
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+let KEY = localStorage.getItem("fm-admin-key") || "";
+let tab = "stats";
+let draftCount = 0;
+
+async function api(params, body) {
+  const r = await fetch(body ? API : `${API}?${new URLSearchParams(params)}`, {
+    method: body ? "POST" : "GET",
+    headers: { "x-admin-key": KEY, ...(body ? { "Content-Type": "application/json" } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await r.json().catch(() => ({}));
+  if (r.status === 401) { localStorage.removeItem("fm-admin-key"); KEY = ""; renderLogin("비밀번호가 맞지 않습니다."); throw new Error("401"); }
+  if (!r.ok) throw new Error(data.error || `오류 ${r.status}`);
+  return data;
+}
+
+function renderLogin(msg = "") {
+  $("#app").innerHTML = `<div class="login card"><h2>Factory Magazine 관리자</h2>
+    <input type="password" id="pw" placeholder="관리자 비밀번호" autofocus>
+    <button class="btn primary" id="go" style="width:100%">들어가기</button>
+    <p class="muted" style="margin-top:10px;color:var(--red)">${esc(msg)}</p></div>`;
+  const go = () => { KEY = $("#pw").value.trim(); localStorage.setItem("fm-admin-key", KEY); render(); };
+  $("#go").onclick = go; $("#pw").onkeydown = (e) => e.key === "Enter" && go();
+}
+
+function shell(content) {
+  $("#app").innerHTML = `<header><h1>Factory <span>Magazine</span> 관리자</h1>
+      <div><a class="btn" href="/articles/index.html" target="_blank">사이트 보기</a>
+      <button class="btn" id="logout">나가기</button></div></header>
+    <div class="tabs">
+      <button data-t="stats" class="${tab === "stats" ? "on" : ""}">현황</button>
+      <button data-t="drafts" class="${tab === "drafts" || tab === "edit" ? "on" : ""}">승인 대기${draftCount ? `<span class="count">${draftCount}</span>` : ""}</button>
+      <button data-t="subs" class="${tab === "subs" ? "on" : ""}">구독자</button>
+    </div><div id="view">${content}</div>`;
+  $("#logout").onclick = () => { localStorage.removeItem("fm-admin-key"); KEY = ""; renderLogin(); };
+  document.querySelectorAll(".tabs button").forEach((b) => (b.onclick = () => { tab = b.dataset.t; render(); }));
+}
+
+async function render() {
+  if (!KEY) return renderLogin();
+  shell('<p class="muted">불러오는 중…</p>');
+  try {
+    const d = await api({ view: "drafts" }); draftCount = d.drafts.length;
+    if (tab === "stats") return renderStats();
+    if (tab === "drafts") return renderDrafts(d.drafts);
+    if (tab === "subs") return renderSubs();
+  } catch (e) { if (e.message !== "401") $("#view").innerHTML = `<p class="muted">${esc(e.message)}</p>`; }
+}
+
+async function renderStats() {
+  const s = await api({ view: "stats" });
+  shell("");
+  const i = s.days.length - 1;
+  const max = Math.max(1, ...s.uv);
+  const md = (d) => d.slice(5).replace("-", ".");
+  const bars = s.days.map((d, k) => `<div class="bar" data-k="${k}" aria-label="${md(d)} 방문자 ${s.uv[k]}명, 조회 ${s.pv[k]}회"><span style="height:${(s.uv[k] / max) * 100}%"></span></div>`).join("");
+  const top = (list) => list.length ? `<ol class="top">${list.map((t) => `<li><a href="/articles/${esc(t.slug)}.html" target="_blank">${esc(t.slug)}</a><b>${t.views}</b></li>`).join("")}</ol>` : '<p class="muted">아직 기록이 없어요.</p>';
+  $("#view").innerHTML = `
+    <div class="tiles">
+      <div class="tile"><div class="label">오늘 방문자</div><div class="value">${s.uv[i].toLocaleString()}</div><div class="sub">어제 ${s.uv[i - 1].toLocaleString()}명</div></div>
+      <div class="tile"><div class="label">오늘 페이지 조회</div><div class="value">${s.pv[i].toLocaleString()}</div><div class="sub">어제 ${s.pv[i - 1].toLocaleString()}회</div></div>
+      <div class="tile"><div class="label">뉴스레터 구독자</div><div class="value">${s.subscribers.toLocaleString()}</div><div class="sub">오늘 +${s.newSubsToday} · 최근 7일 +${s.newSubsWeek}</div></div>
+      <div class="tile"><div class="label">독자 투표 참여</div><div class="value">${s.votes.toLocaleString()}</div><div class="sub">투표 ${s.polls}개 누적</div></div>
+    </div>
+    <div class="card"><h2>최근 14일 방문자</h2>
+      <div class="chart" id="chart">${bars}<div class="tip" id="tip"></div></div>
+      <div class="xlabels">${s.days.map((d, k) => `<div>${k % 2 === 1 ? md(d) : ""}</div>`).join("")}</div>
+      <details><summary>표로 보기</summary><table><tr><th>날짜</th><th class="num">방문자</th><th class="num">조회</th></tr>
+        ${s.days.map((d, k) => `<tr><td>${d}</td><td class="num">${s.uv[k]}</td><td class="num">${s.pv[k]}</td></tr>`).reverse().join("")}</table></details>
+      <p class="hint">방문 통계는 2026년 10월 20일부터 집계합니다. 관리자 페이지 방문과 검색 로봇은 세지 않아요.</p>
+    </div>
+    <div class="two"><div class="card"><h2>오늘 많이 본 기사</h2>${top(s.topToday)}</div>
+      <div class="card"><h2>어제 많이 본 기사</h2>${top(s.topYesterday)}</div></div>`;
+  const chart = $("#chart"), tip = $("#tip");
+  chart.querySelectorAll(".bar").forEach((b) => {
+    b.onmouseenter = () => { const k = +b.dataset.k; tip.innerHTML = `<b>${md(s.days[k])}</b> 방문자 ${s.uv[k]}명 · 조회 ${s.pv[k]}회`;
+      tip.style.left = `${b.offsetLeft + b.offsetWidth / 2}px`; tip.style.top = `${b.offsetTop + b.offsetHeight - b.firstChild.offsetHeight}px`; tip.style.display = "block"; };
+    b.onmouseleave = () => (tip.style.display = "none");
+  });
+}
+
+function renderDrafts(list) {
+  if (!list.length) return ($("#view").innerHTML = `<div class="card"><p class="muted">승인 대기 중인 초안이 없어요. 매일 낮 자동 작성이 끝나면 여기에 들어옵니다.</p></div>`);
+  $("#view").innerHTML = `<div class="card"><h2>승인 대기 ${list.length}편</h2>${list.map((d) => `
+    <div class="draft"><img src="${esc(d.photo || "")}" alt="" onerror="this.style.visibility='hidden'">
+      <div><div class="t">${esc(d.title)}</div><div class="m">${esc(d.category)} · ${esc(d.date)}${d.poll ? ` · 투표: ${esc(d.poll)}` : ""}</div></div>
+      <button class="btn primary" data-s="${esc(d.slug)}">검토하기</button></div>`).join("")}</div>`;
+  document.querySelectorAll("[data-s]").forEach((b) => (b.onclick = () => renderEdit(b.dataset.s)));
+}
+
+async function renderEdit(slug) {
+  tab = "edit";
+  shell('<p class="muted">불러오는 중…</p>');
+  const d = await api({ view: "draft", slug });
+  $("#view").innerHTML = `<div class="card editor">
+      <p class="muted">${esc(d.category)} · ${esc(d.eyebrow)} · ${esc(d.date)} ${d.video ? `· <a href="https://www.youtube.com/watch?v=${esc(d.video)}" target="_blank">원본 영상 보기</a>` : ""}</p>
+      <label>카드 사진</label>
+      <div class="photo"><img src="${esc(d.photo)}" alt="" onerror="this.style.visibility='hidden'"><div class="hint">${esc(d.photoBy || "")} ${d.photoLicense ? "· " + esc(d.photoLicense) : ""}<br>사진이 기사와 맞는지 확인하세요. 안 맞으면 보류하고 알려 주세요.</div></div>
+      <label>제목</label><input id="f-title" value="${esc(d.title)}">
+      <label>요약 (검색 결과·카드에 보이는 한 문장)</label><textarea id="f-desc" rows="2">${esc(d.description)}</textarea>
+      <label>독자 투표 질문 (물음표로 끝나야 표시돼요. 비우면 투표 없음)</label><input id="f-poll" value="${esc(d.poll)}">
+      <label>본문 — 글자를 눌러 바로 고치세요</label>
+      <div class="body" id="f-body" contenteditable="true">${d.body}</div>
+      <p class="hint">이름·직함·숫자가 맞는지, 특정 쪽을 편드는 표현이 없는지 확인해 주세요.</p>
+      <div class="actions">
+        <button class="btn" id="back">← 목록</button>
+        <button class="btn" id="save">수정 저장</button>
+        <button class="btn danger" id="skip">보류 (버리기)</button>
+        <button class="btn primary" id="pub">저장하고 발행</button>
+        <span class="msg" id="msg"></span>
+      </div></div>`;
+  const msg = (t, ok) => { const m = $("#msg"); m.textContent = t; m.className = "msg " + (ok ? "ok" : "err"); };
+  const buttons = () => document.querySelectorAll(".actions .btn");
+  const busy = (on) => buttons().forEach((b) => (b.disabled = on));
+  const save = () => api(null, { action: "save", slug, title: $("#f-title").value, description: $("#f-desc").value, poll: $("#f-poll").value, body: $("#f-body").innerHTML });
+  $("#back").onclick = () => { tab = "drafts"; render(); };
+  $("#save").onclick = async () => { busy(true); try { await save(); msg("저장했어요", true); } catch (e) { msg(e.message); } busy(false); };
+  $("#skip").onclick = async () => {
+    if (!confirm("이 초안을 보류할까요? 발행되지 않고 지워집니다.")) return;
+    busy(true); try { await api(null, { action: "skip", slug }); tab = "drafts"; render(); } catch (e) { msg(e.message); busy(false); }
+  };
+  $("#pub").onclick = async () => {
+    if (!confirm("저장하고 발행할까요? 1~3분 뒤 사이트에 올라갑니다.")) return;
+    busy(true);
+    try { await save(); await api(null, { action: "publish", slug }); msg("발행을 시작했어요. 1~3분 뒤 사이트에 올라갑니다.", true);
+      setTimeout(() => { tab = "drafts"; render(); }, 2500);
+    } catch (e) { msg(e.message); busy(false); }
+  };
+}
+
+async function renderSubs() {
+  const s = await api({ view: "stats" });
+  shell("");
+  $("#view").innerHTML = `<div class="tiles">
+      <div class="tile"><div class="label">전체 구독자</div><div class="value">${s.subscribers.toLocaleString()}</div></div>
+      <div class="tile"><div class="label">오늘 신규</div><div class="value">${s.newSubsToday}</div></div>
+      <div class="tile"><div class="label">최근 7일 신규</div><div class="value">${s.newSubsWeek}</div></div></div>
+    <div class="card"><h2>구독자 명단</h2><p class="muted">뉴스레터 발송 서비스(스티비 등)로 옮길 때 내려받으세요. 개인정보이니 다른 곳에 공유하지 마세요.</p>
+      <button class="btn primary" id="csv" style="margin-top:12px">CSV 내려받기</button></div>`;
+  $("#csv").onclick = async () => {
+    const r = await fetch(API.replace("admin", "subscribe") + "?format=csv", { headers: { "x-admin-secret": KEY } });
+    if (!r.ok) return alert("내려받기 실패");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(await r.blob());
+    a.download = `subscribers-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+  };
+}
+
+render();
+</script>
+</body>
+</html>

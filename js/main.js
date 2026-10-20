@@ -15,6 +15,11 @@ function apiUrl(name) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  // 관리자 페이지 '현황'용 방문 집계 (api/track.js). 개인을 알아볼 수 없게 센다.
+  try {
+    navigator.sendBeacon(apiUrl("track"), new Blob([JSON.stringify({ path: location.pathname })], { type: "text/plain" }));
+  } catch (e) { /* 통계가 실패해도 페이지는 그대로 */ }
+
   document.querySelectorAll("form.subscribe-form").forEach(wireSubscribeForm);
   // 전체 기사(all.html?cat=경제): 첫 화면 분야 링크로 들어오면 그 분야 필터를 켠 채로 연다.
   const catParam = new URLSearchParams(location.search).get("cat");

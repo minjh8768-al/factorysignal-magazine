@@ -2,7 +2,7 @@
 """초안 승인 후 발행 (2026-10-20, 사용자 결정 'B: AI가 쓰고, 사람이 승인하고, 발행').
 
     py -3 review.py --send              _drafts/ 의 초안을 비공개 저장소(Upstash)에 넣고
-                                        관리자 텔레그램으로 [발행]/[보류] 버튼과 함께 보낸다
+                                        관리자 페이지(/admin.html) 승인 대기로 올린다
     py -3 review.py --publish <slug>    저장소의 초안을 꺼내 발행한다 (승인 버튼 → GitHub 워크플로)
 
 왜 저장소(Upstash)에 두나
@@ -89,12 +89,17 @@ def review_message(text, slug):
     return msg[:3900] + ("…" if len(msg) > 3900 else "")
 
 
+ADMIN_URL = "https://factorysignal-magazine.vercel.app/admin.html"
+
+
 def send(cfg):
+    """초안을 관리자 페이지(/admin.html '승인 대기')에 올린다. 텔레그램 설정이 있으면 도착 알림만 보낸다.
+    (2026-10-20: 텔레그램 버튼 방식 대신 관리자 페이지에서 수정·발행·보류)"""
     files = sorted(glob.glob(os.path.join(DRAFTS, "*.html")))
     if not files:
-        print("승인 보낼 초안이 없습니다.")
+        print("승인 대기로 올릴 초안이 없습니다.")
         return 0
-    sent = 0
+    titles = []
     for path in files:
         m = DATE_PREFIX.match(os.path.basename(path))
         if not m:
@@ -103,18 +108,16 @@ def send(cfg):
         with open(path, encoding="utf-8") as f:
             text = f.read()
         redis(cfg, [["SET", f"draft:{slug}", json.dumps({"date": date, "html": text}), "EX", DRAFT_TTL]])
-        keyboard = {"inline_keyboard": [[{"text": "✅ 발행", "callback_data": f"pub:{slug}"},
-                                         {"text": "⏸ 보류", "callback_data": f"skip:{slug}"}]]}
-        photo = _meta(text, "fs:photo")
-        if photo:   # 사진이 기사와 맞는지 같이 보도록 먼저 보낸다 (실패해도 계속)
-            try:
-                telegram(cfg, "sendPhoto", chat_id=cfg["telegram_admin_chat_id"], photo=photo)
-            except Exception:
-                pass
-        telegram(cfg, "sendMessage", chat_id=cfg["telegram_admin_chat_id"], text=review_message(text, slug),
-                 parse_mode="HTML", disable_web_page_preview=True, reply_markup=keyboard)
-        sent += 1
-    print(f"승인 요청 {sent}편 보냄")
+        t = re.search(r"<title>(.*?)</title>", text, re.S)
+        titles.append(html.unescape(t.group(1)).split(" — ")[0] if t else slug)
+    print(f"승인 대기 {len(titles)}편 올림")
+    if cfg.get("telegram_bot_token") and cfg.get("telegram_admin_chat_id") and titles:
+        try:
+            telegram(cfg, "sendMessage", chat_id=cfg["telegram_admin_chat_id"], disable_web_page_preview=True,
+                     text=f"📝 오늘 초안 {len(titles)}편이 승인을 기다려요\n\n"
+                          + "\n".join(f"• {t}" for t in titles) + f"\n\n{ADMIN_URL}")
+        except Exception:
+            pass
     return 0
 
 
@@ -130,11 +133,12 @@ def publish_one(cfg, slug):
         f.write(d["html"])
     publish.do_publish([slug], True, translate_too=True)
     redis(cfg, [["DEL", f"draft:{slug}"]])
-    try:
-        telegram(cfg, "sendMessage", chat_id=cfg["telegram_admin_chat_id"],
-                 text=f"✅ 발행 완료\n{SITE}{slug}.html\n(사이트 반영까지 1~2분)")
-    except Exception:
-        pass
+    if cfg.get("telegram_bot_token") and cfg.get("telegram_admin_chat_id"):
+        try:
+            telegram(cfg, "sendMessage", chat_id=cfg["telegram_admin_chat_id"],
+                     text=f"✅ 발행 완료\n{SITE}{slug}.html\n(사이트 반영까지 1~2분)")
+        except Exception:
+            pass
     return 0
 
 
@@ -144,10 +148,10 @@ def main(argv):
     except Exception:
         pass
     cfg = load_config()
-    need = ("telegram_bot_token", "telegram_admin_chat_id", "kv_rest_api_url", "kv_rest_api_token")
+    need = ("kv_rest_api_url", "kv_rest_api_token")      # 텔레그램은 선택 (도착 알림만)
     missing = [k for k in need if not cfg.get(k)]
     if missing:
-        print(f"승인 기능 설정이 없습니다: {missing} — 초안은 _drafts/ 와 실행 기록(artifact)에만 남습니다.")
+        print(f"승인 대기 저장소 설정이 없습니다: {missing} — 초안은 실행 기록(artifact)에만 남습니다.")
         return 0
     if "--send" in argv:
         return send(cfg)
