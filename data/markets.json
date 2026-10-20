@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-20T20:00:05Z",
+ "updatedAt": "2026-10-20T23:10:53Z",
  "markets": [
   {
    "id": "2589813",
@@ -13,24 +13,13 @@
    "status": "live"
   },
   {
-   "id": "5409680",
-   "q": "FC 바르셀로나가 2026년 10월 20일 경기에서 승리할까?",
-   "en": "Will FC Barcelona win on 2026-10-20?",
-   "cat": "스포츠",
-   "event": "ucl-psg-fcb-2026-10-20",
-   "endDate": "2026-10-20T19:00:00Z",
-   "last": 19.5,
-   "addedAt": "2026-10-20T07:22:48Z",
-   "status": "live"
-  },
-  {
    "id": "5686979",
    "q": "미국과 이란의 휴전이 10월 22일까지 유지될까?",
    "en": "US x Iran ceasefire continues through October 22?",
    "cat": "정치·세계",
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 94.6,
+   "last": 94.8,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -52,18 +41,7 @@
    "cat": "정치·세계",
    "event": "who-will-be-the-next-prime-minister-of-israel-after-the-next-election",
    "endDate": "2026-10-28T03:59:00Z",
-   "last": 26.5,
-   "addedAt": "2026-10-20T07:22:48Z",
-   "status": "live"
-  },
-  {
-   "id": "5409532",
-   "q": "SSC 나폴리가 2026년 10월 20일 경기에서 승리할까?",
-   "en": "Will SSC Napoli win on 2026-10-20?",
-   "cat": "스포츠",
-   "event": "ucl-nap-bog-2026-10-20",
-   "endDate": "2026-10-20T19:00:00Z",
-   "last": 80.5,
+   "last": 27.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -74,7 +52,7 @@
    "cat": "코인",
    "event": "what-price-will-bitcoin-hit-in-october-2026",
    "endDate": "2026-11-01T04:00:00Z",
-   "last": 30.5,
+   "last": 35.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -85,7 +63,7 @@
    "cat": "테크·문화",
    "event": "of-views-of-grand-theft-auto-vi-launch-trailer-on-week-1",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 11.0,
+   "last": 15.0,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -111,6 +89,34 @@
    "last": 91.5,
    "addedAt": "2026-10-20T20:00:05Z",
    "status": "live"
+  },
+  {
+   "id": "5409680",
+   "q": "FC 바르셀로나가 2026년 10월 20일 경기에서 승리할까?",
+   "en": "Will FC Barcelona win on 2026-10-20?",
+   "cat": "스포츠",
+   "event": "ucl-psg-fcb-2026-10-20",
+   "endDate": "2026-10-20T19:00:00Z",
+   "last": 19.5,
+   "addedAt": "2026-10-20T07:22:48Z",
+   "status": "resolved",
+   "outcome": "no",
+   "final": 19.5,
+   "resolvedAt": "2026-10-20T23:10:53Z"
+  },
+  {
+   "id": "5409532",
+   "q": "SSC 나폴리가 2026년 10월 20일 경기에서 승리할까?",
+   "en": "Will SSC Napoli win on 2026-10-20?",
+   "cat": "스포츠",
+   "event": "ucl-nap-bog-2026-10-20",
+   "endDate": "2026-10-20T19:00:00Z",
+   "last": 80.5,
+   "addedAt": "2026-10-20T07:22:48Z",
+   "status": "resolved",
+   "outcome": "yes",
+   "final": 80.5,
+   "resolvedAt": "2026-10-20T23:10:53Z"
   },
   {
    "id": "5311940",
