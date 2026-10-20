@@ -330,6 +330,50 @@ def card_html(meta):
     )
 
 
+TODAY_START = "<!-- TODAY:START -->"
+TODAY_END = "<!-- TODAY:END -->"
+_TODAY_FIRST = ("경제", "암호화폐")
+
+
+def pick_today(rows, n=3):
+    """첫 화면 '오늘의 핵심 3'. rows는 최신순. 가장 최근 발행일의 기사 중 경제·암호화폐를
+    먼저, 그날 기사가 모자라면 그 전날 것으로 채운다."""
+    if not rows:
+        return []
+    latest = rows[0]["date"]
+    same_day = [r for r in rows if r["date"] == latest]
+    same_day.sort(key=lambda r: 0 if r["category"] in _TODAY_FIRST else 1)
+    picked = same_day[:n]
+    for r in rows:
+        if len(picked) >= n:
+            break
+        if r not in picked:
+            picked.append(r)
+    return picked
+
+
+def today_html(items):
+    """'오늘의 핵심 3' 목록 마크업. item: slug, category, title, line(한 줄 요약)."""
+    esc = lambda v: html.escape(str(v), quote=True)
+    lis = []
+    for i, it in enumerate(items, 1):
+        lis.append(
+            f'          <li class="today-item" data-category="{esc(it["category"])}">'
+            f'<span class="today-num">{i}</span>'
+            f'<a href="{esc(it["slug"])}.html"><strong>{esc(it["title"])}</strong>'
+            f'<span>{esc(it["line"])}</span></a></li>'
+        )
+    return "\n        <ol class=\"today-list\">\n" + "\n".join(lis) + "\n        </ol>\n        "
+
+
+def replace_between(text, start_marker, end_marker, inner):
+    start = text.find(start_marker)
+    end = text.find(end_marker)
+    if start == -1 or end == -1 or end < start:
+        raise ValueError(f"{start_marker} / {end_marker} 마커가 없습니다.")
+    return text[:start + len(start_marker)] + inner + text[end:]
+
+
 def replace_cards(index_html, cards):
     """마커 사이를 새 카드 목록으로 통째로 교체한다. 마커 밖은 건드리지 않는다."""
     start = index_html.find(CARDS_START)

@@ -1,0 +1,7 @@
+[
+  { "key": "fed-oct-hike", "marketId": "2589813", "question": "연준이 10월 회의에서 금리를 올릴까?", "category": "경제" },
+  { "key": "btc-100k-2026", "marketId": "701496", "question": "비트코인이 올해 안에 10만 달러를 찍을까?", "category": "암호화폐" },
+  { "key": "btc-below-70k-2026", "marketId": "3865960", "question": "비트코인이 올해 안에 7만 달러 아래로 떨어질까?", "category": "암호화폐" },
+  { "key": "dem-senate-2026", "marketId": "562793", "question": "민주당이 이번 중간선거에서 상원 다수당이 될까?", "category": "세계" },
+  { "key": "us-iran-ceasefire-oct31", "marketId": "4641065", "question": "미국-이란 휴전이 10월 31일까지 이어질까?", "category": "세계" }
+]

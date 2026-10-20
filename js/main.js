@@ -16,6 +16,8 @@ function apiUrl(name) {
 
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("form.subscribe-form").forEach(wireSubscribeForm);
+  const oddsList = document.getElementById("odds-list");
+  if (oddsList) mountOdds(oddsList);
 
   const nav = document.querySelector(".nav");
   const toggle = document.querySelector(".nav-toggle");
@@ -97,6 +99,77 @@ document.addEventListener("DOMContentLoaded", () => {
     articleBody.append(notice);
   }
 });
+
+// ── 첫 화면 '오늘의 확률 & 예측' ─────────────────────────────────────
+// 시장 확률은 api/odds.js(미국 리전에서 Polymarket 조회), 독자 예측은 api/vote.js에
+// 'odds-<key>' 슬러그로 저장한다. 독자 비율은 참여한 뒤에만 보여 준다(먼저 보면 따라가게 돼서).
+async function mountOdds(list) {
+  const pct = (n) => `${Math.round(n)}%`;
+  let items;
+  try {
+    const r = await fetch(apiUrl("odds"));
+    items = (await r.json()).items || [];
+  } catch (e) {
+    items = [];
+  }
+  if (!items.length) {
+    list.innerHTML = '<p class="odds-empty">지금은 확률을 불러올 수 없어요. 잠시 후 다시 확인해 주세요.</p>';
+    return;
+  }
+  let readers = {};
+  try {
+    const slugs = items.map((it) => `odds-${it.key}`).join(",");
+    readers = await (await fetch(`${apiUrl("vote")}?slugs=${encodeURIComponent(slugs)}`)).json();
+  } catch (e) { /* 독자 비율 없이도 시장 확률은 보여 준다 */ }
+
+  list.innerHTML = "";
+  items.forEach((it) => {
+    const slug = `odds-${it.key}`;
+    const card = document.createElement("div");
+    card.className = "odds-card";
+    card.dataset.category = it.category;
+    card.innerHTML = `
+      <p class="odds-q"></p>
+      <div class="odds-bars">
+        <div class="odds-bar"><span class="odds-label">시장</span><span class="odds-track"><span style="width:${it.market}%"></span></span><b>${pct(it.market)}</b></div>
+        <div class="odds-bar is-reader" hidden><span class="odds-label">독자</span><span class="odds-track"><span></span></span><b></b></div>
+      </div>
+      <div class="odds-actions"><button type="button" data-choice="yes">예</button><button type="button" data-choice="no">아니오</button></div>`;
+    card.querySelector(".odds-q").textContent = it.question;
+    const readerRow = card.querySelector(".is-reader");
+    const actions = card.querySelector(".odds-actions");
+
+    const showReader = (data, mine) => {
+      const total = (data.yes || 0) + (data.no || 0);
+      const yes = total ? (data.yes / total) * 100 : 0;
+      readerRow.hidden = false;
+      readerRow.querySelector(".odds-track span").style.width = `${yes}%`;
+      readerRow.querySelector("b").textContent = pct(yes);
+      readerRow.querySelector(".odds-label").textContent = `독자 (${total.toLocaleString()}명)`;
+      actions.innerHTML = `<span class="odds-mine">내 예측: ${mine === "yes" ? "예" : "아니오"}</span>`;
+    };
+
+    const mine = localStorage.getItem(`fm-poll:${slug}`);
+    if (mine && readers[slug]) showReader(readers[slug], mine);
+
+    actions.querySelectorAll("button").forEach((b) => b.addEventListener("click", async () => {
+      actions.querySelectorAll("button").forEach((x) => (x.disabled = true));
+      try {
+        const r = await fetch(apiUrl("vote"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slug, choice: b.dataset.choice }),
+        });
+        if (!r.ok) throw new Error();
+        localStorage.setItem(`fm-poll:${slug}`, b.dataset.choice);
+        showReader(await r.json(), b.dataset.choice);
+      } catch (e) {
+        actions.querySelectorAll("button").forEach((x) => (x.disabled = false));
+      }
+    }));
+    list.append(card);
+  });
+}
 
 // ── 뉴스레터 구독 ───────────────────────────────────────────────────
 // 구독 페이지와 기사 하단 박스가 같은 처리기를 쓴다. 저장은 api/subscribe.js.

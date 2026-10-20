@@ -1525,3 +1525,52 @@ footer {
 .policy-page table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.88rem; }
 .policy-page th, .policy-page td { border: 1px solid var(--gray-200); padding: 10px; text-align: left; vertical-align: top; word-break: keep-all; }
 .policy-page th { background: var(--gray-100); }
+
+/* ---------- 첫 화면: 오늘의 핵심 3 · 오늘의 확률 & 예측 ---------- */
+.today-section { padding: 0 0 56px; }
+.today-grid { display: grid; grid-template-columns: 1fr; gap: 28px; }
+@media (min-width: 900px) { .today-grid { grid-template-columns: 1fr 1fr; } }
+.today-col {
+  border: 1px solid var(--gray-200);
+  border-radius: 16px;
+  padding: 24px;
+  background: var(--white);
+}
+.today-title { font-size: 1.15rem; margin-bottom: 16px; }
+.today-list { list-style: none; padding: 0; margin: 0; }
+.today-item { display: flex; gap: 14px; padding: 14px 0; border-top: 1px solid var(--gray-200); }
+.today-item:first-child { border-top: none; padding-top: 0; }
+.today-num {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--black); color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.85rem;
+}
+.today-item a { display: block; min-width: 0; }
+.today-item strong { display: block; font-size: 1rem; line-height: 1.45; margin-bottom: 4px; word-break: keep-all; }
+.today-item a:hover strong { color: var(--accent); }
+.today-item span:not(.today-num) {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  font-size: 0.86rem; color: var(--gray-600); line-height: 1.55; word-break: keep-all;
+}
+
+.odds-list { display: flex; flex-direction: column; gap: 12px; }
+.odds-empty { color: var(--gray-400); font-size: 0.9rem; }
+.odds-card { padding: 14px 16px; border-radius: 12px; background: var(--gray-100); }
+.odds-q { font-weight: 700; font-size: 0.95rem; line-height: 1.45; margin-bottom: 10px; word-break: keep-all; }
+.odds-bar { display: grid; grid-template-columns: 5.5em 1fr 3em; gap: 8px; align-items: center; font-size: 0.82rem; margin: 4px 0; }
+.odds-label { color: var(--gray-600); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.odds-track { height: 8px; border-radius: 999px; background: var(--white); overflow: hidden; }
+.odds-track span { display: block; height: 100%; background: var(--gray-400); }
+.odds-bar.is-reader .odds-track span { background: var(--accent); }
+.odds-bar b { text-align: right; }
+.odds-actions { display: flex; gap: 8px; margin-top: 10px; }
+.odds-actions button {
+  flex: 1; padding: 8px 0; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--accent); background: var(--white); color: var(--accent);
+  font-weight: 700; font-size: 0.9rem;
+}
+.odds-actions button:hover { background: var(--accent); color: var(--white); }
+.odds-actions button:disabled { opacity: 0.5; cursor: default; }
+.odds-mine { font-size: 0.82rem; color: var(--accent); font-weight: 700; }
+.odds-note { margin-top: 12px; font-size: 0.75rem; color: var(--gray-400); line-height: 1.5; word-break: keep-all; }

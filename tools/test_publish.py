@@ -294,5 +294,37 @@ class TitleRoundTrip(unittest.TestCase):
             self.assertIn(article.BYLINE, text)
 
 
+class TodayTop3(unittest.TestCase):
+    """첫 화면 '오늘의 핵심 3' 고르기와 요약 줄 뽑기."""
+
+    @staticmethod
+    def _row(slug, date, cat):
+        return {"slug": slug, "date": date, "category": cat, "title": slug, "description": "d"}
+
+    def test_prefers_econ_and_crypto_on_latest_day(self):
+        rows = [self._row("a", "2026-10-20", "정치"), self._row("b", "2026-10-20", "경제"),
+                self._row("c", "2026-10-20", "스포츠"), self._row("d", "2026-10-20", "암호화폐"),
+                self._row("e", "2026-10-19", "경제")]
+        self.assertEqual([r["slug"] for r in article.pick_today(rows)], ["b", "d", "a"])
+
+    def test_fills_from_previous_day_when_short(self):
+        rows = [self._row("a", "2026-10-20", "정치"), self._row("e", "2026-10-19", "경제"),
+                self._row("f", "2026-10-19", "세계")]
+        self.assertEqual([r["slug"] for r in article.pick_today(rows)], ["a", "e", "f"])
+
+    def test_first_summary_only_when_list_leads(self):
+        lead = '<article class="article-content"><ul><li>금리가 <strong>올랐어요</strong>.</li></ul><h2>x</h2>'
+        late = '<article class="article-content"><p>a</p><h2>x</h2><ul><li>목록</li></ul>'
+        self.assertEqual(publish.first_summary(lead), "금리가 올랐어요.")
+        self.assertEqual(publish.first_summary(late), "")
+
+    def test_today_markers_replaced(self):
+        page = "a<!-- TODAY:START -->old<!-- TODAY:END -->b"
+        out = article.replace_between(page, article.TODAY_START, article.TODAY_END,
+                                      article.today_html([dict(slug="s", category="경제", title="T", line="L")]))
+        self.assertIn('href="s.html"', out)
+        self.assertNotIn("old", out)
+
+
 if __name__ == "__main__":
     unittest.main()

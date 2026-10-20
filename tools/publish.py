@@ -96,12 +96,28 @@ def published():
     return rows
 
 
+def first_summary(text):
+    """기사 맨 앞 핵심 요약 첫 줄(<ul> 첫 <li>). 요약 목록이 첫 소제목보다 앞에 있을 때만."""
+    body = text.split('<article class="article-content">', 1)[-1]
+    ul, h2 = body.find("<ul>"), body.find("<h2")
+    if ul == -1 or (h2 != -1 and h2 < ul):
+        return ""
+    m = re.search(r"<li>(.*?)</li>", body[ul:], re.S)
+    return html.unescape(re.sub(r"<[^>]+>", "", m.group(1))).strip() if m else ""
+
+
 def rebuild_index(apply_changes):
     rows = published()
     cards = [article.card_html(m) for m in rows]
     with open(INDEX, encoding="utf-8") as f:
         old = f.read()
     new = article.replace_cards(old, cards)
+    if article.TODAY_START in new:
+        today = [dict(slug=r["slug"], category=r["category"], title=r["title"],
+                      line=first_summary(r["_text"]) or r["description"])
+                 for r in article.pick_today(rows)]
+        new = article.replace_between(new, article.TODAY_START, article.TODAY_END,
+                                      article.today_html(today))
     if apply_changes and new != old:
         with open(INDEX, "w", encoding="utf-8") as f:
             f.write(new)

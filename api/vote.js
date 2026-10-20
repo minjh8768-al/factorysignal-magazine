@@ -44,6 +44,14 @@ module.exports = async (req, res) => {
 
   try {
     if (req.method === 'GET') {
+      // 여러 개를 한 번에: ?slugs=a,b,c → { a: {yes,no}, b: ... } (첫 화면 '오늘의 확률'용)
+      if (req.query.slugs) {
+        const slugs = String(req.query.slugs).split(',').filter((s) => SLUG_RE.test(s)).slice(0, 20);
+        const rows = slugs.length ? await redis(slugs.map((s) => ['HGETALL', `poll:${s}`])) : [];
+        const out = {};
+        slugs.forEach((s, i) => { out[s] = counts(rows[i]); });
+        return res.json(out);
+      }
       const slug = String(req.query.slug || '');
       if (!SLUG_RE.test(slug)) return res.status(400).json({ error: 'bad slug' });
       const [all] = await redis([['HGETALL', `poll:${slug}`]]);
