@@ -1,3 +1,14 @@
+// Vercel Web Analytics. 기사 수백 편에 태그를 일일이 넣지 않고 공용 스크립트에서 붙인다.
+// /blog 아래로 프록시돼 열리면 Factory Signal 프로젝트의 분석에, 매거진 주소로 직접
+// 열리면 매거진 프로젝트의 분석에 잡힌다 (각 프로젝트에서 Analytics를 켜 둬야 집계됨).
+(() => {
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  const s = document.createElement("script");
+  s.defer = true;
+  s.src = "/_vercel/insights/script.js";
+  document.head.append(s);
+})();
+
 document.addEventListener("DOMContentLoaded", () => {
   const nav = document.querySelector(".nav");
   const toggle = document.querySelector(".nav-toggle");
