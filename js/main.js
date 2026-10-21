@@ -119,9 +119,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const notice = document.createElement("p");
     notice.className = "source-note ai-note";
+    // 예측 기사(fs:market)는 자동 팩트체크 대신 편집자 승인을 거쳐 발행된다.
+    const isMarket = !!document.querySelector('meta[name="fs:market"]');
     notice.textContent = isEn
       ? "This article was written with AI assistance and passed an automated fact-check. It is for information only, not investment advice."
-      : "이 기사는 AI의 도움을 받아 작성했으며 자동 팩트체크를 거쳤습니다. 정보 제공용이며 투자 권유가 아닙니다.";
+      : isMarket
+        ? "이 기사는 AI의 도움을 받아 작성했으며 편집자가 확인한 뒤 발행했습니다. 정보 제공용이며 투자·베팅 권유가 아닙니다."
+        : "이 기사는 AI의 도움을 받아 작성했으며 자동 팩트체크를 거쳤습니다. 정보 제공용이며 투자 권유가 아닙니다.";
     articleBody.append(notice);
   }
 });

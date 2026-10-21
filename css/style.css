@@ -1957,3 +1957,6 @@ footer {
 .mk-article-market { margin: 0 0 20px; }
 .mk-article-market:empty { display: none; }
 .mk-article-label { font-size: 0.78rem; font-weight: 800; color: var(--accent); margin-bottom: 8px; }
+
+/* 예측 기사: 맨 앞 핵심 요약 목록과 첫 단락 사이 간격 */
+.article-content .source-note + ul { margin-bottom: 1.4em; }

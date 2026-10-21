@@ -217,7 +217,7 @@ def render(fields, body, read, photo, m, kind):
                 photo_tags += f'<meta name="fs:photo_{key}" content="{esc(photo[key])}" />\n'
     label = "예측 기사" if kind == "preview" else "결과 기사"
     note = ("해외 예측시장(Polymarket) 참가자들이 매긴 확률과 공개 보도를 바탕으로 작성한 예측 기사입니다. "
-            "확률은 기사 작성 시점 값이며, 아래에서 지금 확률을 보고 직접 예측해 볼 수 있습니다."
+            "본문의 확률은 기사 작성 시점 값이며, 위 카드에서 지금 확률을 보고 직접 예측해 볼 수 있습니다."
             if kind == "preview" else
             "해외 예측시장(Polymarket)이 결과 전에 매긴 확률과 실제 결과, 공개 보도를 바탕으로 작성한 결과 기사입니다.")
     nav = article._NAV
