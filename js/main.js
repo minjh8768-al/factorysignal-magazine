@@ -233,6 +233,7 @@ async function mountMarkets() {
   }
   const mine = Object.fromEntries((me.preds || []).map((p) => [p.id, p]));
   mountSidebar(data, me);
+  mountRankStrip(me);
 
   const links = marketLinks();
   const liveCards = data.live.map((m) => liveCard(m, mine[m.id], links[m.id] || []));
@@ -288,7 +289,9 @@ async function mountSidebar(data, me) {
     <div class="sb-card sb-rank"><p class="sb-title"><span>이번 주 TOP 3</span><a href="ranking.html">전체 랭킹 →</a></p><div id="sb-r"><p class="sb-note">불러오는 중…</p></div></div>
     <div class="sb-card sb-quotes"><p class="sb-title">빠른 통계</p><div id="sb-q"><p class="sb-note">불러오는 중…</p></div></div>
     ${soon.length ? `<div class="sb-card sb-soon"><p class="sb-title">곧 결과가 나와요</p>${soon.map((m) => `<div class="sb-row"><span title="${esc(m.q)}">${esc(m.q)}</span><b>${dday(m.endDate)}</b></div>`).join("")}</div>` : ""}`;
-  getJSON(`${apiUrl("me")}?view=rank&period=week`, { credentials: "same-origin" }).then((r) => {
+  // 첫 화면은 예측 카드 위 랭킹 띠(mountRankStrip)가 같은 내용을 크게 보여 주므로 오른쪽 TOP 3는 뺀다.
+  if (document.getElementById("rank-strip")) sb.querySelector(".sb-rank").remove();
+  else getJSON(`${apiUrl("me")}?view=rank&period=week`, { credentials: "same-origin" }).then((r) => {
     const medal = ["🥇", "🥈", "🥉"];
     document.getElementById("sb-r").innerHTML = (r.rows.length
       ? r.rows.slice(0, 3).map((x, i) => `<div class="sb-row"><span>${medal[i] || x.rank} ${esc(x.nick)}</span><b>${x.score}점</b></div>`).join("")
@@ -425,6 +428,22 @@ async function mountArticleMarket(box) {
     label.textContent = m.status === "resolved" ? "이 기사의 예측 질문 · 결과" : "이 기사의 예측 질문 · 지금 확률";
     box.append(label, m.status === "resolved" ? resultRow(m, my) : liveCard(m, my));
   } catch (e) { /* 카드 없이도 기사는 읽힌다 */ }
+}
+
+// ── 첫 화면 랭킹 띠 (2026-10-21) — 예측 카드 바로 위. "이번 주 1등은 누구"를 보여 참여를 끈다.
+async function mountRankStrip(me) {
+  const box = document.getElementById("rank-strip");
+  if (!box) return;
+  let r = { rows: [] };
+  try { r = await getJSON(`${apiUrl("me")}?view=rank&period=week`, { credentials: "same-origin" }); } catch (e) { /* 비어 있는 띠로 */ }
+  const medal = ["🥇", "🥈", "🥉"];
+  const top = r.rows.slice(0, 5);
+  const slots = top.length
+    ? top.map((x, i) => `<div class="rs-slot${x.me ? " is-me" : ""}"><span class="rs-medal">${medal[i] || `${x.rank}위`}</span><b>${esc(x.nick)}</b><em>${x.score}점</em></div>`).join("")
+    : [0, 1, 2].map((i) => `<div class="rs-slot is-empty"><span class="rs-medal">${medal[i]}</span><b>비어 있어요</b><em>첫 주인공은?</em></div>`).join("");
+  const mine = r.me ? `내 순위 <b>${r.me.rank}위 · ${r.me.score}점</b>` : (me && me.user ? "아직 이번 주 결과가 나온 내 예측이 없어요" : "로그인하고 예측하면 랭킹에 올라가요");
+  box.innerHTML = `<div class="rs-head"><div><strong>🏆 이번 주 예측 랭킹</strong><span>시장이 낮게 본 결과를 맞힐수록 점수가 커요</span></div><a href="ranking.html">전체 랭킹 →</a></div>
+    <div class="rs-slots">${slots}</div><p class="rs-mine">${mine}</p>`;
 }
 
 // ── 독자 질문 제안 (2026-10-21) ──────────────────────────────────────
