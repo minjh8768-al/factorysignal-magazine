@@ -35,6 +35,9 @@
   </div>
 </header>
 
+<!-- 2026-10-21: 왼쪽 = 예측·결과·기사, 오른쪽 = 따라다니는 내 카드·빠른 통계·곧 결과 (main.js mountSidebar) -->
+<div class="page-grid">
+<div class="page-main">
 <!-- 2026-10-20 개편(이사님 방향): 매거진이 아니라 '핫한 질문 10개 + 가상 예측 + 결과 + 내 기록'.
      질문은 data/markets.json(tools/markets.py, 4시간마다) → api/markets.js. 예측은 api/me.js. -->
 <section class="pm-section">
@@ -251,6 +254,10 @@
     <p>확률은 해외 예측시장(Polymarket)의 가격을 옮긴 참고 정보입니다. 이 사이트의 예측은 돈이나 포인트가 오가지 않는 가상 예측이며, 투자·베팅 권유가 아닙니다.</p>
   </div>
 </section>
+
+</div>
+<aside class="sb" id="sidebar"></aside>
+</div>
 
 <footer>
   <div class="wrap">

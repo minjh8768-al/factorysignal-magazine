@@ -46,7 +46,9 @@ KEEP_RESOLVED = 200
 
 # 이런 시장은 빼거나(SKIP) 분야를 정한다(태그 라벨 기준, 앞에서부터 먼저 맞는 것).
 SKIP_TAGS = {"Tweet Markets", "Mention Markets", "Weather", "Daily Temperature",
-             "Highest temperature", "Tennis", "Up or Down", "5M", "15M", "Hourly"}
+             "Highest temperature", "Tennis", "Up or Down", "5M", "15M", "Hourly",
+             # 2026-10-21: 국내 관심 낮은 e스포츠 (LoL은 유지)
+             "counter strike 2", "Counter Strike 2", "Counter-Strike", "CS2", "Dota 2", "Valorant"}
 CAT_TAGS = [
     ("코인", {"Crypto", "Crypto Prices", "Bitcoin", "Ethereum", "Solana", "XRP"}),
     ("경제", {"Economy", "Fed", "Fed Rates", "fomc", "Finance", "Oil", "Global Rates",

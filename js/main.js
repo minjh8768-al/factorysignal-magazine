@@ -225,6 +225,7 @@ async function mountMarkets() {
     return;
   }
   const mine = Object.fromEntries((me.preds || []).map((p) => [p.id, p]));
+  mountSidebar(data, me);
 
   const links = marketLinks();
   const liveCards = data.live.map((m) => liveCard(m, mine[m.id], links[m.id] || []));
@@ -242,6 +243,53 @@ async function mountMarkets() {
   catTabs(document.getElementById("tabs-resolved"), data.resolved.map((m) => m.cat),
     fill(resEl, resRows, data.resolved, "아직 결과가 나온 질문이 없어요."));
   mountArticles([...data.live, ...data.resolved]);
+}
+
+// ── 오른쪽 따라다니는 칸 (2026-10-21) ─────────────────────────────────
+// 내 카드(로그인 전: 로그인 버튼 / 후: 적중률·진행 중 내 예측) · 빠른 통계(api/quotes.js) · 곧 결과가 나와요.
+// 폰에서는 내 카드만 첫 화면 위쪽에 보인다(CSS).
+async function mountSidebar(data, me) {
+  const sb = document.getElementById("sidebar");
+  if (!sb) return;
+  const u = me && me.user;
+  let card;
+  if (u) {
+    const s = me.stats || {};
+    const open = (me.preds || []).filter((p) => p.result === "open").slice(0, 3);
+    card = `<div class="sb-card sb-mecard">
+      <div class="sb-me"><span class="sb-ava">${esc((u.nick || "?").slice(0, 1))}</span><div><strong>${esc(u.nick)}</strong><span>${u.provider === "kakao" ? "카카오" : "Google"} 로그인</span></div></div>
+      <div class="sb-stats"><div><b>${s.accuracy == null ? "–" : s.accuracy + "%"}</b><span>적중률</span></div><div><b>${s.wins || 0}</b><span>적중</span></div><div><b>${s.open || 0}</b><span>진행 중</span></div></div>
+      ${open.length ? `<p class="sb-sub">진행 중인 내 예측</p>${open.map((p) => `<div class="sb-mine"><span>${esc(p.q)}</span><em>${choiceKo(p.choice)}${p.market != null ? ` · 지금 ${pct(p.market)}` : ""}</em></div>`).join("")}` : '<p class="sb-sub">아직 진행 중인 예측이 없어요. 왼쪽에서 골라 보세요.</p>'}
+      <a class="sb-btn" href="profile.html">내 예측 기록 전체 →</a></div>`;
+  } else {
+    const auth = await getJSON(`${apiUrl("auth")}?status=1`).catch(() => ({}));
+    const next = encodeURIComponent(location.pathname.replace(/^\/blog/, ""));
+    const btn = (p, label) => auth[p]
+      ? `<a class="sb-btn sb-${p}" href="${apiUrl("auth")}?start=${p}&next=${next}">${label}</a>`
+      : `<span class="sb-btn sb-${p} is-off">${label} (준비 중)</span>`;
+    card = `<div class="sb-card sb-mecard sb-guest"><div class="sb-wave">👋</div><strong>로그인하고 내 예측을 기록하세요</strong><span>적중률 · 연속 적중 · 역발상 적중까지</span>
+      ${btn("kakao", "카카오로 로그인")}${btn("google", "Google로 로그인")}</div>`;
+  }
+  const soon = data.live.filter((m) => m.status === "live").sort((a, b) => Date.parse(a.endDate) - Date.parse(b.endDate)).slice(0, 3);
+  sb.innerHTML = `${card}
+    <div class="sb-card sb-quotes"><p class="sb-title">빠른 통계</p><div id="sb-q"><p class="sb-note">불러오는 중…</p></div></div>
+    ${soon.length ? `<div class="sb-card sb-soon"><p class="sb-title">곧 결과가 나와요</p>${soon.map((m) => `<div class="sb-row"><span title="${esc(m.q)}">${esc(m.q)}</span><b>${dday(m.endDate)}</b></div>`).join("")}</div>` : ""}`;
+  try {
+    const q = await getJSON(apiUrl("quotes"));
+    const num = (v, d = 2) => v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+    const chg = (x) => (x.pct >= 0 ? `<b class="up">▲${num(Math.abs(x.pct), 1)}%</b>` : `<b class="down">▼${num(Math.abs(x.pct), 1)}%</b>`);
+    const rows = [
+      ["비트코인", q.btc, (x) => `$${num(x.price, 0)}`],
+      ["S&amp;P 500", q.sp500, (x) => num(x.price)],
+      ["원/달러 환율", q.krw, (x) => `${num(x.price, 0)}원`],
+      ["VIX 공포지수", q.vix, (x) => num(x.price)],
+    ].filter((r) => r[1]);
+    document.getElementById("sb-q").innerHTML = rows.length
+      ? rows.map(([l, x, f]) => `<div class="sb-row"><span>${l}</span><span class="sb-val"><b>${f(x)}</b> ${chg(x)}</span></div>`).join("") + '<p class="sb-note">지연 시세 · 참고용</p>'
+      : '<p class="sb-note">지금은 시세를 불러올 수 없어요.</p>';
+  } catch (e) {
+    document.getElementById("sb-q").innerHTML = '<p class="sb-note">지금은 시세를 불러올 수 없어요.</p>';
+  }
 }
 
 // 반원 게이지. 시장이 '예'에 매긴 확률을 호의 길이로 보여 준다. 숫자도 함께 적어 색에만 기대지 않는다.
