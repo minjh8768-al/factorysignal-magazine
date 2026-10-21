@@ -134,7 +134,7 @@ async function render() {
   try {
     const d = await api({ view: "drafts" }); draftCount = d.drafts.length;
     if (tab === "stats") return renderStats();
-    if (tab === "drafts") return renderDrafts(d.drafts);
+    if (tab === "drafts") return renderDrafts(d.drafts, d.syncError);
     if (tab === "polls") return renderPolls();
     if (tab === "subs") return renderSubs();
   } catch (e) { if (e.message !== "401") $("#view").innerHTML = `<p class="muted">${esc(e.message)}</p>`; }
@@ -173,8 +173,9 @@ async function renderStats() {
   });
 }
 
-function renderDrafts(list) {
-  if (!list.length) return ($("#view").innerHTML = `<div class="card"><p class="muted">승인 대기 중인 초안이 없어요. 매일 낮 자동 작성이 끝나면 여기에 들어옵니다.</p></div>`);
+function renderDrafts(list, syncError) {
+  const warn = syncError ? `<p class="muted" style="color:var(--red);margin-bottom:8px">초안 가져오기 문제: ${esc(syncError)}</p>` : "";
+  if (!list.length) return ($("#view").innerHTML = `<div class="card">${warn}<p class="muted">승인 대기 중인 초안이 없어요. 예측 기사 초안은 하루 세 번(09:30·14:30·19:30) 자동으로 들어옵니다.</p></div>`);
   $("#view").innerHTML = `<div class="card"><h2>승인 대기 ${list.length}편</h2>${list.map((d) => `
     <div class="draft"><img src="${esc(d.photo || "")}" alt="" onerror="this.style.visibility='hidden'">
       <div><div class="t">${esc(d.title)}</div><div class="m">${esc(d.category)} · ${esc(d.date)}${d.poll ? ` · 투표: ${esc(d.poll)}` : ""}</div></div>

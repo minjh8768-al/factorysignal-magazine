@@ -137,10 +137,12 @@ async function gh(path, opts = {}) {
   });
 }
 
+let lastSyncError = '';
 async function syncDrafts() {
-  if (!GH) return;
+  lastSyncError = '';
+  if (!GH) { lastSyncError = 'GITHUB_DISPATCH_TOKEN 없음'; return; }
   const r = await gh('/actions/artifacts?per_page=30');
-  if (!r.ok) return;
+  if (!r.ok) { lastSyncError = `결과물 목록 조회 실패 (${r.status})`; return; }
   const weekAgo = Date.now() - 7 * 864e5;
   const fresh = ((await r.json()).artifacts || [])
     .filter((a) => /^drafts-\d+$/.test(a.name) && !a.expired && Date.parse(a.created_at) > weekAgo);
@@ -148,8 +150,12 @@ async function syncDrafts() {
   const seen = await kv(fresh.map((a) => ['SISMEMBER', 'imported-artifacts', String(a.id)]));
   for (const [i, a] of fresh.entries()) {
     if (Number(seen[i]) === 1) continue;
-    const z = await gh(`/actions/artifacts/${a.id}/zip`);   // 저장소 주소로 넘겨줄 때 인증 헤더는 빠진다
-    if (!z.ok) continue;
+    // GitHub은 302로 저장소(블롭) 주소를 넘겨준다. 그 주소는 서명이 붙어 있어 인증 헤더가 필요 없고,
+    // 헤더가 따라가면 오히려 거절된다 — 그래서 넘겨받은 주소를 헤더 없이 직접 연다. (2026-10-21)
+    const hop = await gh(`/actions/artifacts/${a.id}/zip`, { redirect: 'manual' });
+    const loc = hop.headers.get('location');
+    const z = loc ? await fetch(loc) : hop;
+    if (!z.ok) { lastSyncError = `결과물 ${a.name} 내려받기 실패 (${hop.status}/${z.status})`; continue; }
     const cmds = [];
     for (const f of unzip(Buffer.from(await z.arrayBuffer()))) {
       const m = f.name.match(DRAFT_NAME);
@@ -240,7 +246,7 @@ module.exports = async (req, res) => {
       if (view === 'stats') return res.json(await stats());
       if (view === 'polls') return res.json({ polls: await polls(`https://${req.headers.host}`) });
       if (view === 'drafts') {
-        try { await syncDrafts(); } catch (e) { /* 가져오기 실패해도 이미 있는 초안은 보여 준다 */ }
+        try { await syncDrafts(); } catch (e) { lastSyncError = `가져오기 오류: ${e.message}`; }
         const keys = await scan('draft:*');
         const vals = keys.length ? await kv(keys.map((k) => ['GET', k])) : [];
         const list = vals.map((v, i) => {
@@ -249,7 +255,7 @@ module.exports = async (req, res) => {
           const f = fields(d.html || '');
           return { slug: keys[i].slice(6), date: d.date, title: f.title, category: f.category, photo: f.photo, poll: f.poll };
         }).filter(Boolean).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-        return res.json({ drafts: list });
+        return res.json({ drafts: list, syncError: lastSyncError });
       }
       if (view === 'draft') {
         const slug = String(req.query.slug || '');
