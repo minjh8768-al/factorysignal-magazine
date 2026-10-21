@@ -5,6 +5,7 @@
 //   GET  ?view=polls                 투표별 질문·기사·예/아니오 수 (많이 참여한 순)
 //   GET  ?view=drafts                승인 대기 초안 목록 (Upstash draft:*)
 //   GET  ?view=draft&slug=           초안 하나 (편집용 필드 + 미리보기 HTML)
+//   GET  ?view=photos&q=             카드 사진 후보 (위키미디어 커먼즈, 상업 이용 가능한 라이선스만)
 //   POST {action:'save', slug, title, description, poll, body}   초안 수정
 //   POST {action:'publish', slug}    수정된 HTML을 담아 GitHub publish-draft 워크플로 실행 → 1~3분 뒤 반영
 //   (초안은 승인 대기 화면을 열 때 daily 워크플로의 결과물에서 자동으로 가져온다 — syncDrafts)
@@ -81,6 +82,45 @@ function fields(html) {
   };
 }
 
+// 카드 사진 후보 — tools/commons.py 와 같은 라이선스 기준(CC0·퍼블릭 도메인·CC BY·CC BY-SA, NC·ND 제외).
+// 고르는 건 사람이 눈으로 하므로 연도·인물 필터는 두지 않는다. (2026-10-21)
+const LIC_OK = /^(cc0|public domain|pd|cc by(-sa)? [\d.]+( [a-z]{2,3})?|kogl type 1)/i;
+const LIC_BAD = /\b(nc|nd)\b/i;
+const strip = (s) => String(s || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+
+async function photoCandidates(q) {
+  const params = new URLSearchParams({
+    action: 'query', format: 'json', generator: 'search', gsrsearch: `${q} filetype:bitmap`, gsrnamespace: '6',
+    gsrlimit: '30', prop: 'imageinfo', iiprop: 'url|extmetadata|size', iiurlwidth: '960', origin: '*',
+  });
+  const r = await fetch(`https://commons.wikimedia.org/w/api.php?${params}`, {
+    headers: { 'User-Agent': 'FactoryMagazine/1.0 (https://factorysignal-magazine.vercel.app)' }, signal: AbortSignal.timeout(10000),
+  });
+  const pages = Object.values(((await r.json()).query || {}).pages || {}).sort((a, b) => (a.index || 99) - (b.index || 99));
+  const out = [];
+  for (const p of pages) {
+    const ii = (p.imageinfo || [])[0] || {};
+    const m = ii.extmetadata || {};
+    const lic = strip(m.LicenseShortName && m.LicenseShortName.value);
+    if (!LIC_OK.test(lic) || LIC_BAD.test(lic) || (ii.width || 0) < 600 || (ii.height && ii.width / ii.height < 0.9)) continue;
+    const date = strip(m.DateTimeOriginal && m.DateTimeOriginal.value).match(/(19|20)\d\d/);
+    out.push({ url: ii.thumburl || ii.url, by: strip(m.Artist && m.Artist.value).slice(0, 60) || 'Wikimedia Commons',
+      license: lic, src: ii.descriptionurl || '', title: String(p.title || '').replace(/^File:/, ''), year: date ? date[0] : '' });
+    if (out.length >= 12) break;
+  }
+  return out;
+}
+
+function applyPhoto(html, photo) {
+  html = html.replace(/<meta name="fs:photo(?:_by|_license|_src)?" content="[^"]*" \/>\n?/g, '');
+  if (!photo || !/^https:\/\//.test(photo.url || '')) return html;     // '사진 없이'
+  const tags = [`<meta name="fs:photo" content="${esc(photo.url)}" />`];
+  if (photo.by) tags.push(`<meta name="fs:photo_by" content="${esc(String(photo.by).slice(0, 80))}" />`);
+  if (photo.license) tags.push(`<meta name="fs:photo_license" content="${esc(String(photo.license).slice(0, 40))}" />`);
+  if (photo.src && /^https:\/\//.test(photo.src)) tags.push(`<meta name="fs:photo_src" content="${esc(photo.src)}" />`);
+  return html.replace('<link rel="stylesheet"', `${tags.join('\n')}\n<link rel="stylesheet"`);
+}
+
 function applyEdits(html, f) {
   const title = String(f.title || '').trim().slice(0, 140);
   const desc = String(f.description || '').trim().slice(0, 240);
@@ -97,6 +137,7 @@ function applyEdits(html, f) {
   if (typeof f.body === 'string' && f.body.trim()) {
     html = html.replace(BODY_RE, (m, a, _b, c) => `${a}${sanitize(f.body)}${c}`);
   }
+  if (f.photo !== undefined) html = applyPhoto(html, f.photo);   // null = 사진 없이
   return html;
 }
 
@@ -256,6 +297,11 @@ module.exports = async (req, res) => {
           return { slug: keys[i].slice(6), date: d.date, title: f.title, category: f.category, photo: f.photo, poll: f.poll };
         }).filter(Boolean).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
         return res.json({ drafts: list, syncError: lastSyncError });
+      }
+      if (view === 'photos') {
+        const q = String(req.query.q || '').trim().slice(0, 80);
+        if (q.length < 2) return res.json({ photos: [] });
+        return res.json({ photos: await photoCandidates(q) });
       }
       if (view === 'draft') {
         const slug = String(req.query.slug || '');

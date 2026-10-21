@@ -68,8 +68,8 @@ JSON으로만 답한다:
   "category": "{cat_choice}",
   "eyebrow": "{eyebrows} 중 하나",
   "slug": "영문 소문자-하이픈 (예: netanyahu-next-pm-odds)",
-  "photo_subject": "기사 주인공이 실존 인물·팀·기관이면 영어 정식 이름, 아니면 빈 문자열",
-  "photo_query": "주인공이 없을 때 쓸 영어 사진 검색어 2~3단어",
+  "photo_subject": "질문의 주인공이 한 명의 실존 인물(정치인·선수·CEO) 또는 하나의 팀일 때만 영어 정식 이름(예: Benjamin Netanyahu, T1). 국가·정부·협정·사건·지표·가격이면 반드시 빈 문자열",
+  "photo_query": "주인공이 없을 때 쓸 영어 장면 사진 검색어 2~3단어 (예: Tehran skyline, stock market screen, bitcoin coins). 경찰·군인·무기·사고 장면 금지",
   "body_html": "본문 HTML"}}"""
 
 TASK_PREVIEW = """[할 일] '예측 기사'를 쓴다. 이 질문은 아직 결과가 나지 않았다.

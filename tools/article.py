@@ -308,7 +308,8 @@ def thumb_html(meta):
     """
     esc = lambda v: html.escape(str(v), quote=True)
     nl = chr(10)
-    if meta.get("video") and meta.get("photo"):
+    news = meta.get("video") or meta.get("market")     # 예측 기사(fs:market)도 뉴스 카드처럼
+    if news and meta.get("photo"):
         # 뉴스처럼 보이게 실제 사진 + 분야 라벨. 남의 방송 화면은 쓰지 않는다.
         # 사진은 위키미디어 커먼즈(인물·팀 실사진, CC BY 등) 또는 Pexels(장면). CC BY 계열은
         # 출처 표기가 이용 조건이라 촬영자·라이선스를 사진 위에 작게 단다.
@@ -325,7 +326,7 @@ def thumb_html(meta):
                 f'<img class="thumb-photo" src="{esc(meta["photo"])}" alt="" loading="lazy"{fallback} />'
                 f'<span class="thumb-cat">{esc(meta["category"])}</span>'
                 f'{credit}</div>{nl}')
-    if meta.get("video"):
+    if news:
         # 사진을 못 찾은 경우의 대체 썸네일: 분야 색 + 핵심어.
         # 2026-10-20: 남의 방송 썸네일(채널 로고·자막이 그대로 보임) 대신 우리 썸네일.
         # 분야 색 배경 + 제목에서 뽑은 핵심 숫자(없으면 꼬리표)를 크게. 영상은 기사 안에 그대로 있다.
