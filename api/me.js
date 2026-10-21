@@ -4,9 +4,14 @@
 //        2026-10-20 사용자 결정: 로그인(구글·카카오)해야 예측할 수 있다. 아니면 401.
 //   POST /api/me { action:'nick', nick }      닉네임 바꾸기
 //   POST /api/me { action:'logout' }
+//   POST /api/me { action:'propose', q, cat, closesAt, how }   독자 질문 제안 (로그인, 하루 3개, 관리자 승인 후 공개)
+//   GET  /api/me?view=rank&period=week|lastweek|month          주간·월간 랭킹 (+ 내 순위)
+// 랭킹 점수(2026-10-21): 맞히면 100 − (고를 때 내가 고른 쪽 확률), 틀리면 0. 시장을 따라가기보다
+// 시장보다 먼저 맞힌 사람이 위로 가게. 독자 질문은 시장 확률 대신 고를 때의 독자 '예' 비율.
 // 돈·포인트는 없다. 예/아니오를 골라 두고 결과가 나면 맞혔는지만 센다.
 // 저장(Upstash): user:{uid} 해시(nick, createdAt, provider), pred:{uid} 해시(질문id → {c, at, p}),
 //               poll:pm-{id} 해시(yes/no 독자 수).
+const crypto = require('crypto');
 const { kv, hpairs, markets, readUid, clearUid, ready } = require('./_lib');
 
 const NICK_RE = /^[\p{L}\p{N}_.\- ]{2,12}$/u;
@@ -35,7 +40,8 @@ async function profile(uid) {
     const p = JSON.parse(v);
     const m = byId[id] || { id, q: p.q || '(목록에서 내려간 질문)', status: 'gone' };
     // 고를 때 내가 고른 쪽의 시장 확률
-    const pickedOdds = p.c === 'yes' ? p.p : Math.round((100 - p.p) * 10) / 10;
+    const base = p.p == null ? 50 : p.p;            // 독자 질문 첫 표처럼 기준 확률이 없으면 50
+    const pickedOdds = p.c === 'yes' ? base : Math.round((100 - base) * 10) / 10;
     const result = m.status === 'resolved' ? (m.outcome === p.c ? 'win' : 'lose') : m.status === 'gone' ? 'unknown' : 'open';
     return { id, q: m.q, cat: m.cat || '', choice: p.c, at: p.at, pickedOdds, market: m.market ?? null,
       status: m.status, outcome: m.outcome || null, resolvedAt: m.resolvedAt || '', result };
@@ -46,12 +52,64 @@ async function profile(uid) {
   };
 }
 
+// ── 랭킹 ─────────────────────────────────────────────────────
+const KST = 9 * 3600e3;
+function periodRange(period) {
+  const now = new Date(Date.now() + KST);                       // 한국 시각을 UTC 필드로
+  const day0 = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - KST;
+  if (period === 'month') return [Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1) - KST, Infinity];
+  const monday = day0 - ((now.getUTCDay() + 6) % 7) * 864e5;    // 월요일 0시(한국)
+  if (period === 'lastweek') return [monday - 7 * 864e5, monday];
+  return [monday, Infinity];
+}
+
+const rankCache = {};
+async function ranking(period) {
+  const hit = rankCache[period];
+  if (hit && Date.now() - hit.at < 60e3) return hit.rows;
+  const [from, to] = periodRange(period);
+  const resolved = {};
+  (await markets()).forEach((m) => {
+    if (m.status !== 'resolved') return;
+    const t = m.resolvedAt ? Date.parse(m.resolvedAt) : Date.now();
+    if (t >= from && t < to) resolved[m.id] = m;
+  });
+  const [uids] = await kv([['SMEMBERS', 'users:predicted']]);
+  const list = uids || [];
+  const data = list.length ? await kv(list.flatMap((u) => [['HGET', `user:${u}`, 'nick'], ['HGETALL', `pred:${u}`]])) : [];
+  const rows = list.map((uid, i) => {
+    let score = 0, wins = 0, count = 0, best = 0;
+    Object.entries(hpairs(data[2 * i + 1])).forEach(([id, v]) => {
+      const m = resolved[id];
+      if (!m) return;
+      const p = JSON.parse(v);
+      const b = p.p == null ? 50 : p.p;
+      const odds = p.c === 'yes' ? b : 100 - b;
+      count++;
+      if (p.c === m.outcome) { const pts = Math.round(100 - odds); score += pts; wins++; best = Math.max(best, pts); }
+    });
+    return { uid, nick: data[2 * i] || '예측러', score, wins, count, best };
+  }).filter((r) => r.count > 0).sort((a, b) => b.score - a.score || b.wins - a.wins || a.count - b.count);
+  rows.forEach((r, i) => { r.rank = i && r.score === rows[i - 1].score && r.wins === rows[i - 1].wins ? rows[i - 1].rank : i + 1; });
+  rankCache[period] = { at: Date.now(), rows };
+  return rows;
+}
+
+const RQ_CATS = ['경제', '코인', '정치·세계', '스포츠', '테크·문화', '생활·연예'];
+
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   if (!ready()) return res.status(503).json({ error: '예측 저장소가 아직 연결되지 않았습니다.' });
   try {
     let uid = readUid(req);
     if (req.method === 'GET') {
+      if (req.query && req.query.view === 'rank') {
+        const period = ['week', 'lastweek', 'month'].includes(req.query.period) ? req.query.period : 'week';
+        const rows = await ranking(period);
+        const mine = uid ? rows.find((r) => r.uid === uid) : null;
+        const pub = (r) => ({ rank: r.rank, nick: r.nick, score: r.score, wins: r.wins, count: r.count, best: r.best, me: r.uid === uid });
+        return res.json({ period, rows: rows.slice(0, 50).map(pub), me: mine ? pub(mine) : null, players: rows.length });
+      }
       if (!uid) return res.json({ user: null, stats: stats([]), preds: [] });
       return res.json(await profile(uid));
     }
@@ -71,19 +129,43 @@ module.exports = async (req, res) => {
     if (b.action === 'predict') {
       const id = String(b.id || '');
       const choice = b.choice;
-      if (!/^\d{1,12}$/.test(id) || (choice !== 'yes' && choice !== 'no')) return res.status(400).json({ error: 'bad request' });
-      const m = (await markets()).find((x) => x.id === id);
+      if (!/^(\d{1,12}|r[a-z0-9]{6,20})$/.test(id) || (choice !== 'yes' && choice !== 'no')) return res.status(400).json({ error: 'bad request' });
+      const m = (await markets(id.startsWith('r'))).find((x) => x.id === id);   // 독자 질문은 지금 비율로
       if (!m || m.status !== 'live') return res.status(409).json({ error: '예측이 마감된 질문이에요.' });
       const [provider] = uid ? await kv([['HGET', `user:${uid}`, 'provider']]) : [null];
       if (!provider) return res.status(401).json({ error: '로그인하면 예측할 수 있어요.', login: true });
       const now = new Date().toISOString();
       const [first] = await kv([
-        ['HSETNX', `pred:${uid}`, id, JSON.stringify({ c: choice, at: now, p: m.market, q: m.q })],
+        ['HSETNX', `pred:${uid}`, id, JSON.stringify({ c: choice, at: now, p: m.kind === 'reader' ? m.odds : m.market, q: m.q })],
+        ['SADD', 'users:predicted', uid],
       ]);
       if (first !== 1) return res.status(409).json({ error: '이미 예측한 질문이에요.' });
       const [, counts] = await kv([['HINCRBY', `poll:pm-${id}`, choice, 1], ['HGETALL', `poll:pm-${id}`]]);
       const c = hpairs(counts);
       return res.json({ ok: true, readers: { yes: Number(c.yes) || 0, no: Number(c.no) || 0 } });
+    }
+    if (b.action === 'propose') {
+      const [u] = uid ? await kv([['HGETALL', `user:${uid}`]]) : [null];
+      const user = hpairs(u);
+      if (!user.provider) return res.status(401).json({ error: '로그인하면 질문을 제안할 수 있어요.', login: true });
+      const q = String(b.q || '').trim().replace(/\s+/g, ' ');
+      const cat = RQ_CATS.includes(b.cat) ? b.cat : '생활·연예';
+      const how = String(b.how || '').trim().slice(0, 60);
+      const closes = Date.parse(b.closesAt);
+      if (q.length < 8 || q.length > 80 || !/[?？]$/.test(q)) return res.status(400).json({ error: '질문은 8~80자, 물음표로 끝나게 써 주세요.' });
+      if (!(closes > Date.now() + 2 * 3600e3 && closes < Date.now() + 90 * 864e5)) return res.status(400).json({ error: '마감은 지금부터 2시간 뒤 ~ 90일 안으로 정해 주세요.' });
+      if (how.length < 2) return res.status(400).json({ error: '결과를 어디서 확인하는지 적어 주세요.' });
+      const day = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+      const [n] = await kv([['INCR', `rq:limit:${uid}:${day}`], ['EXPIRE', `rq:limit:${uid}:${day}`, 86400]]);
+      if (n > 3) return res.status(429).json({ error: '질문 제안은 하루 3개까지예요.' });
+      const id = 'r' + Date.now().toString(36) + crypto.randomBytes(2).toString('hex');
+      const now = new Date().toISOString();
+      await kv([
+        ['HSET', `rq:${id}`, 'q', q, 'cat', cat, 'closesAt', new Date(closes).toISOString(), 'how', how,
+          'by', uid, 'byNick', user.nick || '', 'status', 'pending', 'createdAt', now],
+        ['ZADD', 'rq:pending', Date.now(), id],
+      ]);
+      return res.json({ ok: true, id });
     }
     return res.status(400).json({ error: 'bad action' });
   } catch (e) {

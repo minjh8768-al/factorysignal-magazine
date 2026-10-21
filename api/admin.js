@@ -252,6 +252,11 @@ async function polls(origin) {
     return o;
   }).sort((a, b) => b.total - a.total).slice(0, 100);
   await Promise.all(rows.map(async (r) => {
+    if (r.slug.startsWith('pm-r')) {                     // 독자 질문
+      const [q] = await kv([['HMGET', `rq:${r.slug.slice(3)}`, 'q', 'cat', 'status']]);
+      Object.assign(r, { kind: 'odds', question: (q && q[0]) || r.slug, title: `독자 질문${q && q[2] === 'resolved' ? ' · 결과 확정' : ''}`, category: (q && q[1]) || '' });
+      return;
+    }
     if (r.slug.startsWith('pm-')) {
       const m = (DATA.markets || []).find((x) => `pm-${x.id}` === r.slug);
       Object.assign(r, { kind: 'odds', question: m ? m.q : r.slug, title: m && m.status === 'resolved' ? `예측 질문 · 결과 ${m.outcome === 'yes' ? '예' : '아니오'}` : '예측 질문', category: m ? m.cat : '' });
@@ -276,6 +281,65 @@ async function polls(origin) {
   return rows;
 }
 
+// ── 독자 질문 관리 (2026-10-21) ─────────────────────────────────
+// 제안(rq:pending) → 승인(rq:live) → 마감 뒤 결과 확정(rq:resolved) 또는 무효(취소, 점수 없음).
+const RQ_ID = /^r[a-z0-9]{6,20}$/;
+async function rqList(ids) {
+  if (!ids.length) return [];
+  const rows = await kv(ids.flatMap((id) => [['HGETALL', `rq:${id}`], ['HGETALL', `poll:pm-${id}`]]));
+  const pairs = (a) => { const o = {}; for (let i = 0; i + 1 < (a || []).length; i += 2) o[a[i]] = a[i + 1]; return o; };
+  return ids.map((id, i) => {
+    const r = pairs(rows[2 * i]), c = pairs(rows[2 * i + 1]);
+    return { id, ...r, yes: Number(c.yes) || 0, no: Number(c.no) || 0 };
+  });
+}
+
+async function proposals() {
+  const [pending, live] = await kv([['ZRANGE', 'rq:pending', 0, 99], ['ZRANGE', 'rq:live', 0, -1]]);
+  const liveRows = await rqList(live || []);
+  const now = Date.now();
+  return {
+    pending: await rqList(pending || []),
+    awaiting: liveRows.filter((r) => Date.parse(r.closesAt) <= now),   // 마감됨 — 결과를 정해 주세요
+    live: liveRows.filter((r) => Date.parse(r.closesAt) > now),
+  };
+}
+
+async function rqAction(b) {
+  const id = String(b.id || '');
+  if (!RQ_ID.test(id)) throw new Error('bad id');
+  if (b.action === 'rq_approve') {
+    const sets = [];
+    const q = String(b.q || '').trim();
+    if (q.length >= 8 && q.length <= 80) sets.push('q', q);
+    const closes = Date.parse(b.closesAt);
+    if (closes > Date.now()) sets.push('closesAt', new Date(closes).toISOString());
+    await kv([
+      ...(sets.length ? [['HSET', `rq:${id}`, ...sets]] : []),
+      ['HSET', `rq:${id}`, 'status', 'live', 'approvedAt', new Date().toISOString()],
+      ['ZREM', 'rq:pending', id], ['ZADD', 'rq:live', Date.now(), id],
+    ]);
+  } else if (b.action === 'rq_reject') {
+    await kv([['HSET', `rq:${id}`, 'status', 'rejected'], ['ZREM', 'rq:pending', id]]);
+  } else if (b.action === 'rq_resolve') {
+    const outcome = b.outcome;
+    if (outcome === 'void') {
+      await kv([['HSET', `rq:${id}`, 'status', 'void'], ['ZREM', 'rq:live', id]]);
+    } else if (outcome === 'yes' || outcome === 'no') {
+      const [c] = await kv([['HGETALL', `poll:pm-${id}`]]);
+      const o = {}; for (let i = 0; i + 1 < (c || []).length; i += 2) o[c[i]] = Number(c[i + 1]) || 0;
+      const n = (o.yes || 0) + (o.no || 0);
+      const final = n ? Math.round(((o.yes || 0) / n) * 1000) / 10 : 50;
+      const now = new Date().toISOString();
+      await kv([
+        ['HSET', `rq:${id}`, 'status', 'resolved', 'outcome', outcome, 'final', final, 'resolvedAt', now],
+        ['ZREM', 'rq:live', id], ['ZADD', 'rq:resolved', Date.now(), id],
+      ]);
+    } else throw new Error('bad outcome');
+  } else throw new Error('bad action');
+  return { ok: true };
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   if (!SECRET || !URL_ || !TOKEN) return res.status(503).json({ error: '관리자 설정(비밀번호·저장소)이 없습니다.' });
@@ -286,6 +350,7 @@ module.exports = async (req, res) => {
       const view = req.query.view;
       if (view === 'stats') return res.json(await stats());
       if (view === 'polls') return res.json({ polls: await polls(`https://${req.headers.host}`) });
+      if (view === 'proposals') return res.json(await proposals());
       if (view === 'drafts') {
         try { await syncDrafts(); } catch (e) { lastSyncError = `가져오기 오류: ${e.message}`; }
         const keys = await scan('draft:*');
@@ -316,6 +381,7 @@ module.exports = async (req, res) => {
 
     if (req.method !== 'POST') return res.status(405).end();
     const b = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+    if (String(b.action || '').startsWith('rq_')) return res.json(await rqAction(b));
     const slug = String(b.slug || '');
     if (!SLUG_RE.test(slug)) return res.status(400).json({ error: 'bad slug' });
     const key = `draft:${slug}`;

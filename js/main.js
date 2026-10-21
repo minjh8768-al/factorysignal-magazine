@@ -44,6 +44,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const artMarket = document.querySelector(".mk-article-market[data-market]");
   if (artMarket) mountArticleMarket(artMarket);
   if (document.getElementById("pf-head")) mountProfile();
+  if (document.getElementById("rk-list")) mountRanking();
+  // 오른쪽 칸만 있는 페이지(랭킹): 질문·내 기록을 따로 불러와 채운다
+  if (document.getElementById("sidebar") && !document.getElementById("pm-live") && !document.getElementById("pm-resolved")) {
+    Promise.all([getJSON(apiUrl("markets")), getJSON(apiUrl("me"), { credentials: "same-origin" }).catch(() => ({ preds: [] }))])
+      .then(([data, me]) => mountSidebar(data, me)).catch(() => {});
+  }
 
   const nav = document.querySelector(".nav");
   const toggle = document.querySelector(".nav-toggle");
@@ -162,13 +168,14 @@ async function getJSON(url, opts) {
 }
 
 // 분야 탭. 세 구역(진행 중 · 결과 · 기사)이 같은 분야 순서를 쓴다. 해당 분야에 항목이 없으면 탭도 없다.
-const MKT_CATS = ["경제", "코인", "정치·세계", "스포츠", "테크·문화"];
+const MKT_CATS = ["경제", "코인", "정치·세계", "스포츠", "테크·문화", "독자 질문"];
+const RQ_CAT = "독자 질문";
 const OLD_CAT = { "경제": "경제", "코인": "암호화폐", "정치·세계": "정치", "스포츠": "스포츠", "테크·문화": "스타트업" };
 
-function catTabs(box, cats, onPick) {
+function catTabs(box, cats, onPick, always = []) {
   if (!box) return;
-  const present = MKT_CATS.filter((c) => cats.includes(c));
-  box.innerHTML = ["전체", ...present].map((c) => `<button type="button" data-cat="${c}">${c}</button>`).join("");
+  const present = MKT_CATS.filter((c) => cats.includes(c) || always.includes(c));
+  box.innerHTML = ["전체", ...present].map((c) => `<button type="button" data-cat="${c}"${c === RQ_CAT ? ' class="rq-tab"' : ""}>${c}</button>`).join("");
   const pick = (c) => {
     box.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.cat === c));
     onPick(c);
@@ -236,10 +243,16 @@ async function mountMarkets() {
     items.forEach((node, i) => {
       if ((cat === "전체" || list[i].cat === cat) && el.children.length < limit) el.append(node);
     });
-    if (!el.children.length) el.innerHTML = `<p class="odds-empty">${empty}</p>`;
+    if (!el.children.length) el.innerHTML = `<p class="odds-empty">${cat === RQ_CAT ? "아직 공개된 독자 질문이 없어요. 첫 질문을 제안해 보세요!" : empty}</p>`;
+    // 독자 질문 탭: 맨 위에 '질문 제안하기' 띠
+    const band = document.getElementById("rq-band");
+    if (band) band.hidden = cat !== RQ_CAT || el !== liveEl;
   };
-  if (liveEl) catTabs(document.getElementById("tabs-live"), data.live.map((m) => m.cat),
-    fill(liveEl, liveCards, data.live, "새 질문을 고르는 중이에요."));
+  if (liveEl) {
+    mountProposeBand(liveEl, me);
+    catTabs(document.getElementById("tabs-live"), data.live.map((m) => m.cat),
+      fill(liveEl, liveCards, data.live, "새 질문을 고르는 중이에요."), [RQ_CAT]);
+  }
   catTabs(document.getElementById("tabs-resolved"), data.resolved.map((m) => m.cat),
     fill(resEl, resRows, data.resolved, "아직 결과가 나온 질문이 없어요."));
   mountArticles([...data.live, ...data.resolved]);
@@ -272,8 +285,16 @@ async function mountSidebar(data, me) {
   }
   const soon = data.live.filter((m) => m.status === "live").sort((a, b) => Date.parse(a.endDate) - Date.parse(b.endDate)).slice(0, 3);
   sb.innerHTML = `${card}
+    <div class="sb-card sb-rank"><p class="sb-title"><span>이번 주 TOP 3</span><a href="ranking.html">전체 랭킹 →</a></p><div id="sb-r"><p class="sb-note">불러오는 중…</p></div></div>
     <div class="sb-card sb-quotes"><p class="sb-title">빠른 통계</p><div id="sb-q"><p class="sb-note">불러오는 중…</p></div></div>
     ${soon.length ? `<div class="sb-card sb-soon"><p class="sb-title">곧 결과가 나와요</p>${soon.map((m) => `<div class="sb-row"><span title="${esc(m.q)}">${esc(m.q)}</span><b>${dday(m.endDate)}</b></div>`).join("")}</div>` : ""}`;
+  getJSON(`${apiUrl("me")}?view=rank&period=week`, { credentials: "same-origin" }).then((r) => {
+    const medal = ["🥇", "🥈", "🥉"];
+    document.getElementById("sb-r").innerHTML = (r.rows.length
+      ? r.rows.slice(0, 3).map((x, i) => `<div class="sb-row"><span>${medal[i] || x.rank} ${esc(x.nick)}</span><b>${x.score}점</b></div>`).join("")
+      : '<p class="sb-note">이번 주 첫 결과가 나오면 순위가 생겨요.</p>')
+      + (r.me ? `<div class="sb-myrank">내 순위 ${r.me.rank}위 · ${r.me.score}점</div>` : "");
+  }).catch(() => { document.getElementById("sb-r").innerHTML = '<p class="sb-note">지금은 순위를 불러올 수 없어요.</p>'; });
   try {
     const q = await getJSON(apiUrl("quotes"));
     const num = (v, d = 2) => v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -311,20 +332,26 @@ function relLink(arts, kind) {
 
 function liveCard(m, my, arts = []) {
   const el = document.createElement("article");
-  el.className = "pm-card";
+  const rq = m.kind === "reader";
+  el.className = "pm-card" + (rq ? " is-rq" : "");
   const open = m.status === "live";
+  const few = rq && (m.voters || 0) < READER_MIN;
+  const g = few
+    ? `<div class="pm-few"><b>${m.voters || 0}명</b><span>참여 중</span></div>`
+    : `${gauge(m.market)}<span>${rq ? "독자 '예'" : "가능성"}</span>`;
   el.innerHTML = `
     <div class="pm-main">
       <div class="pm-text">
-        <div class="pm-meta"><span class="pm-cat">${esc(m.cat)}</span><span>·</span><span>${open ? dday(m.endDate) : "결과 확인 중"}</span></div>
+        <div class="pm-meta"><span class="pm-cat">${esc(m.cat)}</span>${rq && m.sub ? `<span>·</span><span>${esc(m.sub)}</span>` : ""}<span>·</span><span>${open ? dday(m.endDate) : "결과 확인 중"}</span></div>
         <h3 class="pm-q">${esc(m.q)}</h3>
+        ${rq ? `<p class="pm-by">제안 ${esc(m.by || "독자")} · 결과 확인: ${esc(m.how || "")}</p>` : ""}
       </div>
-      <div class="pm-g">${gauge(m.market)}<span>가능성</span></div>
+      <div class="pm-g">${g}</div>
     </div>
     <div class="pm-foot"><div class="pm-actions"></div>${relLink(arts, "preview")}</div>`;
   const actions = el.querySelector(".pm-actions");
   const showMine = (choice, readers, odds) => {
-    actions.innerHTML = `<span class="pm-mine">내 예측 <b>${choiceKo(choice)}</b>${odds != null ? ` · 고를 때 시장 ${pct(odds)}` : ""}</span><span class="pm-readers">${esc(readersLine(readers, choice))}</span>`;
+    actions.innerHTML = `<span class="pm-mine">내 예측 <b>${choiceKo(choice)}</b>${odds != null ? ` · 고를 때 ${rq ? "독자" : "시장"} ${pct(odds)}` : ""}</span><span class="pm-readers">${esc(readersLine(readers, choice))}</span>`;
   };
   if (my) { showMine(my.choice, m.readers, my.pickedOdds); return el; }
   if (!open) { actions.innerHTML = '<span class="pm-readers">예측 마감</span>'; return el; }
@@ -336,7 +363,8 @@ function liveCard(m, my, arts = []) {
         method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "predict", id: m.id, choice: b.dataset.c }),
       });
-      showMine(b.dataset.c, d.readers, b.dataset.c === "yes" ? m.market : 100 - m.market);
+      const base = rq ? (m.odds ?? 50) : m.market;
+      showMine(b.dataset.c, d.readers, b.dataset.c === "yes" ? base : 100 - base);
     } catch (e) {
       actions.querySelectorAll("button").forEach((x) => (x.disabled = false));
       if (e.status === 401) return showLogin(actions);
@@ -377,7 +405,7 @@ function resultRow(m, my, arts = []) {
   el.innerHTML = `
     <div class="pm-rtop"><span class="pm-outcome is-${m.outcome}">결과 ${choiceKo(m.outcome)}</span>${upset}<span class="pm-rmeta">${esc(m.cat)}${day ? ` · ${day}` : ""}</span></div>
     <strong class="pm-rq">${esc(m.q)}</strong>
-    <span class="pm-rodds">${m.final != null ? `시장은 마감 전 '예'를 <b>${pct(m.final)}</b>로 봤어요` : "결과 확정"}${readers}</span>
+    <span class="pm-rodds">${m.final != null ? `${m.kind === "reader" ? "독자는 마감 때" : "시장은 마감 전"} '예'를 <b>${pct(m.final)}</b>로 봤어요` : "결과 확정"}${readers}</span>
     <div class="pm-rfoot">${my ? `<span class="pm-rmine">내 예측 ${choiceKo(my.choice)}</span>${badge}` : ""}${relLink(arts, "result")}</div>`;
   return el;
 }
@@ -397,6 +425,69 @@ async function mountArticleMarket(box) {
     label.textContent = m.status === "resolved" ? "이 기사의 예측 질문 · 결과" : "이 기사의 예측 질문 · 지금 확률";
     box.append(label, m.status === "resolved" ? resultRow(m, my) : liveCard(m, my));
   } catch (e) { /* 카드 없이도 기사는 읽힌다 */ }
+}
+
+// ── 독자 질문 제안 (2026-10-21) ──────────────────────────────────────
+// 진행 중 구역의 '독자 질문' 탭 맨 위. 로그인한 사람만, 관리자 승인 뒤 공개(api/me.js propose).
+function mountProposeBand(liveEl, me) {
+  if (document.getElementById("rq-band")) return;
+  const band = document.createElement("div");
+  band.id = "rq-band";
+  band.className = "rq-band";
+  band.hidden = true;
+  band.innerHTML = `<div class="rq-head"><span><b>궁금한 게 있나요?</b> 예/아니오 질문을 제안하면, 승인 뒤 모두가 예측할 수 있어요.</span><button type="button" class="rq-open">질문 제안하기</button></div>
+    <form class="rq-form" hidden>
+      <label>질문 (예/아니오로 답할 수 있게, 물음표로 끝내기)</label><input name="q" maxlength="80" placeholder="예: LG 트윈스가 2026 한국시리즈에서 우승할까?">
+      <div class="rq-row"><div><label>분야</label><select name="cat">${["스포츠", "경제", "코인", "정치·세계", "테크·문화", "생활·연예"].map((c) => `<option>${c}</option>`).join("")}</select></div>
+      <div><label>마감 (이때까지 예측 받기)</label><input name="closesAt" type="datetime-local"></div></div>
+      <label>결과 확인 방법 (어디서 결과를 확인하나요?)</label><input name="how" maxlength="60" placeholder="예: KBO 공식 발표">
+      <p class="rq-hint">사람을 비방하거나 사행성·불법 내용은 승인되지 않아요. 승인되면 이 탭에 올라가고, 결과는 운영자가 확정해요. 하루 3개까지.</p>
+      <button type="submit" class="rq-submit">제안 보내기</button><p class="rq-msg" role="status"></p>
+    </form>`;
+  liveEl.before(band);
+  const form = band.querySelector("form");
+  band.querySelector(".rq-open").onclick = () => {
+    if (!(me && me.user)) return showLogin(band.querySelector(".rq-head"));
+    form.hidden = !form.hidden;
+  };
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const f = new FormData(form);
+    const msg = form.querySelector(".rq-msg");
+    const c = f.get("closesAt");
+    try {
+      await getJSON(apiUrl("me"), { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "propose", q: f.get("q"), cat: f.get("cat"), how: f.get("how"), closesAt: c ? new Date(c).toISOString() : "" }) });
+      form.reset();
+      msg.className = "rq-msg is-ok";
+      msg.textContent = "제안을 보냈어요. 운영자가 확인한 뒤 공개돼요.";
+    } catch (err) {
+      msg.className = "rq-msg";
+      msg.textContent = err.message;
+    }
+  };
+}
+
+// ── 랭킹 (ranking.html) ────────────────────────────────────────────
+async function mountRanking() {
+  const box = document.getElementById("rk-list");
+  const tabs = document.getElementById("rk-tabs");
+  const load = async (period) => {
+    tabs.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.p === period));
+    box.innerHTML = '<p class="odds-empty">불러오는 중…</p>';
+    try {
+      const r = await getJSON(`${apiUrl("me")}?view=rank&period=${period}`, { credentials: "same-origin" });
+      const medal = { 1: "🥇", 2: "🥈", 3: "🥉" };
+      box.innerHTML = r.rows.length ? `<table class="rk-table"><tr class="rk-headrow"><td>순위</td><td>닉네임</td><td class="num">점수</td><td class="num">적중/결과</td></tr>
+        ${r.rows.map((x) => `<tr class="${x.me ? "is-me" : ""}"><td class="rk-n">${medal[x.rank] || x.rank}</td><td><b>${esc(x.nick)}</b>${x.best >= 60 ? `<span class="rk-tag">${x.best}점짜리 이변 적중</span>` : ""}</td><td class="num"><b>${x.score}</b>점</td><td class="num">${x.wins}/${x.count}</td></tr>`).join("")}</table>
+        ${r.me && !r.rows.some((x) => x.me) ? `<p class="rk-me">내 순위 ${r.me.rank}위 · ${r.me.score}점</p>` : ""}`
+        : '<p class="odds-empty">이 기간에 결과가 나온 예측이 아직 없어요. 결과가 나오면 순위가 생겨요.</p>';
+    } catch (e) {
+      box.innerHTML = `<p class="odds-empty">${esc(e.message)}</p>`;
+    }
+  };
+  tabs.querySelectorAll("button").forEach((b) => (b.onclick = () => load(b.dataset.p)));
+  load("week");
 }
 
 // ── 내 예측 기록 (profile.html) ─────────────────────────────────────

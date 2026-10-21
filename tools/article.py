@@ -234,6 +234,7 @@ _NAV = """<nav class="nav">
   </button>
   <div class="nav-links">
     <a href="https://factorysignal-holdings.vercel.app" class="nav-holdings" target="_blank" rel="noopener">Factory<span> Holdings</span></a>
+    <a href="ranking.html" class="nav-rank">랭킹</a>
     <a href="profile.html" class="nav-cta">내 예측 기록</a>
   </div>
 </nav>"""

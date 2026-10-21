@@ -130,6 +130,7 @@ function shell(content) {
       <button data-t="stats" class="${tab === "stats" ? "on" : ""}">현황</button>
       <button data-t="drafts" class="${tab === "drafts" || tab === "edit" ? "on" : ""}">승인 대기${draftCount ? `<span class="count">${draftCount}</span>` : ""}</button>
       <button data-t="polls" class="${tab === "polls" ? "on" : ""}">투표</button>
+      <button data-t="rq" class="${tab === "rq" ? "on" : ""}">독자 질문</button>
       <button data-t="subs" class="${tab === "subs" ? "on" : ""}">구독자</button>
     </div><div id="view">${content}</div>`;
   $("#logout").onclick = () => { localStorage.removeItem("fm-admin-key"); KEY = ""; renderLogin(); };
@@ -144,6 +145,7 @@ async function render() {
     if (tab === "stats") return renderStats();
     if (tab === "drafts") return renderDrafts(d.drafts, d.syncError);
     if (tab === "polls") return renderPolls();
+    if (tab === "rq") return renderRq();
     if (tab === "subs") return renderSubs();
   } catch (e) { if (e.message !== "401") $("#view").innerHTML = `<p class="muted">${esc(e.message)}</p>`; }
 }
@@ -283,6 +285,40 @@ async function renderPolls() {
       <p class="hint">참여가 많은 순서입니다. 같은 사람(같은 인터넷 주소)은 30일 동안 한 번만 셉니다. 날짜별 투표 수는 10월 20일부터 집계해요.</p></div>`;
   document.querySelectorAll(".pfilter button").forEach((b) => (b.onclick = () => { pollKind = b.dataset.k; draw(); }));
   draw();
+}
+
+// 독자 질문: 제안 승인·거절, 마감된 질문의 결과 확정 (2026-10-21)
+async function renderRq() {
+  const d = await api({ view: "proposals" });
+  shell("");
+  const when = (s) => (s ? new Date(s).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "");
+  const local = (s) => { const t = new Date(s); return new Date(t - t.getTimezoneOffset() * 6e4).toISOString().slice(0, 16); };
+  const pend = d.pending.length ? d.pending.map((r) => `<div class="poll" style="cursor:default">
+      <div class="m">${esc(r.cat)} · 제안 ${esc(r.byNick || "")} · ${when(r.createdAt)} · 결과 확인: ${esc(r.how || "")}</div>
+      <input class="rq-q" data-id="${esc(r.id)}" value="${esc(r.q)}" style="width:100%;margin:8px 0;padding:8px 10px;border:1px solid var(--line);border-radius:8px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="muted">마감</span><input type="datetime-local" class="rq-c" data-id="${esc(r.id)}" value="${local(r.closesAt)}" style="padding:6px;border:1px solid var(--line);border-radius:8px">
+      <button class="btn primary" data-ok="${esc(r.id)}">승인 (공개)</button><button class="btn danger" data-no="${esc(r.id)}">거절</button></div></div>`).join("")
+    : '<p class="muted">새 제안이 없어요.</p>';
+  const wait = d.awaiting.length ? d.awaiting.map((r) => `<div class="poll" style="cursor:default"><div class="q">${esc(r.q)}</div>
+      <div class="m">마감 ${when(r.closesAt)} · 결과 확인: ${esc(r.how || "")} · 독자 예 ${r.yes} / 아니오 ${r.no}</div>
+      <div style="display:flex;gap:8px;margin-top:8px"><button class="btn primary" data-res="yes" data-id="${esc(r.id)}">결과: 예</button><button class="btn primary" data-res="no" data-id="${esc(r.id)}">결과: 아니오</button><button class="btn" data-res="void" data-id="${esc(r.id)}">무효 (점수 없음)</button></div></div>`).join("")
+    : '<p class="muted">결과를 정할 질문이 없어요.</p>';
+  const live = d.live.length ? d.live.map((r) => `<li><span>${esc(r.q)}</span><b>${when(r.closesAt)} 마감 · ${r.yes + r.no}명</b></li>`).join("") : "";
+  $("#view").innerHTML = `
+    <div class="card"><h2>결과를 정해 주세요 (${d.awaiting.length})</h2>${wait}<p class="hint">결과를 정하면 맞힌 사람에게 랭킹 점수가 들어가요. 확실하지 않으면 '무효'를 고르세요.</p></div>
+    <div class="card"><h2>새 제안 (${d.pending.length})</h2>${pend}<p class="hint">사람을 비방하거나, 결과를 확인할 수 없거나, 사행성·불법 내용이면 거절하세요. 문구와 마감은 고친 뒤 승인할 수 있어요.</p></div>
+    ${live ? `<div class="card"><h2>진행 중인 독자 질문</h2><ol class="top">${live}</ol></div>` : ""}`;
+  const act = async (body) => { try { await api(null, body); renderRq(); } catch (e) { alert(e.message); } };
+  document.querySelectorAll("[data-ok]").forEach((b) => (b.onclick = () => {
+    const id = b.dataset.ok;
+    const c = document.querySelector(`.rq-c[data-id="${id}"]`).value;
+    act({ action: "rq_approve", id, q: document.querySelector(`.rq-q[data-id="${id}"]`).value, closesAt: c ? new Date(c).toISOString() : "" });
+  }));
+  document.querySelectorAll("[data-no]").forEach((b) => (b.onclick = () => confirm("이 제안을 거절할까요?") && act({ action: "rq_reject", id: b.dataset.no })));
+  document.querySelectorAll("[data-res]").forEach((b) => (b.onclick = () => {
+    const label = { yes: "예", no: "아니오", void: "무효" }[b.dataset.res];
+    if (confirm(`결과를 '${label}'(으)로 확정할까요? 되돌릴 수 없어요.`)) act({ action: "rq_resolve", id: b.dataset.id, outcome: b.dataset.res });
+  }));
 }
 
 async function renderSubs() {

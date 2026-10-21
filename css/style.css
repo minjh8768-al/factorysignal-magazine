@@ -2003,3 +2003,39 @@ footer {
 .sb-mine { font-size: 0.8rem; padding: 6px 0; border-top: 1px solid var(--gray-100); }
 .sb-mine span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sb-mine em { font-style: normal; color: var(--accent); font-size: 0.75rem; }
+
+/* ── 2026-10-21: 독자 질문 · 랭킹 ─────────────────────────────────── */
+.mk-tabs button.rq-tab { border-color: #c4b5fd; color: #6d28d9; }
+.mk-tabs button.rq-tab.active { background: #7c3aed; border-color: #7c3aed; color: var(--white); }
+.pm-card.is-rq .pm-cat { color: #7c3aed; }
+.pm-card.is-rq .g-on { stroke: #7c3aed; }
+.pm-by { font-size: 0.75rem; color: var(--gray-400); margin-top: 4px; }
+.pm-few { width: 84px; height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 10px; background: #f5f3ff; }
+.pm-few b { font-size: 1rem; color: #6d28d9; } .pm-few span { font-size: 0.68rem; color: var(--gray-400); }
+.rq-band { border: 1px dashed #c4b5fd; border-radius: 14px; background: #faf5ff; padding: 14px 18px; margin-bottom: 12px; }
+.rq-band[hidden] { display: none; }
+.rq-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 0.9rem; }
+.rq-head b { color: #6d28d9; }
+.rq-open, .rq-submit { background: #7c3aed; color: var(--white); border: 0; padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+.rq-form { margin-top: 12px; }
+.rq-form[hidden] { display: none; }
+.rq-form label { display: block; font-size: 0.78rem; font-weight: 700; color: var(--gray-600); margin: 10px 0 5px; }
+.rq-form input, .rq-form select { width: 100%; padding: 9px 11px; border: 1px solid var(--gray-200); border-radius: 8px; font: inherit; background: var(--white); }
+.rq-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.rq-hint { font-size: 0.72rem; color: var(--gray-400); margin: 8px 0; line-height: 1.5; }
+.rq-submit { width: 100%; padding: 10px; }
+.rq-msg { font-size: 0.82rem; margin-top: 8px; color: #c42536; } .rq-msg.is-ok { color: #0b8a55; }
+.rq-band .pm-login { margin-top: 10px; }
+.sb-title { display: flex; justify-content: space-between; align-items: baseline; }
+.sb-title a { font-size: 0.75rem; color: var(--accent); font-weight: 700; }
+.sb-myrank { background: var(--accent-dim); color: var(--accent); border-radius: 8px; padding: 7px 10px; font-size: 0.8rem; font-weight: 700; margin-top: 8px; }
+.ranking-page .pf-lead { margin-bottom: 14px; }
+.rk-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; background: var(--white); border: 1px solid var(--gray-200); border-radius: 14px; overflow: hidden; }
+.rk-table td { padding: 12px 10px; border-top: 1px solid var(--gray-100); }
+.rk-headrow td { font-size: 0.75rem; color: var(--gray-400); border-top: 0; }
+.rk-n { width: 48px; text-align: center; font-size: 1.05rem; }
+.rk-table .num { text-align: right; font-variant-numeric: tabular-nums; color: var(--gray-600); }
+.rk-table tr.is-me td { background: var(--accent-dim); }
+.rk-tag { margin-left: 8px; font-size: 0.7rem; background: #fef3c7; color: #b45309; padding: 2px 7px; border-radius: 999px; font-weight: 700; }
+.rk-me { margin-top: 10px; font-weight: 700; color: var(--accent); }
+.rk-how { font-size: 0.8rem; color: var(--gray-600); background: var(--gray-100); border-radius: 10px; padding: 12px 14px; margin-top: 16px; line-height: 1.6; }

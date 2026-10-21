@@ -39,11 +39,34 @@ async function live(id) {
   return { closed: Boolean(m.closed), price: p };
 }
 
+// ── 독자 질문 (2026-10-21) ─────────────────────────────────────
+// 로그인한 독자가 제안 → 관리자가 승인한 예/아니오 질문. 시장 확률 대신 독자 '예' 비율(market)을 쓴다.
+// rq:{id} 해시(q, cat=분야, closesAt, how, by, byNick, status, outcome, final, resolvedAt, createdAt)
+// rq:pending / rq:live / rq:resolved = 정렬 집합(점수 = 시각). 표는 Polymarket 질문과 같은 poll:pm-{id}.
+const RQ_CAT = '독자 질문';
+async function readerQuestions() {
+  const [live, done] = await kv([['ZRANGE', 'rq:live', 0, -1], ['ZREVRANGE', 'rq:resolved', 0, 199]]);
+  const ids = [...(live || []), ...(done || [])];
+  if (!ids.length) return [];
+  const rows = await kv(ids.flatMap((id) => [['HGETALL', `rq:${id}`], ['HGETALL', `poll:pm-${id}`]]));
+  return ids.map((id, i) => {
+    const r = hpairs(rows[2 * i]), c = hpairs(rows[2 * i + 1]);
+    const yes = Number(c.yes) || 0, n = yes + (Number(c.no) || 0);
+    const base = { id, q: r.q, cat: RQ_CAT, sub: r.cat || '', endDate: r.closesAt, addedAt: r.createdAt,
+      kind: 'reader', by: r.byNick || '', how: r.how || '', voters: n };
+    if (r.status === 'resolved') return { ...base, status: 'resolved', outcome: r.outcome, final: Number(r.final), resolvedAt: r.resolvedAt };
+    const market = n ? Math.round((yes / n) * 1000) / 10 : null;
+    // 랭킹 점수용 기준 확률: 표가 적을 때 한두 명의 표로 0%·100%가 되지 않게 50% 쪽으로 당긴다(가상 10표).
+    const odds = Math.round(((yes + 5) / (n + 10)) * 1000) / 10;
+    return { ...base, status: Date.parse(r.closesAt) < Date.now() ? 'closed' : 'live', market, odds };
+  }).filter((x) => x.q);
+}
+
 // 모든 질문의 현재 상태. 진행 중인 것만 실시간 조회하고 60초간 재사용한다.
 // status: live(진행 중) | closed(마감, 결과 확인 중) | resolved(결과 확정)
-async function markets() {
-  if (cache.list && Date.now() - cache.at < 60e3) return cache.list;
-  const list = await Promise.all(DATA.markets.map(async (m) => {
+async function markets(fresh) {
+  if (!fresh && cache.list && Date.now() - cache.at < 60e3) return cache.list;
+  const pm = await Promise.all(DATA.markets.map(async (m) => {
     const base = { id: m.id, q: m.q, cat: m.cat, endDate: m.endDate, addedAt: m.addedAt };
     if (m.status === 'resolved') return { ...base, status: 'resolved', outcome: m.outcome, final: m.final, resolvedAt: m.resolvedAt };
     let g = null;
@@ -57,6 +80,9 @@ async function markets() {
     if (Date.parse(m.endDate) < Date.now()) return { ...base, status: 'closed', market };
     return { ...base, status: 'live', market };
   }));
+  let rq = [];
+  try { rq = await readerQuestions(); } catch (e) { /* 독자 질문 없이도 */ }
+  const list = [...pm, ...rq];
   cache = { at: Date.now(), list };
   return list;
 }
@@ -81,4 +107,4 @@ function clearUid(res) {
 
 const newUid = () => crypto.randomBytes(12).toString('hex');
 
-module.exports = { kv, hpairs, markets, readUid, setUid, clearUid, newUid, ready, DATA };
+module.exports = { kv, hpairs, markets, readUid, setUid, clearUid, newUid, ready, DATA, RQ_CAT };
