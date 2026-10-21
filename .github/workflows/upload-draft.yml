@@ -1,0 +1,35 @@
+# 손으로 쓴 예측 기사 초안을 관리자 '승인 대기'로 보낸다 (2026-10-21).
+# tools/manual_draft.py --upload 가 실행한다. 초안을 결과물(drafts-<실행번호>)로 올리면
+# 관리자 페이지가 가져간다 (api/admin.js syncDrafts). 발행은 여전히 사람이 승인해야 한다.
+name: upload-draft
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: '파일 이름 (YYYY-MM-DD-slug.html)'
+        required: true
+      html_b64:
+        description: '초안 HTML (base64)'
+        required: true
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 초안 파일 만들기
+        env:
+          NAME: ${{ inputs.name }}
+          HTML_B64: ${{ inputs.html_b64 }}
+        run: |
+          echo "$NAME" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9][a-z0-9-]{2,119}\.html$' || { echo "파일 이름 형식 오류"; exit 1; }
+          mkdir -p _drafts
+          printf '%s' "$HTML_B64" | base64 -d > "_drafts/$NAME"
+          grep -q 'name="fs:market"' "_drafts/$NAME" || { echo "예측 기사 형식이 아님"; exit 1; }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: drafts-${{ github.run_id }}
+          path: _drafts/
+          retention-days: 14
