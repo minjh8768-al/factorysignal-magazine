@@ -613,17 +613,28 @@ def mkt_cat(category):
     return OLD_TO_MKT.get(category, category if category in MKT_CATS else "")
 
 
-def market_articles_html(rows):
-    """첫 화면 기사 카드들 + 질문별 기사 목록(JSON, 예측 카드의 '관련 기사' 링크용)."""
+MKT_ONLY_START = "<!-- MARKET-ONLY:START -->"
+MKT_ONLY_END = "<!-- MARKET-ONLY:END -->"
+
+
+def market_articles_html(rows, only_market=False):
+    """첫 화면 기사 카드들 + 질문별 기사 목록(JSON, 예측 카드의 '관련 기사' 링크용).
+    only_market: 지난 예측 페이지용 — 예측 질문에 연결된 기사만, 전부."""
     import json as _json
     esc = lambda v: html.escape(str(v), quote=True)
     rows = [r for r in rows if mkt_cat(r["category"]) and not r["slug"].endswith("-en")]
+    if only_market:
+        rows = [r for r in rows if r.get("market")]
+        if not rows:
+            return ('\n<p class="odds-empty">예측 기사는 곧 올라와요.</p>\n'
+                    '<script type="application/json" id="mk-links">{}</script>\n')
     ordered = sorted(rows, key=lambda r: (bool(r.get("market")), r["date"]), reverse=True)
     picked, seen = [], set()
+    per_cat = 10 ** 6 if only_market else MKT_PER_CAT
     for cat in (None,) + MKT_CATS:
         n = 0
         for r in ordered:
-            if n >= MKT_PER_CAT:
+            if n >= per_cat:
                 break
             if cat and mkt_cat(r["category"]) != cat:
                 continue

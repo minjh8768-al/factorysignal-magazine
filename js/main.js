@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const part = hour < 12 ? "아침" : hour < 18 ? "오후" : "저녁";
     briefDate.textContent = `${day} ${part}의 예측`;
   }
-  if (document.getElementById("pm-live")) mountMarkets();
+  if (document.getElementById("pm-live") || document.getElementById("pm-resolved")) mountMarkets();
   if (document.getElementById("pf-head")) mountProfile();
 
   const nav = document.querySelector(".nav");
@@ -180,7 +180,7 @@ function mountArticles(markets) {
   catTabs(document.getElementById("tabs-articles"), cards.map((c) => c.dataset.cat), (cat) => {
     let n = 0;
     cards.forEach((c) => {
-      const show = (cat === "전체" || c.dataset.cat === cat) && n < 9;
+      const show = (cat === "전체" || c.dataset.cat === cat) && n < (document.getElementById("pm-live") ? 9 : Infinity);
       if (show) n++;
       c.hidden = !show;
     });
@@ -208,10 +208,11 @@ async function mountMarkets() {
   let data, me;
   try {
     [data, me] = await Promise.all([
-      getJSON(apiUrl("markets")),
+      getJSON(apiUrl("markets") + (liveEl ? "" : "?all=1")),
       getJSON(apiUrl("me"), { credentials: "same-origin" }).catch(() => ({ preds: [] })),
     ]);
   } catch (e) {
+    if (!liveEl) { resEl.innerHTML = '<p class="odds-empty">지금은 불러올 수 없어요. 잠시 후 다시 확인해 주세요.</p>'; return; }
     liveEl.innerHTML = '<p class="odds-empty">지금은 질문을 불러올 수 없어요. 잠시 후 다시 확인해 주세요.</p>';
     resEl.innerHTML = "";
     return;
@@ -222,11 +223,14 @@ async function mountMarkets() {
   const liveCards = data.live.map((m) => liveCard(m, mine[m.id], links[m.id] || []));
   const resRows = data.resolved.map((m) => resultRow(m, mine[m.id], links[m.id] || []));
   const fill = (el, items, list, empty) => (cat) => {
+    const limit = Number(el.dataset.limit) || Infinity;   // 첫 화면 결과는 6개(3칸 × 2줄)만
     el.innerHTML = "";
-    items.forEach((node, i) => { if (cat === "전체" || list[i].cat === cat) el.append(node); });
+    items.forEach((node, i) => {
+      if ((cat === "전체" || list[i].cat === cat) && el.children.length < limit) el.append(node);
+    });
     if (!el.children.length) el.innerHTML = `<p class="odds-empty">${empty}</p>`;
   };
-  catTabs(document.getElementById("tabs-live"), data.live.map((m) => m.cat),
+  if (liveEl) catTabs(document.getElementById("tabs-live"), data.live.map((m) => m.cat),
     fill(liveEl, liveCards, data.live, "새 질문을 고르는 중이에요."));
   catTabs(document.getElementById("tabs-resolved"), data.resolved.map((m) => m.cat),
     fill(resEl, resRows, data.resolved, "아직 결과가 나온 질문이 없어요."));
@@ -305,17 +309,21 @@ async function showLogin(actions) {
   actions.after(box);
 }
 
+// 결과 카드. 시장이 50% 미만으로 본 쪽이 실제로 일어났으면 '이변' 표시.
 function resultRow(m, my, arts = []) {
-  const el = document.createElement("div");
-  el.className = "pm-result";
+  const el = document.createElement("article");
+  el.className = "pm-rcard";
   const total = (m.readers.yes || 0) + (m.readers.no || 0);
   const readers = total >= READER_MIN ? ` · 독자 ${pct((m.readers.yes / total) * 100)} 예` : "";
   const badge = my ? (my.choice === m.outcome ? '<span class="pm-win">적중</span>' : '<span class="pm-lose">빗나감</span>') : "";
+  const sideOdds = m.final == null ? null : m.outcome === "yes" ? m.final : 100 - m.final;
+  const upset = sideOdds != null && sideOdds < 50 ? '<span class="pm-upset">이변</span>' : "";
+  const day = (m.resolvedAt || "").slice(5, 10).replace("-", ".");
   el.innerHTML = `
-    <span class="pm-outcome is-${m.outcome}">${choiceKo(m.outcome)}</span>
-    <div class="pm-result-body"><strong>${esc(m.q)}</strong>
-      <span>${esc(m.cat)} · ${m.final != null ? `시장은 마감 전 '예'를 ${pct(m.final)}로 봤어요` : "결과 확정"}${readers}${my ? ` · 내 예측 ${choiceKo(my.choice)}` : ""}</span></div>
-    ${badge}${relLink(arts, "result")}`;
+    <div class="pm-rtop"><span class="pm-outcome is-${m.outcome}">결과 ${choiceKo(m.outcome)}</span>${upset}<span class="pm-rmeta">${esc(m.cat)}${day ? ` · ${day}` : ""}</span></div>
+    <strong class="pm-rq">${esc(m.q)}</strong>
+    <span class="pm-rodds">${m.final != null ? `시장은 마감 전 '예'를 <b>${pct(m.final)}</b>로 봤어요` : "결과 확정"}${readers}</span>
+    <div class="pm-rfoot">${my ? `<span class="pm-rmine">내 예측 ${choiceKo(my.choice)}</span>${badge}` : ""}${relLink(arts, "result")}</div>`;
   return el;
 }
 

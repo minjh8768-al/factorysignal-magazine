@@ -1930,3 +1930,25 @@ footer {
 .mk-chip:empty { display: none; }
 .mk-chip.is-live { background: var(--accent-dim); color: var(--accent); }
 .mk-chip.is-done { background: #e6f7ef; color: #0b8a55; }
+
+/* ── 2026-10-21: 결과 카드 3칸 × 2줄 + 지난 예측 페이지 ───────────────── */
+.pm-rgrid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 640px) { .pm-rgrid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1000px) { .pm-rgrid { grid-template-columns: repeat(3, 1fr); } }
+.pm-rcard { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border: 1px solid var(--gray-200); border-radius: 14px; background: var(--white); }
+.pm-rtop { display: flex; align-items: center; gap: 6px; }
+.pm-rcard .pm-outcome { width: auto; padding: 3px 9px; font-size: 0.75rem; border-radius: 999px; }
+.pm-upset { font-size: 0.72rem; font-weight: 800; color: #b45309; background: #fef3c7; padding: 3px 8px; border-radius: 999px; }
+.pm-rmeta { margin-left: auto; font-size: 0.75rem; color: var(--gray-400); white-space: nowrap; }
+.pm-rq { font-size: 0.95rem; line-height: 1.45; word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.9em; }
+.pm-rodds { font-size: 0.8rem; color: var(--gray-600); }
+.pm-rodds b { color: var(--black); }
+.pm-rfoot { display: flex; align-items: center; gap: 8px; min-height: 20px; }
+.pm-rfoot:empty { display: none; }
+.pm-rmine { font-size: 0.78rem; color: var(--gray-600); }
+.pm-rfoot .pm-rel { margin-left: auto; }
+.pm-all { display: block; margin-top: 14px; padding: 12px; text-align: center; border: 1px solid var(--gray-200); border-radius: 12px; font-size: 0.9rem; font-weight: 700; color: var(--black); background: var(--white); }
+.pm-all:hover { border-color: var(--accent); color: var(--accent); }
+.results-page { padding: 104px 0 56px; }
+.results-page h1 { font-size: 1.6rem; margin-bottom: 6px; }
+.results-page .pf-lead { margin-bottom: 20px; }

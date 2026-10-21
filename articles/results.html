@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>지난 예측과 결과 — Factory Magazine</title>
+<meta name="description" content="해외 예측시장이 몇 %로 봤던 질문들이 실제로 어떻게 끝났는지, 결과와 기사를 모았습니다." />
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+
+<nav class="nav">
+  <button class="nav-toggle" aria-label="메뉴 열기">
+    <span></span><span></span><span></span>
+  </button>
+  <a href="index.html" class="nav-logo">Factory<span> Magazine</span></a>
+  <button type="button" class="nav-search" aria-label="검색" title="검색 (준비 중)">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+  </button>
+  <div class="nav-links">
+    <a href="https://factorysignal-holdings.vercel.app" class="nav-holdings" target="_blank" rel="noopener">Factory<span> Holdings</span></a>
+    <a href="profile.html" class="nav-cta">내 예측 기록</a>
+  </div>
+</nav>
+
+
+<main class="results-page">
+  <div class="wrap">
+    <!-- 지난 예측 (2026-10-21). 결과는 api/markets.js?all=1, 기사 목록은 publish.py가 아래 표시 사이에 채운다. -->
+    <h1>지난 예측과 결과</h1>
+    <p class="pf-lead">세계는 몇 %로 봤고, 실제로는 어떻게 됐을까요. 시장이 50% 미만으로 본 일이 일어나면 '이변'으로 표시해요.</p>
+    <div class="mk-tabs" id="tabs-resolved"></div>
+    <div class="pm-rgrid" id="pm-resolved"><p class="odds-empty">불러오는 중…</p></div>
+  </div>
+</main>
+
+<section class="pm-section">
+  <div class="wrap">
+    <div class="pm-head"><h2>예측 · 결과 기사</h2><span class="pm-sub">질문을 둘러싼 이야기와 결과가 난 뒤의 이야기</span><a class="mk-more" href="all.html">전체 기사 →</a></div>
+    <div class="mk-tabs" id="tabs-articles"></div>
+    <!-- MARKET-ONLY:START -->
+<p class="odds-empty">예측 기사는 곧 올라와요.</p>
+<script type="application/json" id="mk-links">{}</script>
+<!-- MARKET-ONLY:END -->
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-logo">Factory<span> Magazine</span></a>
+        <p class="footer-tagline">노이즈 속에서, 신호를 찾습니다.</p>
+        <p>세계가 몇 %로 보는지, 확률로 읽는 뉴스를 만드는 매체입니다.</p>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h4>예측</h4>
+          <ul>
+            <li><a href="index.html">진행 중인 예측</a></li>
+            <li><a href="results.html">지난 예측</a></li>
+            <li><a href="profile.html">내 예측 기록</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>링크</h4>
+          <ul>
+            <li><a href="all.html">지난 기사</a></li>
+            <li><a href="privacy.html">개인정보처리방침</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Factory Magazine</span>
+    </div>
+  </div>
+</footer>
+
+<script src="../js/main.js"></script>
+</body>
+</html>

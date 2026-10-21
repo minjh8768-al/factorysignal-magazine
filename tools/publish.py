@@ -156,6 +156,10 @@ def rebuild_index(apply_changes):
         return text
 
     changed = _rewrite(INDEX, home, apply_changes) or changed
+    results = os.path.join(ARTICLES, "results.html")       # 지난 예측 페이지 (2026-10-21)
+    changed = _rewrite(results, lambda t: article.replace_between(
+        t, article.MKT_ONLY_START, article.MKT_ONLY_END, article.market_articles_html(rows, only_market=True))
+        if article.MKT_ONLY_START in t else t, apply_changes) or changed
     if apply_changes:
         write_sitemap()
     return rows, changed
