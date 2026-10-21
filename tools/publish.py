@@ -73,6 +73,9 @@ def read_meta(path):
         "video": _meta(text, "fs:video"),
         "date": _meta(text, "fs:date"),
         "kind": _meta(text, "fs:kind"),
+        # 예측 기사(2026-10-21~): 연결된 Polymarket 질문 id와 종류(preview=예측 기사, result=결과 기사)
+        "market": _meta(text, "fs:market"),
+        "market_kind": _meta(text, "fs:market_kind"),
         "photo": _meta(text, "fs:photo"),
         "photo_by": _meta(text, "fs:photo_by"),
         "thumb": _meta(text, "fs:thumb"),
@@ -145,6 +148,9 @@ def rebuild_index(apply_changes):
             shown = set(top3) | article.home_top_slugs(rows, top3)
             text = article.replace_between(text, article.HOME_SEC_START, article.HOME_SEC_END,
                                            article.home_sections_html(rows, shown))
+        if article.MKT_START in text:            # 2026-10-21 첫 화면: 예측 + 분야별 기사
+            text = article.replace_between(text, article.MKT_START, article.MKT_END,
+                                           article.market_articles_html(rows))
         if article.CARDS_START in text:          # 예전 구조(카드 목록이 첫 화면에 있던 때)
             text = article.replace_cards(text, cards)
         return text

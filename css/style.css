@@ -1892,3 +1892,41 @@ footer {
 .pm-login .pf-login { margin-top: 0; }
 .pm-login .pf-btn { padding: 8px 14px; font-size: 0.85rem; }
 .pm-grid { align-items: start; }
+
+/* ── 2026-10-21: 분야 탭 · 확률 게이지 카드 · 기사 구역 ─────────────────── */
+.mk-tabs { display: flex; gap: 6px; margin: 0 0 14px; flex-wrap: wrap; }
+.mk-tabs:empty { display: none; }
+.mk-tabs button { padding: 6px 14px; border-radius: 999px; border: 1px solid var(--gray-200); background: var(--white); font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+.mk-tabs button.active { background: var(--black); border-color: var(--black); color: var(--white); }
+.pm-card { gap: 12px; padding: 16px 18px 14px; }
+.pm-main { display: flex; gap: 14px; align-items: flex-start; }
+.pm-text { flex: 1; min-width: 0; }
+.pm-meta { justify-content: flex-start; gap: 6px; margin-bottom: 6px; }
+.pm-q { font-size: 1rem; }
+.pm-g { flex-shrink: 0; width: 84px; text-align: center; font-size: 0.7rem; color: var(--gray-400); line-height: 1; }
+.pm-gauge { display: block; width: 84px; height: 50px; }
+.pm-gauge path { fill: none; stroke-width: 8; stroke-linecap: round; }
+.pm-gauge .g-bg { stroke: var(--gray-100); }
+.pm-gauge .g-on { stroke: var(--accent); }
+.pm-gauge .g-num { font-size: 15px; font-weight: 800; text-anchor: middle; fill: var(--black); font-family: inherit; }
+.pm-foot { display: flex; align-items: center; gap: 10px; }
+.pm-foot .pm-actions { flex: 1; min-height: 34px; }
+.pm-foot .pm-actions button { padding: 7px 0; font-size: 0.85rem; }
+.pm-rel, .pm-result .pm-rel { flex-shrink: 0; font-size: 0.8rem; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.pm-rel:hover { text-decoration: underline; }
+.mk-more { margin-left: auto; font-size: 0.85rem; font-weight: 700; color: var(--accent); }
+.mk-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 640px) { .mk-grid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1000px) { .mk-grid { grid-template-columns: repeat(3, 1fr); } }
+.mk-art { display: flex; flex-direction: column; border: 1px solid var(--gray-200); border-radius: 14px; overflow: hidden; background: var(--white); }
+.mk-art[hidden] { display: none; }
+.mk-art .article-thumb { aspect-ratio: 16 / 9; height: auto; border-radius: 0; margin: 0; }
+.mk-art-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; }
+.mk-art h4 { font-size: 1rem; line-height: 1.45; word-break: keep-all; }
+.mk-art:hover h4 { color: var(--accent); }
+.mk-kind { font-size: 0.72rem; font-weight: 800; color: var(--accent); }
+.mk-kind--result { color: #0b8a55; }
+.mk-chip { align-self: flex-start; font-size: 0.75rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; }
+.mk-chip:empty { display: none; }
+.mk-chip.is-live { background: var(--accent-dim); color: var(--accent); }
+.mk-chip.is-done { background: #e6f7ef; color: #0b8a55; }

@@ -155,6 +155,53 @@ async function getJSON(url, opts) {
   return d;
 }
 
+// 분야 탭. 세 구역(진행 중 · 결과 · 기사)이 같은 분야 순서를 쓴다. 해당 분야에 항목이 없으면 탭도 없다.
+const MKT_CATS = ["경제", "코인", "정치·세계", "스포츠", "테크·문화"];
+const OLD_CAT = { "경제": "경제", "코인": "암호화폐", "정치·세계": "정치", "스포츠": "스포츠", "테크·문화": "스타트업" };
+
+function catTabs(box, cats, onPick) {
+  if (!box) return;
+  const present = MKT_CATS.filter((c) => cats.includes(c));
+  box.innerHTML = ["전체", ...present].map((c) => `<button type="button" data-cat="${c}">${c}</button>`).join("");
+  const pick = (c) => {
+    box.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.cat === c));
+    onPick(c);
+  };
+  box.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => pick(b.dataset.cat)));
+  pick("전체");
+}
+
+// 기사 구역: publish.py가 카드(data-cat)와 질문별 기사 목록(#mk-links)을 미리 심어 둔다.
+function mountArticles(markets) {
+  const grid = document.getElementById("mk-grid");
+  if (!grid) return;
+  const cards = [...grid.querySelectorAll(".mk-art")];
+  const more = document.getElementById("mk-more");
+  catTabs(document.getElementById("tabs-articles"), cards.map((c) => c.dataset.cat), (cat) => {
+    let n = 0;
+    cards.forEach((c) => {
+      const show = (cat === "전체" || c.dataset.cat === cat) && n < 9;
+      if (show) n++;
+      c.hidden = !show;
+    });
+    if (more) more.href = cat === "전체" ? "all.html" : `all.html?cat=${encodeURIComponent(OLD_CAT[cat])}`;
+  });
+  // 예측 기사 카드에 연결된 질문의 지금 상태를 붙인다.
+  const byId = Object.fromEntries(markets.map((m) => [m.id, m]));
+  grid.querySelectorAll(".mk-chip[data-market]").forEach((chip) => {
+    const m = byId[chip.dataset.market];
+    if (!m) return;
+    chip.classList.add(m.status === "resolved" ? "is-done" : "is-live");
+    chip.textContent = m.status === "resolved"
+      ? `결과 ${choiceKo(m.outcome)} · 마감 전 ${pct(m.final)}`
+      : `진행 중 · 시장 ${pct(m.market)}`;
+  });
+}
+
+function marketLinks() {
+  try { return JSON.parse(document.getElementById("mk-links").textContent || "{}"); } catch (e) { return {}; }
+}
+
 async function mountMarkets() {
   const liveEl = document.getElementById("pm-live");
   const resEl = document.getElementById("pm-resolved");
@@ -171,24 +218,51 @@ async function mountMarkets() {
   }
   const mine = Object.fromEntries((me.preds || []).map((p) => [p.id, p]));
 
-  liveEl.innerHTML = "";
-  if (!data.live.length) liveEl.innerHTML = '<p class="odds-empty">새 질문을 고르는 중이에요.</p>';
-  data.live.forEach((m) => liveEl.append(liveCard(m, mine[m.id])));
-
-  resEl.innerHTML = "";
-  if (!data.resolved.length) resEl.innerHTML = '<p class="odds-empty">아직 결과가 나온 질문이 없어요. 첫 결과는 곧 나와요.</p>';
-  data.resolved.forEach((m) => resEl.append(resultRow(m, mine[m.id])));
+  const links = marketLinks();
+  const liveCards = data.live.map((m) => liveCard(m, mine[m.id], links[m.id] || []));
+  const resRows = data.resolved.map((m) => resultRow(m, mine[m.id], links[m.id] || []));
+  const fill = (el, items, list, empty) => (cat) => {
+    el.innerHTML = "";
+    items.forEach((node, i) => { if (cat === "전체" || list[i].cat === cat) el.append(node); });
+    if (!el.children.length) el.innerHTML = `<p class="odds-empty">${empty}</p>`;
+  };
+  catTabs(document.getElementById("tabs-live"), data.live.map((m) => m.cat),
+    fill(liveEl, liveCards, data.live, "새 질문을 고르는 중이에요."));
+  catTabs(document.getElementById("tabs-resolved"), data.resolved.map((m) => m.cat),
+    fill(resEl, resRows, data.resolved, "아직 결과가 나온 질문이 없어요."));
+  mountArticles([...data.live, ...data.resolved]);
 }
 
-function liveCard(m, my) {
+// 반원 게이지. 시장이 '예'에 매긴 확률을 호의 길이로 보여 준다. 숫자도 함께 적어 색에만 기대지 않는다.
+function gauge(p) {
+  const r = 34, len = Math.PI * r;
+  const on = Math.max(0, Math.min(100, p)) / 100 * len;
+  return `<svg class="pm-gauge" viewBox="0 0 84 50" role="img" aria-label="시장이 본 '예' 확률 ${pct(p)}">
+    <path d="M8 44 A34 34 0 0 1 76 44" class="g-bg"/>
+    <path d="M8 44 A34 34 0 0 1 76 44" class="g-on" stroke-dasharray="${on} ${len}"/>
+    <text x="42" y="40" class="g-num">${pct(p)}</text></svg>`;
+}
+
+function relLink(arts, kind) {
+  const a = arts.find((x) => x.kind === kind) || arts[0];
+  if (!a) return "";
+  const label = kind === "result" ? "결과 기사" : "관련 기사";
+  return `<a class="pm-rel" href="${esc(a.slug)}.html">${label}${arts.length > 1 ? ` ${arts.length}편` : ""} →</a>`;
+}
+
+function liveCard(m, my, arts = []) {
   const el = document.createElement("article");
   el.className = "pm-card";
   const open = m.status === "live";
   el.innerHTML = `
-    <div class="pm-meta"><span class="pm-cat">${esc(m.cat)}</span><span>${open ? dday(m.endDate) : "결과 확인 중"}</span></div>
-    <h3 class="pm-q">${esc(m.q)}</h3>
-    <div class="pm-odds"><span class="pm-track"><span style="width:${m.market}%"></span></span><span class="pm-num">시장 <b>${pct(m.market)}</b></span></div>
-    <div class="pm-actions"></div>`;
+    <div class="pm-main">
+      <div class="pm-text">
+        <div class="pm-meta"><span class="pm-cat">${esc(m.cat)}</span><span>·</span><span>${open ? dday(m.endDate) : "결과 확인 중"}</span></div>
+        <h3 class="pm-q">${esc(m.q)}</h3>
+      </div>
+      <div class="pm-g">${gauge(m.market)}<span>가능성</span></div>
+    </div>
+    <div class="pm-foot"><div class="pm-actions"></div>${relLink(arts, "preview")}</div>`;
   const actions = el.querySelector(".pm-actions");
   const showMine = (choice, readers, odds) => {
     actions.innerHTML = `<span class="pm-mine">내 예측 <b>${choiceKo(choice)}</b>${odds != null ? ` · 고를 때 시장 ${pct(odds)}` : ""}</span><span class="pm-readers">${esc(readersLine(readers, choice))}</span>`;
@@ -231,7 +305,7 @@ async function showLogin(actions) {
   actions.after(box);
 }
 
-function resultRow(m, my) {
+function resultRow(m, my, arts = []) {
   const el = document.createElement("div");
   el.className = "pm-result";
   const total = (m.readers.yes || 0) + (m.readers.no || 0);
@@ -240,8 +314,8 @@ function resultRow(m, my) {
   el.innerHTML = `
     <span class="pm-outcome is-${m.outcome}">${choiceKo(m.outcome)}</span>
     <div class="pm-result-body"><strong>${esc(m.q)}</strong>
-      <span>${m.final != null ? `시장은 마감 전 '예'를 ${pct(m.final)}로 봤어요` : "결과 확정"}${readers}${my ? ` · 내 예측 ${choiceKo(my.choice)}` : ""}</span></div>
-    ${badge}`;
+      <span>${esc(m.cat)} · ${m.final != null ? `시장은 마감 전 '예'를 ${pct(m.final)}로 봤어요` : "결과 확정"}${readers}${my ? ` · 내 예측 ${choiceKo(my.choice)}` : ""}</span></div>
+    ${badge}${relLink(arts, "result")}`;
   return el;
 }
 

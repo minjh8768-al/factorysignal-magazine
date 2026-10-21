@@ -595,3 +595,60 @@ def home_sections_html(rows, shown=None):
                    '<div class="home-row-list">' + "".join(_home_feature(r, "home-mini") for r in items[1:]) +
                    "</div></section>")
     return "\n".join(out) + "\n"
+
+
+# ── 2026-10-21 첫 화면 '기사' 구역 ─────────────────────────────────────────
+# 위쪽은 예측 질문(api/markets.js), 아래는 기사. 기사도 예측과 같은 분야 탭으로 나눈다.
+# 예측 기사(fs:market 있음)를 먼저, 그 뒤에 예전 기사를 분야별로 섞어 보여 준다(사용자 결정).
+# 탭 전환은 main.js가 data-cat으로 한다. 분야마다 최신 MKT_PER_CAT개만 싣는다.
+MKT_START = "<!-- MARKET-ARTICLES:START -->"
+MKT_END = "<!-- MARKET-ARTICLES:END -->"
+MKT_CATS = ("경제", "코인", "정치·세계", "스포츠", "테크·문화")
+OLD_TO_MKT = {"경제": "경제", "암호화폐": "코인", "정치": "정치·세계", "세계": "정치·세계",
+              "스포츠": "스포츠", "스타트업": "테크·문화"}
+MKT_PER_CAT = 9
+
+
+def mkt_cat(category):
+    return OLD_TO_MKT.get(category, category if category in MKT_CATS else "")
+
+
+def market_articles_html(rows):
+    """첫 화면 기사 카드들 + 질문별 기사 목록(JSON, 예측 카드의 '관련 기사' 링크용)."""
+    import json as _json
+    esc = lambda v: html.escape(str(v), quote=True)
+    rows = [r for r in rows if mkt_cat(r["category"]) and not r["slug"].endswith("-en")]
+    ordered = sorted(rows, key=lambda r: (bool(r.get("market")), r["date"]), reverse=True)
+    picked, seen = [], set()
+    for cat in (None,) + MKT_CATS:
+        n = 0
+        for r in ordered:
+            if n >= MKT_PER_CAT:
+                break
+            if cat and mkt_cat(r["category"]) != cat:
+                continue
+            n += 1
+            if r["slug"] not in seen:
+                seen.add(r["slug"])
+                picked.append(r)
+    cards = []
+    for r in picked:
+        cat = mkt_cat(r["category"])
+        label = {"preview": "예측 기사", "result": "결과 기사"}.get(r.get("market_kind") or "", "")
+        chip = (f'<span class="mk-chip" data-market="{esc(r["market"])}"></span>' if r.get("market") else "")
+        cards.append(
+            f'<a class="mk-art" href="{esc(r["slug"])}.html" data-cat="{esc(cat)}"'
+            f'{" data-market=" + chr(34) + esc(r["market"]) + chr(34) if r.get("market") else ""}>\n'
+            + thumb_html(dict(r, category=cat)) +
+            f'<div class="mk-art-body">'
+            + (f'<span class="mk-kind mk-kind--{esc(r["market_kind"])}">{label}</span>' if label else "")
+            + f'<h4>{esc(r["title"])}</h4>'
+            f'<span class="home-meta">{esc(cat)} · {_short_date(r["date"])}</span>{chip}</div></a>')
+    links = {}
+    for r in rows:
+        if r.get("market"):
+            links.setdefault(r["market"], []).append(
+                {"slug": r["slug"], "kind": r.get("market_kind") or "", "title": r["title"]})
+    data = _json.dumps(links, ensure_ascii=False).replace("</", "<\\/")
+    return ('\n<div class="mk-grid" id="mk-grid">\n' + "\n".join(cards) + '\n</div>\n'
+            f'<script type="application/json" id="mk-links">{data}</script>\n')
