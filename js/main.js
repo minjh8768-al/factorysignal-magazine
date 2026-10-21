@@ -186,7 +186,7 @@ function mountArticles(markets) {
   catTabs(document.getElementById("tabs-articles"), cards.map((c) => c.dataset.cat), (cat) => {
     let n = 0;
     cards.forEach((c) => {
-      const show = (cat === "전체" || c.dataset.cat === cat) && n < (document.getElementById("pm-live") ? 9 : Infinity);
+      const show = (cat === "전체" || c.dataset.cat === cat) && n < (document.getElementById("pm-live") ? 12 : Infinity);
       if (show) n++;
       c.hidden = !show;
     });
@@ -218,6 +218,7 @@ async function mountMarkets() {
       getJSON(apiUrl("me"), { credentials: "same-origin" }).catch(() => ({ preds: [] })),
     ]);
   } catch (e) {
+    mountArticles([]);   // 확률을 못 불러와도 기사 탭은 동작하게
     if (!liveEl) { resEl.innerHTML = '<p class="odds-empty">지금은 불러올 수 없어요. 잠시 후 다시 확인해 주세요.</p>'; return; }
     liveEl.innerHTML = '<p class="odds-empty">지금은 질문을 불러올 수 없어요. 잠시 후 다시 확인해 주세요.</p>';
     resEl.innerHTML = "";
