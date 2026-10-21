@@ -19,7 +19,7 @@ const REPO = 'minjh8768-al/factorysignal-magazine';
 const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
 const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 const SECRET = process.env.MAGAZINE_ADMIN_SECRET || '';
-const GH = process.env.GITHUB_DISPATCH_TOKEN;
+const GH = (process.env.GITHUB_DISPATCH_TOKEN || '').trim();   // 붙여넣을 때 섞인 공백·줄바꿈 제거
 const SLUG_RE = /^[a-z0-9][a-z0-9-]{2,119}$/;
 // 본문 편집에서 허용하는 태그 (기사 생성 규칙과 같다). 나머지 태그·속성은 지운다.
 const ALLOWED = new Set(['p', 'h2', 'h3', 'blockquote', 'ul', 'ol', 'li', 'strong', 'em', 'a', 'br']);
