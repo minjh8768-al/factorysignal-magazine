@@ -293,6 +293,7 @@ async function mountSidebar(data, me) {
   if (document.getElementById("rank-strip")) sb.querySelector(".sb-rank").remove();
   else getJSON(`${apiUrl("me")}?view=rank&period=week`, { credentials: "same-origin" }).then((r) => {
     const medal = ["🥇", "🥈", "🥉"];
+    if (r.sample) sb.querySelector(".sb-rank .sb-title span").insertAdjacentHTML("beforeend", ' <span class="rk-sample">예시</span>');
     document.getElementById("sb-r").innerHTML = (r.rows.length
       ? r.rows.slice(0, 3).map((x, i) => `<div class="sb-row"><span>${medal[i] || x.rank} ${esc(x.nick)}</span><b>${x.score}점</b></div>`).join("")
       : '<p class="sb-note">이번 주 첫 결과가 나오면 순위가 생겨요.</p>')
@@ -442,7 +443,7 @@ async function mountRankStrip(me) {
     ? top.map((x, i) => `<div class="rs-slot${x.me ? " is-me" : ""}"><span class="rs-medal">${medal[i] || `${x.rank}위`}</span><b>${esc(x.nick)}</b><em>${x.score}점</em></div>`).join("")
     : [0, 1, 2].map((i) => `<div class="rs-slot is-empty"><span class="rs-medal">${medal[i]}</span><b>비어 있어요</b><em>첫 주인공은?</em></div>`).join("");
   const mine = r.me ? `내 순위 <b>${r.me.rank}위 · ${r.me.score}점</b>` : (me && me.user ? "아직 이번 주 결과가 나온 내 예측이 없어요" : "로그인하고 예측하면 랭킹에 올라가요");
-  box.innerHTML = `<div class="rs-head"><div><strong>🏆 이번 주 예측 랭킹</strong><span>시장이 낮게 본 결과를 맞힐수록 점수가 커요</span></div><a href="ranking.html">전체 랭킹 →</a></div>
+  box.innerHTML = `<div class="rs-head"><div><strong>🏆 이번 주 예측 랭킹${r.sample ? ' <span class="rk-sample">예시</span>' : ""}</strong><span>시장이 낮게 본 결과를 맞힐수록 점수가 커요</span></div><a href="ranking.html">전체 랭킹 →</a></div>
     <div class="rs-slots">${slots}</div><p class="rs-mine">${mine}</p>`;
 }
 
@@ -497,8 +498,9 @@ async function mountRanking() {
     try {
       const r = await getJSON(`${apiUrl("me")}?view=rank&period=${period}`, { credentials: "same-origin" });
       const medal = { 1: "🥇", 2: "🥈", 3: "🥉" };
-      box.innerHTML = r.rows.length ? `<table class="rk-table"><tr class="rk-headrow"><td>순위</td><td>닉네임</td><td class="num">점수</td><td class="num">적중/결과</td></tr>
-        ${r.rows.map((x) => `<tr class="${x.me ? "is-me" : ""}"><td class="rk-n">${medal[x.rank] || x.rank}</td><td><b>${esc(x.nick)}</b>${x.best >= 60 ? `<span class="rk-tag">${x.best}점짜리 이변 적중</span>` : ""}</td><td class="num"><b>${x.score}</b>점</td><td class="num">${x.wins}/${x.count}</td></tr>`).join("")}</table>
+      const note = r.sample ? '<p class="rk-sample-note"><span class="rk-sample">예시</span> 아직 이 기간의 실제 기록이 없어 예시 순위를 보여 드려요. 실제 기록이 생기면 바로 바뀌어요.</p>' : "";
+      box.innerHTML = r.rows.length ? note + `<table class="rk-table"><tr class="rk-headrow"><td>순위</td><td>닉네임</td><td class="num">점수</td><td class="num">적중/결과</td></tr>
+        ${r.rows.slice(0, 30).map((x) => `<tr class="${x.me ? "is-me" : ""}"><td class="rk-n">${medal[x.rank] || x.rank}</td><td><b>${esc(x.nick)}</b>${x.best >= 60 ? `<span class="rk-tag">${x.best}점짜리 이변 적중</span>` : ""}</td><td class="num"><b>${x.score}</b>점</td><td class="num">${x.wins}/${x.count}</td></tr>`).join("")}</table>
         ${r.me && !r.rows.some((x) => x.me) ? `<p class="rk-me">내 순위 ${r.me.rank}위 · ${r.me.score}점</p>` : ""}`
         : '<p class="odds-empty">이 기간에 결과가 나온 예측이 아직 없어요. 결과가 나오면 순위가 생겨요.</p>';
     } catch (e) {

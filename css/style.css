@@ -2056,3 +2056,7 @@ footer {
 .rs-medal { font-size: 1.3rem; line-height: 1.2; }
 .rs-mine { margin-top: 10px; font-size: 0.82rem; color: var(--gray-600); }
 .rs-mine b { color: var(--accent); }
+
+/* 예시 순위 표시 */
+.rk-sample { display: inline-block; vertical-align: middle; font-size: 0.68rem; font-weight: 800; color: var(--gray-600); background: var(--gray-100); border: 1px solid var(--gray-200); padding: 1px 7px; border-radius: 999px; }
+.rk-sample-note { font-size: 0.8rem; color: var(--gray-600); margin-bottom: 10px; }

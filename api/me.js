@@ -95,6 +95,27 @@ async function ranking(period) {
   return rows;
 }
 
+// 예시 순위 (2026-10-21, 사용자 요청: 데모 화면이 비어 보이지 않게).
+// 실제 기록이 하나도 없을 때만 내보내고 화면에 '예시'로 표시한다. 실제 사용자가 한 명이라도 생기면
+// 자동으로 사라진다 — 가짜 사용자와 실제 사용자가 섞여 경쟁하거나, 예시가 실제 기록처럼 보이지 않게.
+const SAMPLE_NICKS = ['역발상왕', '폴리고수', '금리박사', '코인단타', '롤드컵러버', '여의도개미', '새벽시장', '확률덕후',
+  '뉴스중독', '데이터맨', '월가지망생', '야구광', '시그널헌터', '조용한고수', '선거분석가', '퀀트초보', '환율감시자',
+  '테크러버', '정치9단', '모닝커피', '분석하는곰', '반대로간다', '숫자읽는밤', '예측노트', '오늘도한표', '느긋한황소',
+  '이변수집가', '팩트체커', '주말트레이더', '첫눈기다림'];
+function sampleRows(period) {
+  const scale = period === 'month' ? 3.4 : period === 'lastweek' ? 0.9 : 1;
+  const shift = period === 'month' ? 7 : period === 'lastweek' ? 3 : 0;
+  const rows = SAMPLE_NICKS.map((nick, i) => {
+    const n = SAMPLE_NICKS[(i + shift) % SAMPLE_NICKS.length];
+    const score = Math.round((330 - i * 10.5 - (i % 3) * 3) * scale);
+    const count = Math.max(3, Math.round((9 - (i % 5)) * (scale > 2 ? 3 : 1)));
+    const wins = Math.max(1, Math.min(count, Math.round(count * (0.75 - i * 0.012))));
+    const best = Math.max(10, 88 - i * 3 - (i % 4) * 5);
+    return { rank: i + 1, nick: n, score, wins, count, best, me: false, sample: true };
+  });
+  return rows;
+}
+
 const RQ_CATS = ['경제', '코인', '정치·세계', '스포츠', '테크·문화', '생활·연예'];
 
 module.exports = async (req, res) => {
@@ -108,7 +129,8 @@ module.exports = async (req, res) => {
         const rows = await ranking(period);
         const mine = uid ? rows.find((r) => r.uid === uid) : null;
         const pub = (r) => ({ rank: r.rank, nick: r.nick, score: r.score, wins: r.wins, count: r.count, best: r.best, me: r.uid === uid });
-        return res.json({ period, rows: rows.slice(0, 50).map(pub), me: mine ? pub(mine) : null, players: rows.length });
+        if (!rows.length) return res.json({ period, rows: sampleRows(period), me: null, players: 0, sample: true });
+        return res.json({ period, rows: rows.slice(0, 30).map(pub), me: mine ? pub(mine) : null, players: rows.length });
       }
       if (!uid) return res.json({ user: null, stats: stats([]), preds: [] });
       return res.json(await profile(uid));
