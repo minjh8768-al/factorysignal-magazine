@@ -1952,3 +1952,8 @@ footer {
 .results-page { padding: 104px 0 56px; }
 .results-page h1 { font-size: 1.6rem; margin-bottom: 6px; }
 .results-page .pf-lead { margin-bottom: 20px; }
+
+/* 예측 기사 안의 질문 카드 */
+.mk-article-market { margin: 0 0 20px; }
+.mk-article-market:empty { display: none; }
+.mk-article-label { font-size: 0.78rem; font-weight: 800; color: var(--accent); margin-bottom: 8px; }

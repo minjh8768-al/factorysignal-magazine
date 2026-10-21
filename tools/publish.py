@@ -197,8 +197,9 @@ def stamp_date(text, date):
     if 'name="fs:date"' in text:
         return re.sub(r'<meta name="fs:date" content="[^"]*"',
                       f'<meta name="fs:date" content="{date}"', text)
-    return text.replace('<meta name="fs:video"',
-                        f'<meta name="fs:date" content="{date}" />\n<meta name="fs:video"', 1)
+    # 예측 기사(fs:market)에는 영상이 없어 fs:read 앞에 넣는다.
+    anchor = '<meta name="fs:video"' if '<meta name="fs:video"' in text else '<meta name="fs:read"'
+    return text.replace(anchor, f'<meta name="fs:date" content="{date}" />\n{anchor}', 1)
 
 
 def strip_factcheck(text):
@@ -228,7 +229,8 @@ def do_publish(slugs, apply_changes, translate_too=False):
         src = os.path.join(DRAFTS, name)
         dst = os.path.join(ARTICLES, slug + ".html")
         meta = read_meta(src)
-        missing = [k for k in ("category", "eyebrow", "read", "video") if not meta[k]]
+        # 예측 기사(fs:market)는 영상 대신 질문 id가 출처다.
+        missing = [k for k in ("category", "eyebrow", "read", "market" if meta["market"] else "video") if not meta[k]]
         if missing:
             print(f"  건너뜀 ({name}): fs: 메타 누락 {missing}")
             continue
@@ -258,7 +260,7 @@ def do_publish(slugs, apply_changes, translate_too=False):
         print("\n" + "=" * 82)
         print("영어판 생성")
         cfg = translate.load_config()
-        slugs = [slug for _, _, slug, _, _, _ in planned]
+        slugs = [slug for _, _, slug, _, m, _ in planned if not m["market"]]   # 예측 기사는 영어판 없음
         results = [translate.one(cfg, s) for s in slugs]
         failed = [r["slug"] for r in results if "error" in r]
         if failed:

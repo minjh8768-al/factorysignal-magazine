@@ -41,6 +41,8 @@ document.addEventListener("DOMContentLoaded", () => {
     briefDate.textContent = `${day} ${part}의 예측`;
   }
   if (document.getElementById("pm-live") || document.getElementById("pm-resolved")) mountMarkets();
+  const artMarket = document.querySelector(".mk-article-market[data-market]");
+  if (artMarket) mountArticleMarket(artMarket);
   if (document.getElementById("pf-head")) mountProfile();
 
   const nav = document.querySelector(".nav");
@@ -325,6 +327,23 @@ function resultRow(m, my, arts = []) {
     <span class="pm-rodds">${m.final != null ? `시장은 마감 전 '예'를 <b>${pct(m.final)}</b>로 봤어요` : "결과 확정"}${readers}</span>
     <div class="pm-rfoot">${my ? `<span class="pm-rmine">내 예측 ${choiceKo(my.choice)}</span>${badge}` : ""}${relLink(arts, "result")}</div>`;
   return el;
+}
+
+// 예측 기사 안의 질문 카드 (2026-10-21). 기사를 읽다가 바로 예측하거나 결과를 볼 수 있게.
+async function mountArticleMarket(box) {
+  try {
+    const [data, me] = await Promise.all([
+      getJSON(apiUrl("markets") + "?all=1"),
+      getJSON(apiUrl("me"), { credentials: "same-origin" }).catch(() => ({ preds: [] })),
+    ]);
+    const m = [...data.live, ...data.resolved].find((x) => x.id === box.dataset.market);
+    if (!m) return;
+    const my = (me.preds || []).find((p) => p.id === m.id);
+    const label = document.createElement("p");
+    label.className = "mk-article-label";
+    label.textContent = m.status === "resolved" ? "이 기사의 예측 질문 · 결과" : "이 기사의 예측 질문 · 지금 확률";
+    box.append(label, m.status === "resolved" ? resultRow(m, my) : liveCard(m, my));
+  } catch (e) { /* 카드 없이도 기사는 읽힌다 */ }
 }
 
 // ── 내 예측 기록 (profile.html) ─────────────────────────────────────

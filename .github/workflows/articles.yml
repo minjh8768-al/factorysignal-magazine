@@ -1,0 +1,66 @@
+# 예측 기사 초안 (2026-10-21). 첫 화면 예측 질문마다 '예측 기사'(진행 중)와 '결과 기사'(결과 남)를
+# AI가 쓰고, 초안은 결과물(drafts-<실행번호>)로 남긴다. 발행은 관리자 페이지 '승인 대기'에서
+# 사람이 확인한 뒤에만 한다 (api/admin.js가 이 결과물을 가져간다).
+# 하루 세 번, 한 번에 최대 4편 (Gemini 무료 한도 하루 20회 안에서).
+name: articles
+
+on:
+  schedule:
+    - cron: '30 0,5,10 * * *'     # 09:30 · 14:30 · 19:30 KST
+  workflow_dispatch:
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TZ: Asia/Seoul
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 설정 파일 만들기
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS }}
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ECOS_API_KEY: ${{ secrets.ECOS_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: python tools/config_from_env.py
+
+      - name: 초안 쓰기
+        run: python tools/market_article.py
+
+      - name: 초안 기록 커밋 (같은 질문을 다시 쓰지 않게)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -z "$(git status --porcelain data/drafted.json)" ]; then echo "변경 없음"; exit 0; fi
+          git add data/drafted.json
+          git commit -q -m "chore(articles): 예측 기사 초안 기록 $(date +%Y-%m-%dT%H:%M)"
+          git pull --rebase origin ${{ github.ref_name }}
+          git push origin HEAD:master
+          git push origin HEAD:main
+
+      - name: 초안 보관 (관리자 페이지 승인 대기로 들어감)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: drafts-${{ github.run_id }}
+          path: _drafts/
+          retention-days: 14
+          if-no-files-found: ignore
