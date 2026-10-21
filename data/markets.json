@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-21T13:47:05Z",
+ "updatedAt": "2026-10-21T20:09:23Z",
  "markets": [
   {
    "id": "2589813",
@@ -8,7 +8,7 @@
    "cat": "경제",
    "event": "fed-decision-in-october-20260617190323537",
    "endDate": "2026-10-29T03:59:00Z",
-   "last": 11.5,
+   "last": 12.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -19,7 +19,7 @@
    "cat": "정치·세계",
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 96.6,
+   "last": 76.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -30,7 +30,7 @@
    "cat": "정치·세계",
    "event": "balance-of-power-2026-midterms",
    "endDate": "2026-11-04T04:59:00Z",
-   "last": 27.5,
+   "last": 25.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -41,7 +41,7 @@
    "cat": "정치·세계",
    "event": "who-will-be-the-next-prime-minister-of-israel-after-the-next-election",
    "endDate": "2026-10-28T03:59:00Z",
-   "last": 27.5,
+   "last": 26.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -52,7 +52,7 @@
    "cat": "코인",
    "event": "what-price-will-bitcoin-hit-in-october-2026",
    "endDate": "2026-11-01T04:00:00Z",
-   "last": 40.5,
+   "last": 51.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -63,7 +63,7 @@
    "cat": "테크·문화",
    "event": "of-views-of-grand-theft-auto-vi-launch-trailer-on-week-1",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 6.4,
+   "last": 5.0,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -74,7 +74,7 @@
    "cat": "스포츠",
    "event": "worlds-2026-winner",
    "endDate": "2026-11-29T04:59:00Z",
-   "last": 16.5,
+   "last": 15.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -98,7 +98,7 @@
    "event": "ucl-bay-ars-2026-10-21",
    "eventTitle": "FC Bayern München vs. Arsenal FC",
    "endDate": "2026-10-21T19:00:00Z",
-   "last": 43.5,
+   "last": 37.5,
    "addedAt": "2026-10-21T04:44:12Z",
    "status": "live"
   },
@@ -110,7 +110,7 @@
    "event": "nba-cha-bkn-2026-10-21",
    "eventTitle": "Hornets vs. Nets",
    "endDate": "2026-10-21T23:30:00Z",
-   "last": 51.5,
+   "last": 52.5,
    "addedAt": "2026-10-21T13:47:05Z",
    "status": "live"
   },
