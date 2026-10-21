@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-20T23:10:53Z",
+ "updatedAt": "2026-10-21T04:44:12Z",
  "markets": [
   {
    "id": "2589813",
@@ -8,7 +8,7 @@
    "cat": "경제",
    "event": "fed-decision-in-october-20260617190323537",
    "endDate": "2026-10-29T03:59:00Z",
-   "last": 13.5,
+   "last": 12.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -19,7 +19,7 @@
    "cat": "정치·세계",
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 94.8,
+   "last": 95.8,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -52,7 +52,7 @@
    "cat": "코인",
    "event": "what-price-will-bitcoin-hit-in-october-2026",
    "endDate": "2026-11-01T04:00:00Z",
-   "last": 35.5,
+   "last": 32.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -63,7 +63,7 @@
    "cat": "테크·문화",
    "event": "of-views-of-grand-theft-auto-vi-launch-trailer-on-week-1",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 15.0,
+   "last": 10.0,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -88,6 +88,30 @@
    "endDate": "2026-11-04T04:59:00Z",
    "last": 91.5,
    "addedAt": "2026-10-20T20:00:05Z",
+   "status": "live"
+  },
+  {
+   "id": "5436896",
+   "q": "2026년 10월 21일 바이에른 뮌헨이 아스널을 이길까?",
+   "en": "Will FC Bayern München win on 2026-10-21?",
+   "cat": "스포츠",
+   "event": "ucl-bay-ars-2026-10-21",
+   "eventTitle": "FC Bayern München vs. Arsenal FC",
+   "endDate": "2026-10-21T19:00:00Z",
+   "last": 45.5,
+   "addedAt": "2026-10-21T04:44:12Z",
+   "status": "live"
+  },
+  {
+   "id": "5978757",
+   "q": "1win 프라이빗 클럽 플레이오프: 매직이 더몽골즈를 이길까?",
+   "en": "Will magic beat TheMongolz? (Counter-Strike: magic vs TheMongolz (BO3) - 1win Private Club Playoffs)",
+   "cat": "스포츠",
+   "event": "cs2-mgc-mglz-2026-10-21",
+   "eventTitle": "Counter-Strike: magic vs TheMongolz (BO3) - 1win Private Club Playoffs",
+   "endDate": "2026-10-21T15:00:00Z",
+   "last": 48.5,
+   "addedAt": "2026-10-21T04:44:12Z",
    "status": "live"
   },
   {
