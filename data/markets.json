@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-22T20:06:27Z",
+ "updatedAt": "2026-10-22T23:22:09Z",
  "markets": [
   {
    "id": "2589813",
@@ -19,7 +19,7 @@
    "cat": "정치·세계",
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 98.6,
+   "last": 97.6,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -41,7 +41,7 @@
    "cat": "정치·세계",
    "event": "who-will-be-the-next-prime-minister-of-israel-after-the-next-election",
    "endDate": "2026-10-28T03:59:00Z",
-   "last": 28.0,
+   "last": 28.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -111,7 +111,7 @@
    "event": "ballon-dor-winner-2026",
    "eventTitle": "Ballon d'Or Winner 2026",
    "endDate": "2026-10-27T03:59:00Z",
-   "last": 16.8,
+   "last": 15.4,
    "addedAt": "2026-10-22T20:06:27Z",
    "status": "live"
   },
