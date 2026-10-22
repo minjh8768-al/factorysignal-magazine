@@ -2070,3 +2070,43 @@ footer {
 .pf-delete { margin-top: 28px; text-align: right; }
 .pf-delete button { background: none; border: 0; color: var(--gray-400); font-size: 0.78rem; text-decoration: underline; cursor: pointer; }
 .pf-delete button:hover { color: #c42536; }
+
+/* ── 2026-10-22 폰 화면 손질 ─────────────────────────────────────── */
+/* 기사 본문: 좁은 화면에서 글자가 화면 끝에 붙지 않게 좌우 여백 */
+.article-content { max-width: calc(720px + 2 * var(--pad)); padding-left: var(--pad); padding-right: var(--pad); }
+/* 검색 아이콘은 아직 기능이 없어 숨긴다 */
+.nav-search { display: none !important; }
+@media (max-width: 760px) {
+  /* 분야 탭: 두 줄로 접히지 않고 옆으로 밀어서 보기 */
+  .mk-tabs, .pf-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; margin-left: calc(-1 * var(--pad)); margin-right: calc(-1 * var(--pad)); padding: 0 var(--pad) 2px; }
+  .mk-tabs::-webkit-scrollbar { display: none; }
+  .mk-tabs button, .pf-tabs button { flex-shrink: 0; }
+  /* 랭킹 띠: 5칸을 한 줄 가로 스크롤로 (세로로 한 화면을 차지하지 않게) */
+  .rank-strip { padding: 14px 14px 12px; }
+  .rs-slots { display: flex; overflow-x: auto; scrollbar-width: none; gap: 8px; margin-left: -14px; margin-right: -14px; padding: 0 14px; }
+  .rs-slots::-webkit-scrollbar { display: none; }
+  .rs-slot { flex: 0 0 auto; flex-direction: row; gap: 6px; padding: 8px 12px; }
+  .rs-medal { font-size: 1rem; }
+  .rs-slot b { font-size: 0.85rem; } .rs-slot em { font-size: 0.78rem; }
+  .rs-head > div > span { display: none; }
+  .rs-mine { margin-top: 8px; font-size: 0.78rem; }
+  /* 로그인 전 내 카드: 작게, 버튼은 나란히 */
+  .sb-guest { flex-direction: row; flex-wrap: wrap; justify-content: center; text-align: center; padding: 12px 14px; gap: 6px 8px; }
+  .sb-guest .sb-wave, .sb-guest > span { display: none; }
+  .sb-guest strong { width: 100%; font-size: 0.88rem; }
+  .sb-guest .sb-btn { width: calc(50% - 4px); margin-top: 0; padding: 8px 4px; font-size: 0.8rem; }
+  /* 로그인 후 내 카드: 진행 중 목록은 숨기고 숫자만 */
+  .sb-mecard .sb-sub, .sb-mecard .sb-mine { display: none; }
+  .sb-mecard .sb-stats { margin: 10px 0 8px; padding: 8px 0; }
+  .sb-mecard .sb-btn { padding: 8px; }
+  .sb .sb-rank { display: none; }
+  /* 랭킹 표: 꼬리표·단위가 줄바꿈되지 않게 */
+  .rk-table td { padding: 10px 6px; }
+  .rk-table td:nth-child(4), .rk-headrow td:nth-child(4) { display: none; }
+  .rk-table .num { white-space: nowrap; }
+  .rk-tag { display: inline-block; margin: 2px 0 0; white-space: nowrap; }
+  .rk-table td:nth-child(2) b { display: block; }
+  /* 히어로 조금 낮게 */
+  .brief-band h1 { font-size: 1.35rem; }
+  .brief-lead { font-size: 0.88rem; margin-bottom: 14px; }
+}
