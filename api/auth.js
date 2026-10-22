@@ -101,6 +101,7 @@ module.exports = async (req, res) => {
         const now = new Date().toISOString();
         await kv([
           ['SET', key, uid],
+          ['HSET', `user:${uid}`, 'acct', key],
           ['HSET', `user:${uid}`, 'provider', provider],
           ['HSETNX', `user:${uid}`, 'createdAt', now],
           ['HSETNX', `user:${uid}`, 'nick', `예측러${String(parseInt(uid.slice(0, 6), 16) % 10000).padStart(4, '0')}`],

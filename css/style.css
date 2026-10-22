@@ -2065,3 +2065,8 @@ footer {
 .sb-me > div { flex: 1; min-width: 0; }
 .sb-logout { flex-shrink: 0; font-size: 0.75rem; color: var(--gray-600); background: var(--white); border: 1px solid var(--gray-200); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
 .sb-logout:hover { color: var(--black); border-color: var(--gray-400); }
+
+/* 내 예측 기록: 회원 탈퇴 */
+.pf-delete { margin-top: 28px; text-align: right; }
+.pf-delete button { background: none; border: 0; color: var(--gray-400); font-size: 0.78rem; text-decoration: underline; cursor: pointer; }
+.pf-delete button:hover { color: #c42536; }

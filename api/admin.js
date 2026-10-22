@@ -103,6 +103,8 @@ async function photoCandidates(q) {
     const m = ii.extmetadata || {};
     const lic = strip(m.LicenseShortName && m.LicenseShortName.value);
     if (!LIC_OK.test(lic) || LIC_BAD.test(lic) || (ii.width || 0) < 600 || (ii.height && ii.width / ii.height < 0.9)) continue;
+    // 풍자화·만화·로고·포스터·머그샷·흉내 내는 사람 등은 기사 대표 사진으로 쓰지 않는다 (중립성).
+    if (/caricature|cartoon|satire|parody|meme|impersonat|look-?alike|mug ?shot|logo|poster|emblem|mascot|sticker|banner|wax|tweet|screenshot|illustration|drawing|painting/i.test(String(p.title || ''))) continue;
     const date = strip(m.DateTimeOriginal && m.DateTimeOriginal.value).match(/(19|20)\d\d/);
     out.push({ url: ii.thumburl || ii.url, by: strip(m.Artist && m.Artist.value).slice(0, 60) || 'Wikimedia Commons',
       license: lic, src: ii.descriptionurl || '', title: String(p.title || '').replace(/^File:/, ''), year: date ? date[0] : '' });

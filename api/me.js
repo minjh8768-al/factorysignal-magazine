@@ -4,6 +4,7 @@
 //        2026-10-20 사용자 결정: 로그인(구글·카카오)해야 예측할 수 있다. 아니면 401.
 //   POST /api/me { action:'nick', nick }      닉네임 바꾸기
 //   POST /api/me { action:'logout' }
+//   POST /api/me { action:'delete' }          회원 탈퇴: 로그인 연결·닉네임·예측 기록 삭제 (질문별 예/아니오 합계 숫자는 익명 집계라 남는다)
 //   POST /api/me { action:'propose', q, cat, closesAt, how }   독자 질문 제안 (로그인, 하루 3개, 관리자 승인 후 공개)
 //   GET  /api/me?view=rank&period=week|lastweek|month          주간·월간 랭킹 (+ 내 순위)
 // 랭킹 점수(2026-10-21): 맞히면 100 − (고를 때 내가 고른 쪽 확률), 틀리면 0. 시장을 따라가기보다
@@ -139,6 +140,27 @@ module.exports = async (req, res) => {
     const b = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
 
     if (b.action === 'logout') { clearUid(res); return res.json({ ok: true }); }
+
+    if (b.action === 'delete') {
+      if (!uid) return res.status(401).json({ error: '로그인한 상태에서만 탈퇴할 수 있어요.' });
+      const [acct] = await kv([['HGET', `user:${uid}`, 'acct']]);
+      const keys = acct ? [acct] : [];
+      if (!acct) {   // 연결 키를 남기기 전에 가입한 계정: 연결 목록에서 찾는다
+        let cursor = '0';
+        do {
+          const [r] = await kv([['SCAN', cursor, 'MATCH', 'acct:*', 'COUNT', 500]]);
+          cursor = r[0];
+          const vals = r[1].length ? await kv(r[1].map((k) => ['GET', k])) : [];
+          r[1].forEach((k, i) => { if (vals[i] === uid) keys.push(k); });
+        } while (cursor !== '0');
+      }
+      await kv([
+        ...keys.map((k) => ['DEL', k]),
+        ['DEL', `user:${uid}`], ['DEL', `pred:${uid}`], ['SREM', 'users:predicted', uid],
+      ]);
+      clearUid(res);
+      return res.json({ ok: true });
+    }
 
     if (b.action === 'nick') {
       if (!uid) return res.status(400).json({ error: '먼저 예측을 하나 해 주세요.' });

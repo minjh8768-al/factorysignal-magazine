@@ -570,6 +570,21 @@ async function mountProfile() {
       await fetch(apiUrl("me"), { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) });
       location.href = "profile.html";
     };
+    // 회원 탈퇴 (2026-10-22): 로그인 연결·닉네임·예측 기록을 지운다. 되돌릴 수 없다.
+    if (u.provider) {
+      const del = document.createElement("p");
+      del.className = "pf-delete";
+      del.innerHTML = '<button type="button">회원 탈퇴 (내 기록 삭제)</button>';
+      document.querySelector(".pm-fine-text").after(del);
+      del.querySelector("button").onclick = async () => {
+        if (!confirm("탈퇴하면 닉네임, 예측 기록, 랭킹 점수가 모두 지워지고 되돌릴 수 없어요. 탈퇴할까요?")) return;
+        try {
+          await getJSON(apiUrl("me"), { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "delete" }) });
+          alert("탈퇴했어요. 그동안 이용해 주셔서 감사합니다.");
+          location.href = "index.html";
+        } catch (err) { alert(err.message); }
+      };
+    }
   }
 
   const s = me.stats;
