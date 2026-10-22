@@ -162,6 +162,8 @@ def rebuild_index(apply_changes):
         if article.MKT_ONLY_START in t else t, apply_changes) or changed
     if apply_changes:
         write_sitemap()
+        import og                       # 공유 미리보기 태그 (새 기사·첫 화면 포함 전체)
+        og.main()
     return rows, changed
 
 
