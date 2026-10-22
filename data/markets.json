@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-22T04:42:16Z",
+ "updatedAt": "2026-10-22T13:47:04Z",
  "markets": [
   {
    "id": "2589813",
@@ -8,7 +8,7 @@
    "cat": "경제",
    "event": "fed-decision-in-october-20260617190323537",
    "endDate": "2026-10-29T03:59:00Z",
-   "last": 12.5,
+   "last": 7.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -19,7 +19,7 @@
    "cat": "정치·세계",
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 94.2,
+   "last": 94.6,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -30,7 +30,7 @@
    "cat": "정치·세계",
    "event": "balance-of-power-2026-midterms",
    "endDate": "2026-11-04T04:59:00Z",
-   "last": 25.5,
+   "last": 23.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -41,7 +41,7 @@
    "cat": "정치·세계",
    "event": "who-will-be-the-next-prime-minister-of-israel-after-the-next-election",
    "endDate": "2026-10-28T03:59:00Z",
-   "last": 26.5,
+   "last": 30.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -52,7 +52,7 @@
    "cat": "코인",
    "event": "what-price-will-bitcoin-hit-in-october-2026",
    "endDate": "2026-11-01T04:00:00Z",
-   "last": 30.5,
+   "last": 21.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -63,7 +63,7 @@
    "cat": "테크·문화",
    "event": "of-views-of-grand-theft-auto-vi-launch-trailer-on-week-1",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 0.4,
+   "last": 0.2,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -74,7 +74,7 @@
    "cat": "스포츠",
    "event": "worlds-2026-winner",
    "endDate": "2026-11-29T04:59:00Z",
-   "last": 15.5,
+   "last": 16.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -86,7 +86,7 @@
    "event": "which-party-will-win-the-house-in-2026",
    "eventTitle": "Which party will win the House in 2026?",
    "endDate": "2026-11-04T04:59:00Z",
-   "last": 91.5,
+   "last": 92.5,
    "addedAt": "2026-10-20T20:00:05Z",
    "status": "live"
   },
