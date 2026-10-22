@@ -232,6 +232,7 @@ async function mountMarkets() {
     return;
   }
   const mine = Object.fromEntries((me.preds || []).map((p) => [p.id, p]));
+  lastData = data;
   mountSidebar(data, me);
   mountRankStrip(me);
 
@@ -262,6 +263,13 @@ async function mountMarkets() {
 // ── 오른쪽 따라다니는 칸 (2026-10-21) ─────────────────────────────────
 // 내 카드(로그인 전: 로그인 버튼 / 후: 적중률·진행 중 내 예측) · 빠른 통계(api/quotes.js) · 곧 결과가 나와요.
 // 폰에서는 내 카드만 첫 화면 위쪽에 보인다(CSS).
+// 예측을 하면 오른쪽 내 카드(진행 중 수·내 예측 목록)를 새로고침 없이 바로 갱신한다.
+let lastData = null;
+async function refreshSidebar() {
+  if (!lastData || !document.getElementById("sidebar")) return;
+  try { mountSidebar(lastData, await getJSON(apiUrl("me"), { credentials: "same-origin" })); } catch (e) { /* 다음 새로고침 때 */ }
+}
+
 async function mountSidebar(data, me) {
   const sb = document.getElementById("sidebar");
   if (!sb) return;
@@ -375,6 +383,7 @@ function liveCard(m, my, arts = []) {
       });
       const base = rq ? (m.odds ?? 50) : m.market;
       showMine(b.dataset.c, d.readers, b.dataset.c === "yes" ? base : 100 - base);
+      refreshSidebar();
     } catch (e) {
       actions.querySelectorAll("button").forEach((x) => (x.disabled = false));
       if (e.status === 401) return showLogin(actions);
