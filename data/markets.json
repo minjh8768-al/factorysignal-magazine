@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-21T23:18:11Z",
+ "updatedAt": "2026-10-22T04:42:16Z",
  "markets": [
   {
    "id": "2589813",
@@ -19,7 +19,7 @@
    "cat": "정치·세계",
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 88.4,
+   "last": 94.2,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -52,7 +52,7 @@
    "cat": "코인",
    "event": "what-price-will-bitcoin-hit-in-october-2026",
    "endDate": "2026-11-01T04:00:00Z",
-   "last": 48.5,
+   "last": 30.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -63,7 +63,7 @@
    "cat": "테크·문화",
    "event": "of-views-of-grand-theft-auto-vi-launch-trailer-on-week-1",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 1.2,
+   "last": 0.4,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -91,18 +91,6 @@
    "status": "live"
   },
   {
-   "id": "5716444",
-   "q": "호네츠가 네츠를 이길까?",
-   "en": "Will Hornets beat Nets? (Hornets vs. Nets)",
-   "cat": "스포츠",
-   "event": "nba-cha-bkn-2026-10-21",
-   "eventTitle": "Hornets vs. Nets",
-   "endDate": "2026-10-21T23:30:00Z",
-   "last": 53.5,
-   "addedAt": "2026-10-21T13:47:05Z",
-   "status": "live"
-  },
-  {
    "id": "5906214",
    "q": "롤드컵 그룹 스테이지: G2 이스포츠가 디플러스 기아를 이길까?",
    "en": "Will G2 Esports beat Dplus KIA? (LoL: G2 Esports vs Dplus KIA (BO1) - Worlds Group Stage)",
@@ -113,6 +101,21 @@
    "last": 39.5,
    "addedAt": "2026-10-21T23:18:11Z",
    "status": "live"
+  },
+  {
+   "id": "5716444",
+   "q": "호네츠가 네츠를 이길까?",
+   "en": "Will Hornets beat Nets? (Hornets vs. Nets)",
+   "cat": "스포츠",
+   "event": "nba-cha-bkn-2026-10-21",
+   "eventTitle": "Hornets vs. Nets",
+   "endDate": "2026-10-21T23:30:00Z",
+   "last": 53.5,
+   "addedAt": "2026-10-21T13:47:05Z",
+   "status": "resolved",
+   "outcome": "yes",
+   "final": 53.5,
+   "resolvedAt": "2026-10-22T04:42:16Z"
   },
   {
    "id": "5436896",
