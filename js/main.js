@@ -271,7 +271,7 @@ async function mountSidebar(data, me) {
     const s = me.stats || {};
     const open = (me.preds || []).filter((p) => p.result === "open").slice(0, 3);
     card = `<div class="sb-card sb-mecard">
-      <div class="sb-me"><span class="sb-ava">${esc((u.nick || "?").slice(0, 1))}</span><div><strong>${esc(u.nick)}</strong><span>${u.provider === "kakao" ? "카카오" : "Google"} 로그인</span></div></div>
+      <div class="sb-me"><span class="sb-ava">${esc((u.nick || "?").slice(0, 1))}</span><div><strong>${esc(u.nick)}</strong><span>${u.provider === "kakao" ? "카카오" : "Google"} 로그인</span></div><button type="button" class="sb-logout" id="sb-logout">로그아웃</button></div>
       <div class="sb-stats"><div><b>${s.accuracy == null ? "–" : s.accuracy + "%"}</b><span>적중률</span></div><div><b>${s.wins || 0}</b><span>적중</span></div><div><b>${s.open || 0}</b><span>진행 중</span></div></div>
       ${open.length ? `<p class="sb-sub">진행 중인 내 예측</p>${open.map((p) => `<div class="sb-mine"><span>${esc(p.q)}</span><em>${choiceKo(p.choice)}${p.market != null ? ` · 지금 ${pct(p.market)}` : ""}</em></div>`).join("")}` : '<p class="sb-sub">아직 진행 중인 예측이 없어요. 왼쪽에서 골라 보세요.</p>'}
       <a class="sb-btn" href="profile.html">내 예측 기록 전체 →</a></div>`;
@@ -289,6 +289,12 @@ async function mountSidebar(data, me) {
     <div class="sb-card sb-rank"><p class="sb-title"><span>이번 주 TOP 3</span><a href="ranking.html">전체 랭킹 →</a></p><div id="sb-r"><p class="sb-note">불러오는 중…</p></div></div>
     <div class="sb-card sb-quotes"><p class="sb-title">빠른 통계</p><div id="sb-q"><p class="sb-note">불러오는 중…</p></div></div>
     ${soon.length ? `<div class="sb-card sb-soon"><p class="sb-title">곧 결과가 나와요</p>${soon.map((m) => `<div class="sb-row"><span title="${esc(m.q)}">${esc(m.q)}</span><b>${dday(m.endDate)}</b></div>`).join("")}</div>` : ""}`;
+  const out = sb.querySelector("#sb-logout");
+  if (out) out.onclick = async () => {
+    out.disabled = true;
+    await fetch(apiUrl("me"), { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) }).catch(() => {});
+    location.reload();
+  };
   // 첫 화면은 예측 카드 위 랭킹 띠(mountRankStrip)가 같은 내용을 크게 보여 주므로 오른쪽 TOP 3는 뺀다.
   if (document.getElementById("rank-strip")) sb.querySelector(".sb-rank").remove();
   else getJSON(`${apiUrl("me")}?view=rank&period=week`, { credentials: "same-origin" }).then((r) => {

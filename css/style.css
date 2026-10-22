@@ -2060,3 +2060,8 @@ footer {
 /* 예시 순위 표시 */
 .rk-sample { display: inline-block; vertical-align: middle; font-size: 0.68rem; font-weight: 800; color: var(--gray-600); background: var(--gray-100); border: 1px solid var(--gray-200); padding: 1px 7px; border-radius: 999px; }
 .rk-sample-note { font-size: 0.8rem; color: var(--gray-600); margin-bottom: 10px; }
+
+/* 오른쪽 내 카드: 로그아웃 */
+.sb-me > div { flex: 1; min-width: 0; }
+.sb-logout { flex-shrink: 0; font-size: 0.75rem; color: var(--gray-600); background: var(--white); border: 1px solid var(--gray-200); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+.sb-logout:hover { color: var(--black); border-color: var(--gray-400); }
