@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-22T23:22:09Z",
+ "updatedAt": "2026-10-23T04:47:14Z",
  "markets": [
   {
    "id": "2589813",
@@ -19,7 +19,7 @@
    "cat": "정치·세계",
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 97.6,
+   "last": 97.1,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -52,7 +52,7 @@
    "cat": "코인",
    "event": "what-price-will-bitcoin-hit-in-october-2026",
    "endDate": "2026-11-01T04:00:00Z",
-   "last": 19.5,
+   "last": 20.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -92,6 +92,18 @@
    "status": "live"
   },
   {
+   "id": "608545",
+   "q": "라민 야말이 2026년 발롱도르를 수상할까?",
+   "en": "Will Lamine Yamal win the 2026 Ballon d'Or?",
+   "cat": "스포츠",
+   "event": "ballon-dor-winner-2026",
+   "eventTitle": "Ballon d'Or Winner 2026",
+   "endDate": "2026-10-27T03:59:00Z",
+   "last": 14.1,
+   "addedAt": "2026-10-22T20:06:27Z",
+   "status": "live"
+  },
+  {
    "id": "5769220",
    "q": "너기츠가 썬더를 이길까?",
    "en": "Will Nuggets beat Thunder? (Nuggets vs. Thunder)",
@@ -101,19 +113,10 @@
    "endDate": "2026-10-23T01:30:00Z",
    "last": 26.5,
    "addedAt": "2026-10-22T20:06:27Z",
-   "status": "live"
-  },
-  {
-   "id": "608545",
-   "q": "라민 야말이 2026년 발롱도르를 수상할까?",
-   "en": "Will Lamine Yamal win the 2026 Ballon d'Or?",
-   "cat": "스포츠",
-   "event": "ballon-dor-winner-2026",
-   "eventTitle": "Ballon d'Or Winner 2026",
-   "endDate": "2026-10-27T03:59:00Z",
-   "last": 15.4,
-   "addedAt": "2026-10-22T20:06:27Z",
-   "status": "live"
+   "status": "resolved",
+   "outcome": "no",
+   "final": 26.5,
+   "resolvedAt": "2026-10-23T04:47:14Z"
   },
   {
    "id": "5732709",
