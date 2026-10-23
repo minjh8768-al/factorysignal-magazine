@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-23T13:25:15Z",
+ "updatedAt": "2026-10-23T19:56:57Z",
  "markets": [
   {
    "id": "2589813",
@@ -19,7 +19,7 @@
    "cat": "정치·세계",
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 98.2,
+   "last": 97.6,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -41,7 +41,7 @@
    "cat": "정치·세계",
    "event": "who-will-be-the-next-prime-minister-of-israel-after-the-next-election",
    "endDate": "2026-10-28T03:59:00Z",
-   "last": 29.5,
+   "last": 28.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -52,7 +52,7 @@
    "cat": "코인",
    "event": "what-price-will-bitcoin-hit-in-october-2026",
    "endDate": "2026-11-01T04:00:00Z",
-   "last": 17.5,
+   "last": 14.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -63,7 +63,7 @@
    "cat": "스포츠",
    "event": "worlds-2026-winner",
    "endDate": "2026-11-29T04:59:00Z",
-   "last": 16.5,
+   "last": 13.0,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -75,7 +75,7 @@
    "event": "which-party-will-win-the-house-in-2026",
    "eventTitle": "Which party will win the House in 2026?",
    "endDate": "2026-11-04T04:59:00Z",
-   "last": 92.5,
+   "last": 91.5,
    "addedAt": "2026-10-20T20:00:05Z",
    "status": "live"
   },
@@ -99,7 +99,7 @@
    "event": "ballon-dor-winner-2026",
    "eventTitle": "Ballon d'Or Winner 2026",
    "endDate": "2026-10-27T03:59:00Z",
-   "last": 16.3,
+   "last": 15.4,
    "addedAt": "2026-10-22T20:06:27Z",
    "status": "live"
   },
@@ -111,7 +111,7 @@
    "event": "nba-tor-was-2026-10-23",
    "eventTitle": "Raptors vs. Wizards",
    "endDate": "2026-10-23T23:00:00Z",
-   "last": 75.5,
+   "last": 74.5,
    "addedAt": "2026-10-23T13:25:15Z",
    "status": "live"
   },
