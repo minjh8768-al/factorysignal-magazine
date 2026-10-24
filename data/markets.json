@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-23T23:08:04Z",
+ "updatedAt": "2026-10-24T04:34:34Z",
  "markets": [
   {
    "id": "2589813",
@@ -19,7 +19,7 @@
    "cat": "정치·세계",
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 98.1,
+   "last": 98.7,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -41,7 +41,7 @@
    "cat": "정치·세계",
    "event": "who-will-be-the-next-prime-minister-of-israel-after-the-next-election",
    "endDate": "2026-10-28T03:59:00Z",
-   "last": 28.5,
+   "last": 27.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -52,7 +52,7 @@
    "cat": "코인",
    "event": "what-price-will-bitcoin-hit-in-october-2026",
    "endDate": "2026-11-01T04:00:00Z",
-   "last": 12.5,
+   "last": 11.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -63,7 +63,7 @@
    "cat": "스포츠",
    "event": "worlds-2026-winner",
    "endDate": "2026-11-29T04:59:00Z",
-   "last": 14.0,
+   "last": 11.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -75,7 +75,7 @@
    "event": "which-party-will-win-the-house-in-2026",
    "eventTitle": "Which party will win the House in 2026?",
    "endDate": "2026-11-04T04:59:00Z",
-   "last": 91.5,
+   "last": 92.0,
    "addedAt": "2026-10-20T20:00:05Z",
    "status": "live"
   },
@@ -87,8 +87,32 @@
    "event": "ballon-dor-winner-2026",
    "eventTitle": "Ballon d'Or Winner 2026",
    "endDate": "2026-10-27T03:59:00Z",
-   "last": 15.0,
+   "last": 14.7,
    "addedAt": "2026-10-22T20:06:27Z",
+   "status": "live"
+  },
+  {
+   "id": "5534599",
+   "q": "2026년 10월 24일 첼시 FC가 승리할까?",
+   "en": "Will Chelsea FC win on 2026-10-24?",
+   "cat": "스포츠",
+   "event": "epl-che-tot-2026-10-24",
+   "eventTitle": "Chelsea FC vs. Tottenham Hotspur FC",
+   "endDate": "2026-10-24T16:30:00Z",
+   "last": 51.5,
+   "addedAt": "2026-10-24T04:34:34Z",
+   "status": "live"
+  },
+  {
+   "id": "5523020",
+   "q": "UFC 333: 메라브 드발리시빌리가 표트르 얀을 이길까?",
+   "en": "Will Merab Dvalishvili beat Petr Yan? (UFC 333: Merab Dvalishvili vs. Petr Yan (Bantamweight, Main Card))",
+   "cat": "스포츠",
+   "event": "ufc-mer-pet-2026-10-24",
+   "eventTitle": "UFC 333: Merab Dvalishvili vs. Petr Yan (Bantamweight, Main Card)",
+   "endDate": "2026-10-25T03:59:59Z",
+   "last": 42.5,
+   "addedAt": "2026-10-24T04:34:34Z",
    "status": "live"
   },
   {
@@ -101,7 +125,10 @@
    "endDate": "2026-10-23T23:00:00Z",
    "last": 73.5,
    "addedAt": "2026-10-23T13:25:15Z",
-   "status": "live"
+   "status": "resolved",
+   "outcome": "yes",
+   "final": 73.5,
+   "resolvedAt": "2026-10-24T04:34:34Z"
   },
   {
    "id": "5906226",
@@ -113,7 +140,10 @@
    "endDate": "2026-10-24T05:15:00Z",
    "last": 11.5,
    "addedAt": "2026-10-23T23:08:04Z",
-   "status": "live"
+   "status": "resolved",
+   "outcome": "no",
+   "final": 11.5,
+   "resolvedAt": "2026-10-24T04:34:34Z"
   },
   {
    "id": "5906214",
