@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-24T12:40:20Z",
+ "updatedAt": "2026-10-24T18:47:10Z",
  "markets": [
   {
    "id": "2589813",
@@ -19,7 +19,7 @@
    "cat": "정치·세계",
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 99.1,
+   "last": 99.4,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -52,7 +52,7 @@
    "cat": "코인",
    "event": "what-price-will-bitcoin-hit-in-october-2026",
    "endDate": "2026-11-01T04:00:00Z",
-   "last": 9.5,
+   "last": 8.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -87,7 +87,7 @@
    "event": "ballon-dor-winner-2026",
    "eventTitle": "Ballon d'Or Winner 2026",
    "endDate": "2026-10-27T03:59:00Z",
-   "last": 8.0,
+   "last": 9.0,
    "addedAt": "2026-10-22T20:06:27Z",
    "status": "live"
   },
@@ -99,7 +99,7 @@
    "event": "epl-che-tot-2026-10-24",
    "eventTitle": "Chelsea FC vs. Tottenham Hotspur FC",
    "endDate": "2026-10-24T16:30:00Z",
-   "last": 50.5,
+   "last": 0.0,
    "addedAt": "2026-10-24T04:34:34Z",
    "status": "live"
   },
@@ -111,7 +111,7 @@
    "event": "ufc-mer-pet-2026-10-24",
    "eventTitle": "UFC 333: Merab Dvalishvili vs. Petr Yan (Bantamweight, Main Card)",
    "endDate": "2026-10-25T03:59:59Z",
-   "last": 40.5,
+   "last": 41.5,
    "addedAt": "2026-10-24T04:34:34Z",
    "status": "live"
   },
