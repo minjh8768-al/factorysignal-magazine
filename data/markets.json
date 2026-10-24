@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-24T04:34:34Z",
+ "updatedAt": "2026-10-24T12:40:20Z",
  "markets": [
   {
    "id": "2589813",
@@ -8,7 +8,7 @@
    "cat": "경제",
    "event": "fed-decision-in-october-20260617190323537",
    "endDate": "2026-10-29T03:59:00Z",
-   "last": 6.5,
+   "last": 5.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -19,7 +19,7 @@
    "cat": "정치·세계",
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 98.7,
+   "last": 99.1,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -30,7 +30,7 @@
    "cat": "정치·세계",
    "event": "balance-of-power-2026-midterms",
    "endDate": "2026-11-04T04:59:00Z",
-   "last": 24.5,
+   "last": 25.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -52,7 +52,7 @@
    "cat": "코인",
    "event": "what-price-will-bitcoin-hit-in-october-2026",
    "endDate": "2026-11-01T04:00:00Z",
-   "last": 11.5,
+   "last": 9.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -63,7 +63,7 @@
    "cat": "스포츠",
    "event": "worlds-2026-winner",
    "endDate": "2026-11-29T04:59:00Z",
-   "last": 11.5,
+   "last": 10.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -75,7 +75,7 @@
    "event": "which-party-will-win-the-house-in-2026",
    "eventTitle": "Which party will win the House in 2026?",
    "endDate": "2026-11-04T04:59:00Z",
-   "last": 92.0,
+   "last": 91.5,
    "addedAt": "2026-10-20T20:00:05Z",
    "status": "live"
   },
@@ -87,7 +87,7 @@
    "event": "ballon-dor-winner-2026",
    "eventTitle": "Ballon d'Or Winner 2026",
    "endDate": "2026-10-27T03:59:00Z",
-   "last": 14.7,
+   "last": 8.0,
    "addedAt": "2026-10-22T20:06:27Z",
    "status": "live"
   },
@@ -99,7 +99,7 @@
    "event": "epl-che-tot-2026-10-24",
    "eventTitle": "Chelsea FC vs. Tottenham Hotspur FC",
    "endDate": "2026-10-24T16:30:00Z",
-   "last": 51.5,
+   "last": 50.5,
    "addedAt": "2026-10-24T04:34:34Z",
    "status": "live"
   },
@@ -111,7 +111,7 @@
    "event": "ufc-mer-pet-2026-10-24",
    "eventTitle": "UFC 333: Merab Dvalishvili vs. Petr Yan (Bantamweight, Main Card)",
    "endDate": "2026-10-25T03:59:59Z",
-   "last": 42.5,
+   "last": 40.5,
    "addedAt": "2026-10-24T04:34:34Z",
    "status": "live"
   },
