@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-25T13:10:54Z",
+ "updatedAt": "2026-10-25T19:02:35Z",
  "markets": [
   {
    "id": "2589813",
@@ -41,7 +41,7 @@
    "cat": "정치·세계",
    "event": "who-will-be-the-next-prime-minister-of-israel-after-the-next-election",
    "endDate": "2026-10-28T03:59:00Z",
-   "last": 28.0,
+   "last": 26.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -75,7 +75,7 @@
    "event": "which-party-will-win-the-house-in-2026",
    "eventTitle": "Which party will win the House in 2026?",
    "endDate": "2026-11-04T04:59:00Z",
-   "last": 91.5,
+   "last": 92.5,
    "addedAt": "2026-10-20T20:00:05Z",
    "status": "live"
   },
@@ -87,7 +87,7 @@
    "event": "ballon-dor-winner-2026",
    "eventTitle": "Ballon d'Or Winner 2026",
    "endDate": "2026-10-27T03:59:00Z",
-   "last": 11.0,
+   "last": 12.2,
    "addedAt": "2026-10-22T20:06:27Z",
    "status": "live"
   },
@@ -99,7 +99,7 @@
    "event": "nfl-cin-bal-2026-10-25",
    "eventTitle": "Bengals vs. Ravens",
    "endDate": "2026-10-25T17:00:00Z",
-   "last": 58.5,
+   "last": 62.5,
    "addedAt": "2026-10-25T04:38:57Z",
    "status": "live"
   },
@@ -111,7 +111,7 @@
    "event": "lal-bar-rea-2026-10-25",
    "eventTitle": "FC Barcelona vs. Real Madrid CF",
    "endDate": "2026-10-25T20:00:00Z",
-   "last": 23.5,
+   "last": 24.5,
    "addedAt": "2026-10-25T04:38:57Z",
    "status": "live"
   },
