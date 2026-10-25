@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-24T22:28:14Z",
+ "updatedAt": "2026-10-25T04:38:57Z",
  "markets": [
   {
    "id": "2589813",
@@ -8,7 +8,7 @@
    "cat": "경제",
    "event": "fed-decision-in-october-20260617190323537",
    "endDate": "2026-10-29T03:59:00Z",
-   "last": 5.5,
+   "last": 4.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -19,7 +19,7 @@
    "cat": "정치·세계",
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 99.8,
+   "last": 99.7,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -52,7 +52,7 @@
    "cat": "코인",
    "event": "what-price-will-bitcoin-hit-in-october-2026",
    "endDate": "2026-11-01T04:00:00Z",
-   "last": 9.5,
+   "last": 10.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -63,7 +63,7 @@
    "cat": "스포츠",
    "event": "worlds-2026-winner",
    "endDate": "2026-11-29T04:59:00Z",
-   "last": 10.5,
+   "last": 12.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -87,8 +87,32 @@
    "event": "ballon-dor-winner-2026",
    "eventTitle": "Ballon d'Or Winner 2026",
    "endDate": "2026-10-27T03:59:00Z",
-   "last": 10.2,
+   "last": 12.6,
    "addedAt": "2026-10-22T20:06:27Z",
+   "status": "live"
+  },
+  {
+   "id": "4551273",
+   "q": "벵갈스가 레이븐스를 이길까?",
+   "en": "Will Bengals beat Ravens? (Bengals vs. Ravens)",
+   "cat": "스포츠",
+   "event": "nfl-cin-bal-2026-10-25",
+   "eventTitle": "Bengals vs. Ravens",
+   "endDate": "2026-10-25T17:00:00Z",
+   "last": 58.5,
+   "addedAt": "2026-10-25T04:38:57Z",
+   "status": "live"
+  },
+  {
+   "id": "5598481",
+   "q": "레알 마드리드가 2026년 10월 25일에 승리할까?",
+   "en": "Will Real Madrid CF win on 2026-10-25?",
+   "cat": "스포츠",
+   "event": "lal-bar-rea-2026-10-25",
+   "eventTitle": "FC Barcelona vs. Real Madrid CF",
+   "endDate": "2026-10-25T20:00:00Z",
+   "last": 25.5,
+   "addedAt": "2026-10-25T04:38:57Z",
    "status": "live"
   },
   {
