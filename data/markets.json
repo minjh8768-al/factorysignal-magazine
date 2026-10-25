@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-25T04:38:57Z",
+ "updatedAt": "2026-10-25T13:10:54Z",
  "markets": [
   {
    "id": "2589813",
@@ -8,7 +8,7 @@
    "cat": "경제",
    "event": "fed-decision-in-october-20260617190323537",
    "endDate": "2026-10-29T03:59:00Z",
-   "last": 4.5,
+   "last": 5.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -19,7 +19,7 @@
    "cat": "정치·세계",
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 99.7,
+   "last": 99.8,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -41,7 +41,7 @@
    "cat": "정치·세계",
    "event": "who-will-be-the-next-prime-minister-of-israel-after-the-next-election",
    "endDate": "2026-10-28T03:59:00Z",
-   "last": 27.5,
+   "last": 28.0,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -52,7 +52,7 @@
    "cat": "코인",
    "event": "what-price-will-bitcoin-hit-in-october-2026",
    "endDate": "2026-11-01T04:00:00Z",
-   "last": 10.5,
+   "last": 8.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -63,7 +63,7 @@
    "cat": "스포츠",
    "event": "worlds-2026-winner",
    "endDate": "2026-11-29T04:59:00Z",
-   "last": 12.5,
+   "last": 11.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -87,7 +87,7 @@
    "event": "ballon-dor-winner-2026",
    "eventTitle": "Ballon d'Or Winner 2026",
    "endDate": "2026-10-27T03:59:00Z",
-   "last": 12.6,
+   "last": 11.0,
    "addedAt": "2026-10-22T20:06:27Z",
    "status": "live"
   },
@@ -111,7 +111,7 @@
    "event": "lal-bar-rea-2026-10-25",
    "eventTitle": "FC Barcelona vs. Real Madrid CF",
    "endDate": "2026-10-25T20:00:00Z",
-   "last": 25.5,
+   "last": 23.5,
    "addedAt": "2026-10-25T04:38:57Z",
    "status": "live"
   },
