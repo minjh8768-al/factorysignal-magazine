@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-25T19:02:35Z",
+ "updatedAt": "2026-10-25T22:32:28Z",
  "markets": [
   {
    "id": "2589813",
@@ -8,7 +8,7 @@
    "cat": "경제",
    "event": "fed-decision-in-october-20260617190323537",
    "endDate": "2026-10-29T03:59:00Z",
-   "last": 5.5,
+   "last": 6.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -19,7 +19,7 @@
    "cat": "정치·세계",
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "endDate": "2026-10-23T03:59:00Z",
-   "last": 99.8,
+   "last": 99.6,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -52,7 +52,7 @@
    "cat": "코인",
    "event": "what-price-will-bitcoin-hit-in-october-2026",
    "endDate": "2026-11-01T04:00:00Z",
-   "last": 8.5,
+   "last": 7.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -63,7 +63,7 @@
    "cat": "스포츠",
    "event": "worlds-2026-winner",
    "endDate": "2026-11-29T04:59:00Z",
-   "last": 11.5,
+   "last": 10.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -75,7 +75,7 @@
    "event": "which-party-will-win-the-house-in-2026",
    "eventTitle": "Which party will win the House in 2026?",
    "endDate": "2026-11-04T04:59:00Z",
-   "last": 92.5,
+   "last": 91.5,
    "addedAt": "2026-10-20T20:00:05Z",
    "status": "live"
   },
@@ -87,7 +87,7 @@
    "event": "ballon-dor-winner-2026",
    "eventTitle": "Ballon d'Or Winner 2026",
    "endDate": "2026-10-27T03:59:00Z",
-   "last": 12.2,
+   "last": 11.6,
    "addedAt": "2026-10-22T20:06:27Z",
    "status": "live"
   },
@@ -101,7 +101,10 @@
    "endDate": "2026-10-25T17:00:00Z",
    "last": 62.5,
    "addedAt": "2026-10-25T04:38:57Z",
-   "status": "live"
+   "status": "resolved",
+   "outcome": "yes",
+   "final": 62.5,
+   "resolvedAt": "2026-10-25T22:32:28Z"
   },
   {
    "id": "5598481",
@@ -113,7 +116,10 @@
    "endDate": "2026-10-25T20:00:00Z",
    "last": 24.5,
    "addedAt": "2026-10-25T04:38:57Z",
-   "status": "live"
+   "status": "resolved",
+   "outcome": "yes",
+   "final": 24.5,
+   "resolvedAt": "2026-10-25T22:32:28Z"
   },
   {
    "id": "5534599",
