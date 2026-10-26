@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-25T22:32:28Z",
+ "updatedAt": "2026-10-26T04:44:40Z",
  "markets": [
   {
    "id": "2589813",
@@ -8,18 +8,7 @@
    "cat": "경제",
    "event": "fed-decision-in-october-20260617190323537",
    "endDate": "2026-10-29T03:59:00Z",
-   "last": 6.5,
-   "addedAt": "2026-10-20T07:22:48Z",
-   "status": "live"
-  },
-  {
-   "id": "5686979",
-   "q": "미국과 이란의 휴전이 10월 22일까지 유지될까?",
-   "en": "US x Iran ceasefire continues through October 22?",
-   "cat": "정치·세계",
-   "event": "us-iran-ceasefire-continues-throughptptpt",
-   "endDate": "2026-10-23T03:59:00Z",
-   "last": 99.6,
+   "last": 5.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -52,7 +41,7 @@
    "cat": "코인",
    "event": "what-price-will-bitcoin-hit-in-october-2026",
    "endDate": "2026-11-01T04:00:00Z",
-   "last": 7.5,
+   "last": 5.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -75,7 +64,7 @@
    "event": "which-party-will-win-the-house-in-2026",
    "eventTitle": "Which party will win the House in 2026?",
    "endDate": "2026-11-04T04:59:00Z",
-   "last": 91.5,
+   "last": 92.5,
    "addedAt": "2026-10-20T20:00:05Z",
    "status": "live"
   },
@@ -87,9 +76,59 @@
    "event": "ballon-dor-winner-2026",
    "eventTitle": "Ballon d'Or Winner 2026",
    "endDate": "2026-10-27T03:59:00Z",
-   "last": 11.6,
+   "last": 9.8,
    "addedAt": "2026-10-22T20:06:27Z",
    "status": "live"
+  },
+  {
+   "id": "4641065",
+   "q": "미국과 이란의 휴전이 10월 31일까지 유지될까?",
+   "en": "US x Iran ceasefire continues through October 31?",
+   "cat": "정치·세계",
+   "event": "us-iran-ceasefire-continues-throughptptpt",
+   "eventTitle": "US-Iran ceasefire continues through...?",
+   "endDate": "2026-10-31T23:59:00Z",
+   "last": 82.5,
+   "addedAt": "2026-10-26T04:44:40Z",
+   "status": "live"
+  },
+  {
+   "id": "6168180",
+   "q": "롤드컵 그룹 스테이지: T1이 CTBC 플라잉 오이스터를 이길까?",
+   "en": "Will T1 beat CTBC Flying Oyster? (LoL: T1 vs CTBC Flying Oyster (BO1) - Worlds Group Stage)",
+   "cat": "스포츠",
+   "event": "lol-t1-cfo-2026-10-26",
+   "eventTitle": "LoL: T1 vs CTBC Flying Oyster (BO1) - Worlds Group Stage",
+   "endDate": "2026-10-26T23:00:00Z",
+   "last": 88.5,
+   "addedAt": "2026-10-26T04:44:40Z",
+   "status": "live"
+  },
+  {
+   "id": "6168174",
+   "q": "롤드컵 그룹 스테이지: 카민 코프가 빌리빌리 게이밍을 이길까?",
+   "en": "Will Karmine Corp beat Bilibili Gaming? (LoL: Karmine Corp vs Bilibili Gaming (BO1) - Worlds Group Stage)",
+   "cat": "스포츠",
+   "event": "lol-kc-blg-2026-10-26",
+   "eventTitle": "LoL: Karmine Corp vs Bilibili Gaming (BO1) - Worlds Group Stage",
+   "endDate": "2026-10-27T00:00:00Z",
+   "last": 29.5,
+   "addedAt": "2026-10-26T04:44:40Z",
+   "status": "live"
+  },
+  {
+   "id": "5686979",
+   "q": "미국과 이란의 휴전이 10월 22일까지 유지될까?",
+   "en": "US x Iran ceasefire continues through October 22?",
+   "cat": "정치·세계",
+   "event": "us-iran-ceasefire-continues-throughptptpt",
+   "endDate": "2026-10-23T03:59:00Z",
+   "last": 99.6,
+   "addedAt": "2026-10-20T07:22:48Z",
+   "status": "resolved",
+   "outcome": "yes",
+   "final": 99.6,
+   "resolvedAt": "2026-10-26T04:44:40Z"
   },
   {
    "id": "4551273",
