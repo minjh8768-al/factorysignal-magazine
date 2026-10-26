@@ -321,7 +321,12 @@ def refresh_live(markets, now):
             continue
         p = yes_price(g)
         if not g.get("closed"):
-            if p is not None:
+            # 마감 시각이 지났거나 가격이 0/1 로 쏠렸으면 '결과 직전 확률'을 덮어쓰지 않는다.
+            # (경기가 끝난 뒤 공식 마감 전까지 가격이 0/1 로 움직여, 결과 기사에 '0.0% 적중'
+            #  같은 틀린 숫자가 들어간 일이 있었다 — 2026-10-26 첼시전)
+            ended = (m.get("endDate") or "") and m["endDate"][:19] <= now.strftime("%Y-%m-%dT%H:%M:%S")
+            extreme = p is not None and (p <= 0.01 or p >= 0.99) and m.get("last") is not None
+            if p is not None and not ended and not extreme:
                 m["last"] = round(p * 1000) / 10
             continue
         # 끝남. 가격이 1/0으로 굳었으면 결과 확정, 아니면 판정 대기(다음 실행에서 다시 본다).
