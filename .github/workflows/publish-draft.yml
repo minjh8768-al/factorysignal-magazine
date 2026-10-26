@@ -64,7 +64,8 @@ jobs:
           git add -A articles
           git commit -q -m "chore(publish): 승인된 기사 발행 ${{ inputs.slug }}"
           git pull --rebase origin ${{ github.ref_name }}
-          git push origin HEAD:master
-          git push origin HEAD:main
+          # 두 브랜치를 한 번에(atomic) 올린다. 따로 올리다 한쪽만 실패하면 main·master 가 어긋나
+          # 이후 발행이 전부 실패한다 (2026-10-26 실제 발생).
+          git push --atomic origin HEAD:master HEAD:main
       - name: 독자 텔레그램 그룹에 게시 (경제·암호화폐만, 기존 규칙)
         run: python tools/telegram.py --send || true
