@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-26T15:11:16Z",
+ "updatedAt": "2026-10-26T21:00:20Z",
  "markets": [
   {
    "id": "2589813",
@@ -30,7 +30,7 @@
    "cat": "정치·세계",
    "event": "who-will-be-the-next-prime-minister-of-israel-after-the-next-election",
    "endDate": "2026-10-28T03:59:00Z",
-   "last": 25.5,
+   "last": 28.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -41,7 +41,7 @@
    "cat": "코인",
    "event": "what-price-will-bitcoin-hit-in-october-2026",
    "endDate": "2026-11-01T04:00:00Z",
-   "last": 7.5,
+   "last": 4.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -52,7 +52,7 @@
    "cat": "스포츠",
    "event": "worlds-2026-winner",
    "endDate": "2026-11-29T04:59:00Z",
-   "last": 10.5,
+   "last": 11.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -88,8 +88,32 @@
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "eventTitle": "US-Iran ceasefire continues through...?",
    "endDate": "2026-10-31T23:59:00Z",
-   "last": 85.5,
+   "last": 86.5,
    "addedAt": "2026-10-26T04:44:40Z",
+   "status": "live"
+  },
+  {
+   "id": "6168207",
+   "q": "롤드컵 그룹 스테이지: 팀 리퀴드가 애니원스 레전드를 이길까?",
+   "en": "Will Team Liquid beat Anyone's Legend? (LoL: Team Liquid vs Anyone's Legend (BO3) - Worlds Group Stage)",
+   "cat": "스포츠",
+   "event": "lol-tl2-al-2026-10-26",
+   "eventTitle": "LoL: Team Liquid vs Anyone's Legend (BO3) - Worlds Group Stage",
+   "endDate": "2026-10-27T03:00:00Z",
+   "last": 26.5,
+   "addedAt": "2026-10-26T21:00:20Z",
+   "status": "live"
+  },
+  {
+   "id": "5962892",
+   "q": "워리어스가 너게츠를 이길까?",
+   "en": "Will Warriors beat Nuggets? (Warriors vs. Nuggets)",
+   "cat": "스포츠",
+   "event": "nba-gsw-den-2026-10-26",
+   "eventTitle": "Warriors vs. Nuggets",
+   "endDate": "2026-10-27T02:00:00Z",
+   "last": 28.5,
+   "addedAt": "2026-10-26T21:00:20Z",
    "status": "live"
   },
   {
@@ -102,7 +126,10 @@
    "endDate": "2026-10-26T23:00:00Z",
    "last": 88.5,
    "addedAt": "2026-10-26T04:44:40Z",
-   "status": "live"
+   "status": "resolved",
+   "outcome": "yes",
+   "final": 88.5,
+   "resolvedAt": "2026-10-26T21:00:20Z"
   },
   {
    "id": "6168174",
@@ -114,7 +141,10 @@
    "endDate": "2026-10-27T00:00:00Z",
    "last": 29.5,
    "addedAt": "2026-10-26T04:44:40Z",
-   "status": "live"
+   "status": "resolved",
+   "outcome": "no",
+   "final": 29.5,
+   "resolvedAt": "2026-10-26T21:00:20Z"
   },
   {
    "id": "5686979",
