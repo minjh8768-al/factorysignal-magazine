@@ -26,14 +26,14 @@ QUERIES = {
 DEFAULT_QUERY = "financial market chart"
 
 
-def photo(cfg, query, index=0, timeout=20):
-    """{url, by} 또는 None. 실패는 조용히 None 이다."""
+def photo(cfg, query, index=0, timeout=20, avoid=None):
+    """{url, by} 또는 None. 실패는 조용히 None 이다. avoid: 이미 쓰인 사진 URL — 건너뛴다."""
     key = (cfg or {}).get("pexels_api_key", "")
     if not key:
         return None
     # per_page 를 넉넉히 잡는다. 5로 좁히면 같은 질의에도 결과 구성이 달라져
     # 색이 밋밋한 사진이 1순위로 오는 일이 있었다.
-    url = ENDPOINT.format(n=max(index + 1, 8), q=urllib.parse.quote(query))
+    url = ENDPOINT.format(n=max(index + 1, 15 if avoid else 8), q=urllib.parse.quote(query))
     req = urllib.request.Request(url, headers={
         "Authorization": key, "User-Agent": "Mozilla/5.0"})
     try:
@@ -43,7 +43,12 @@ def photo(cfg, query, index=0, timeout=20):
         return None
     if not photos:
         return None
-    p = photos[min(index, len(photos) - 1)]
+    i = min(index, len(photos) - 1)
+    for k in range(len(photos) if avoid else 0):
+        if photos[(i + k) % len(photos)]["src"]["landscape"] not in avoid:
+            i = (i + k) % len(photos)
+            break
+    p = photos[i]
     return {"url": p["src"]["landscape"], "by": p.get("photographer", ""),
             "page": p.get("url", "")}
 

@@ -9,7 +9,10 @@
 
 키가 필요 없다. 실패하면 None — 그때는 Pexels 장면 사진으로 물러선다.
 """
+import glob
+import html
 import json
+import os
 import re
 import urllib.parse
 import urllib.request
@@ -94,10 +97,26 @@ def candidates(query, limit=15, timeout=20):
     return (solos or out)[:POOL_MAX.get(query, 99)]
 
 
-def search(query, pick=0):
-    """{url, by, license, src} 또는 None. pick: 같은 주인공 기사끼리 사진을 바꿔 쓰는 순번."""
+def search(query, pick=0, avoid=None):
+    """{url, by, license, src} 또는 None. pick: 같은 주인공 기사끼리 사진을 바꿔 쓰는 순번.
+    avoid: 이미 쓰인 사진 URL 집합. 주면 그 사진은 건너뛰고, 다 쓰였으면 None(→ Pexels 장면 사진)."""
     found = candidates(query)
+    if avoid is not None:
+        found = [c for c in found if c["url"] not in avoid]
     return found[pick % len(found)] if found else None
+
+
+def used_photos():
+    """발행된 기사들이 이미 쓰는 카드 사진 URL. 예측 기사와 결과 기사는 주인공이 같아서
+    1순위 사진을 똑같이 가져가 목록에 같은 사진이 나란히 붙었다 (2026-10-27)."""
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    used = set()
+    for path in glob.glob(os.path.join(root, "articles", "*.html")):
+        with open(path, encoding="utf-8") as f:
+            m = re.search(r'<meta name="fs:photo" content="([^"]*)"', f.read())
+        if m:
+            used.add(html.unescape(m.group(1)))
+    return used
 
 
 # 주인공은 있는데 쓸 수 있는 실사진이 없을 때: 원본 유튜브 영상의 썸네일을 출처와 함께 쓴다.

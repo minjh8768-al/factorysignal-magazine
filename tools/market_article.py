@@ -196,10 +196,11 @@ def write(cfg, m, kind, today):
     read = max(2, round(len(re.sub(r"<[^>]+>", "", body)) / 500))
 
     subject = (fields.get("photo_subject") or "").strip()
-    photo = commons.search(subject) if subject else None
+    used = commons.used_photos()
+    photo = commons.search(subject, avoid=used) if subject else None
     if not photo:
         q = (fields.get("photo_query") or "").strip() or pexels.query_for(fields.get("title", ""), fields.get("eyebrow", ""))
-        photo = pexels.photo(cfg, q, pexels.pick_index(fields["slug"], 8))
+        photo = pexels.photo(cfg, q, pexels.pick_index(fields["slug"], 8), avoid=used)
     return render(fields, body, read, photo, m, kind), fields["slug"]
 
 

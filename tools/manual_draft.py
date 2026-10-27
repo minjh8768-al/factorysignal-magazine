@@ -34,7 +34,7 @@ def main():
     assert kind in ("preview", "result")
     body = article.tidy_body(article.validate_body(a["body_html"]))
     read = max(2, round(len(__import__("re").sub(r"<[^>]+>", "", body)) / 500))
-    photo = a.get("photo") or (commons.search(a["photo_subject"]) if a.get("photo_subject") else None)
+    photo = a.get("photo") or (commons.search(a["photo_subject"], avoid=commons.used_photos()) if a.get("photo_subject") else None)
     fields = {"title": a["title"], "description": a["description"], "category": a["category"],
               "eyebrow": a.get("eyebrow", "")}
     page = ma.render(fields, body, read, photo, m, kind)
