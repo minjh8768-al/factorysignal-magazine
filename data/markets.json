@@ -1,17 +1,6 @@
 {
- "updatedAt": "2026-10-28T15:05:35Z",
+ "updatedAt": "2026-10-28T21:02:55Z",
  "markets": [
-  {
-   "id": "2589813",
-   "q": "미 연준이 2026년 10월 회의 후 기준금리를 0.25%p 인상할까?",
-   "en": "Will the Fed increase interest rates by 25 bps after the October 2026 meeting?",
-   "cat": "경제",
-   "event": "fed-decision-in-october-20260617190323537",
-   "endDate": "2026-10-29T03:59:00Z",
-   "last": 5.0,
-   "addedAt": "2026-10-20T07:22:48Z",
-   "status": "live"
-  },
   {
    "id": "562830",
    "q": "2026년 미 중간선거에서 공화당이 상원, 민주당이 하원을 차지할까?",
@@ -41,7 +30,7 @@
    "cat": "코인",
    "event": "what-price-will-bitcoin-hit-in-october-2026",
    "endDate": "2026-11-01T04:00:00Z",
-   "last": 2.2,
+   "last": 2.8,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -64,7 +53,7 @@
    "event": "which-party-will-win-the-house-in-2026",
    "eventTitle": "Which party will win the House in 2026?",
    "endDate": "2026-11-04T04:59:00Z",
-   "last": 91.5,
+   "last": 92.5,
    "addedAt": "2026-10-20T20:00:05Z",
    "status": "live"
   },
@@ -76,7 +65,7 @@
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "eventTitle": "US-Iran ceasefire continues through...?",
    "endDate": "2026-10-31T23:59:00Z",
-   "last": 95.5,
+   "last": 95.4,
    "addedAt": "2026-10-26T04:44:40Z",
    "status": "live"
   },
@@ -88,7 +77,7 @@
    "event": "military-action-against-saudi-oil-pipeline-east-west-byptptpt",
    "eventTitle": "Military action against Saudi Oil Pipeline (East-West) by...?",
    "endDate": "2026-11-30T20:59:00Z",
-   "last": 48.5,
+   "last": 49.5,
    "addedAt": "2026-10-27T05:01:49Z",
    "status": "live"
   },
@@ -115,6 +104,32 @@
    "last": 9.2,
    "addedAt": "2026-10-28T05:40:11Z",
    "status": "live"
+  },
+  {
+   "id": "6037145",
+   "q": "레이커스가 클리퍼스를 이길까?",
+   "en": "Will Lakers beat Clippers? (Lakers vs. Clippers)",
+   "cat": "스포츠",
+   "event": "nba-lal-lac-2026-10-28",
+   "eventTitle": "Lakers vs. Clippers",
+   "endDate": "2026-10-29T02:30:00Z",
+   "last": 49.5,
+   "addedAt": "2026-10-28T21:02:55Z",
+   "status": "live"
+  },
+  {
+   "id": "2589813",
+   "q": "미 연준이 2026년 10월 회의 후 기준금리를 0.25%p 인상할까?",
+   "en": "Will the Fed increase interest rates by 25 bps after the October 2026 meeting?",
+   "cat": "경제",
+   "event": "fed-decision-in-october-20260617190323537",
+   "endDate": "2026-10-29T03:59:00Z",
+   "last": 5.0,
+   "addedAt": "2026-10-20T07:22:48Z",
+   "status": "resolved",
+   "outcome": "no",
+   "final": 5.0,
+   "resolvedAt": "2026-10-28T21:02:55Z"
   },
   {
    "id": "5674420",
