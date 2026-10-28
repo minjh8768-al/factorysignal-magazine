@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-27T20:41:40Z",
+ "updatedAt": "2026-10-28T05:40:11Z",
  "markets": [
   {
    "id": "2589813",
@@ -8,7 +8,7 @@
    "cat": "경제",
    "event": "fed-decision-in-october-20260617190323537",
    "endDate": "2026-10-29T03:59:00Z",
-   "last": 4.5,
+   "last": 4.2,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -19,7 +19,7 @@
    "cat": "정치·세계",
    "event": "balance-of-power-2026-midterms",
    "endDate": "2026-11-04T04:59:00Z",
-   "last": 27.5,
+   "last": 26.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -41,7 +41,7 @@
    "cat": "코인",
    "event": "what-price-will-bitcoin-hit-in-october-2026",
    "endDate": "2026-11-01T04:00:00Z",
-   "last": 4.8,
+   "last": 4.6,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -76,7 +76,7 @@
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "eventTitle": "US-Iran ceasefire continues through...?",
    "endDate": "2026-10-31T23:59:00Z",
-   "last": 93.5,
+   "last": 94.5,
    "addedAt": "2026-10-26T04:44:40Z",
    "status": "live"
   },
@@ -88,8 +88,32 @@
    "event": "military-action-against-saudi-oil-pipeline-east-west-byptptpt",
    "eventTitle": "Military action against Saudi Oil Pipeline (East-West) by...?",
    "endDate": "2026-11-30T20:59:00Z",
-   "last": 44.5,
+   "last": 48.0,
    "addedAt": "2026-10-27T05:01:49Z",
+   "status": "live"
+  },
+  {
+   "id": "6280198",
+   "q": "롤드컵 그룹 스테이지: 인빅터스 게이밍이 LYON을 이길까?",
+   "en": "Will Invictus Gaming beat LYON? (LoL: Invictus Gaming vs LYON (BO3) - Worlds Group Stage)",
+   "cat": "스포츠",
+   "event": "lol-ig1-ly-2026-10-28",
+   "eventTitle": "LoL: Invictus Gaming vs LYON (BO3) - Worlds Group Stage",
+   "endDate": "2026-10-29T05:00:00Z",
+   "last": 66.5,
+   "addedAt": "2026-10-27T05:01:49Z",
+   "status": "live"
+  },
+  {
+   "id": "1235549",
+   "q": "탬파베이 레이스가 2026 월드시리즈에서 우승할까?",
+   "en": "Will the Tampa Bay Rays win the 2026 World Series?",
+   "cat": "스포츠",
+   "event": "mlb-world-series-champion-2026",
+   "eventTitle": "MLB World Series Champion 2026",
+   "endDate": "2026-10-31T23:55:00Z",
+   "last": 8.6,
+   "addedAt": "2026-10-28T05:40:11Z",
    "status": "live"
   },
   {
@@ -102,19 +126,10 @@
    "endDate": "2026-10-27T19:45:00Z",
    "last": 55.5,
    "addedAt": "2026-10-27T05:01:49Z",
-   "status": "live"
-  },
-  {
-   "id": "6280198",
-   "q": "롤드컵 그룹 스테이지: 인빅터스 게이밍이 LYON을 이길까?",
-   "en": "Will Invictus Gaming beat LYON? (LoL: Invictus Gaming vs LYON (BO3) - Worlds Group Stage)",
-   "cat": "스포츠",
-   "event": "lol-ig1-ly-2026-10-28",
-   "eventTitle": "LoL: Invictus Gaming vs LYON (BO3) - Worlds Group Stage",
-   "endDate": "2026-10-29T05:00:00Z",
-   "last": 64.5,
-   "addedAt": "2026-10-27T05:01:49Z",
-   "status": "live"
+   "status": "resolved",
+   "outcome": "yes",
+   "final": 55.5,
+   "resolvedAt": "2026-10-28T05:40:11Z"
   },
   {
    "id": "608545",
