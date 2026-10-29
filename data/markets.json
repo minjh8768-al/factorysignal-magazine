@@ -1,5 +1,5 @@
 {
- "updatedAt": "2026-10-29T05:45:42Z",
+ "updatedAt": "2026-10-29T15:13:19Z",
  "markets": [
   {
    "id": "562830",
@@ -41,7 +41,7 @@
    "cat": "스포츠",
    "event": "worlds-2026-winner",
    "endDate": "2026-11-29T04:59:00Z",
-   "last": 11.5,
+   "last": 10.5,
    "addedAt": "2026-10-20T07:22:48Z",
    "status": "live"
   },
@@ -65,7 +65,7 @@
    "event": "us-iran-ceasefire-continues-throughptptpt",
    "eventTitle": "US-Iran ceasefire continues through...?",
    "endDate": "2026-10-31T23:59:00Z",
-   "last": 96.2,
+   "last": 96.8,
    "addedAt": "2026-10-26T04:44:40Z",
    "status": "live"
   },
@@ -77,8 +77,32 @@
    "event": "military-action-against-saudi-oil-pipeline-east-west-byptptpt",
    "eventTitle": "Military action against Saudi Oil Pipeline (East-West) by...?",
    "endDate": "2026-11-30T20:59:00Z",
-   "last": 50.5,
+   "last": 42.0,
    "addedAt": "2026-10-27T05:01:49Z",
+   "status": "live"
+  },
+  {
+   "id": "3215007",
+   "q": "2026년 12월 회의 후 연준이 기준금리를 동결할까?",
+   "en": "Will there be no change in Fed interest rates after the December 2026 meeting?",
+   "cat": "경제",
+   "event": "fed-decision-in-december-20260729232808632",
+   "eventTitle": "Fed Decision in December?",
+   "endDate": "2026-12-09T23:59:00Z",
+   "last": 21.5,
+   "addedAt": "2026-10-29T05:45:42Z",
+   "status": "live"
+  },
+  {
+   "id": "4906128",
+   "q": "미국이 2026년 11월 30일까지 이란 봉쇄 해제를 발표할까?",
+   "en": "US announces end of Iranian blockade by November 30, 2026?",
+   "cat": "경제",
+   "event": "us-announces-end-of-iranian-blockade-byptptpt-20260713152715080",
+   "eventTitle": "US announces end of Iranian blockade by...?",
+   "endDate": "2026-12-01T04:59:00Z",
+   "last": 28.5,
+   "addedAt": "2026-10-29T05:45:42Z",
    "status": "live"
   },
   {
@@ -91,31 +115,10 @@
    "endDate": "2026-10-31T23:55:00Z",
    "last": 9.2,
    "addedAt": "2026-10-28T05:40:11Z",
-   "status": "live"
-  },
-  {
-   "id": "3215007",
-   "q": "2026년 12월 회의 후 연준이 기준금리를 동결할까?",
-   "en": "Will there be no change in Fed interest rates after the December 2026 meeting?",
-   "cat": "경제",
-   "event": "fed-decision-in-december-20260729232808632",
-   "eventTitle": "Fed Decision in December?",
-   "endDate": "2026-12-09T23:59:00Z",
-   "last": 19.5,
-   "addedAt": "2026-10-29T05:45:42Z",
-   "status": "live"
-  },
-  {
-   "id": "4906128",
-   "q": "미국이 2026년 11월 30일까지 이란 봉쇄 해제를 발표할까?",
-   "en": "US announces end of Iranian blockade by November 30, 2026?",
-   "cat": "경제",
-   "event": "us-announces-end-of-iranian-blockade-byptptpt-20260713152715080",
-   "eventTitle": "US announces end of Iranian blockade by...?",
-   "endDate": "2026-12-01T04:59:00Z",
-   "last": 27.5,
-   "addedAt": "2026-10-29T05:45:42Z",
-   "status": "live"
+   "status": "resolved",
+   "outcome": "no",
+   "final": 9.2,
+   "resolvedAt": "2026-10-29T15:13:19Z"
   },
   {
    "id": "6280198",
